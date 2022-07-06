@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+   <head>
+      <meta charset="utf-8"/>
+      <link rel="icon" href="./favicon.ico"/>
+      <meta name="viewport" content="width=device-width,initial-scale=1"/>
+      <meta name="theme-color" content="#000000"/>
+      <meta name="description" content="Web site created using create-react-app"/>
+      <link rel="apple-touch-icon" href="./logo192.png"/>
+      <link rel="manifest" href="./manifest.json"/>
+      <style>
+      .center{
+          margin:auto;
+          width:60%;
+          height:20%;
+          border:0 solid #73ad21;
+          padding:10px;
+          margin:'auto';
+          color:'red';
+          text-align:center;
+          display: flex;
+          flex-direction: column;
+          align-items:center;
+          }
+          .span{
+              margin:'auto'
+              }
+        .lds-ellipsis{
+            display:inline-block;
+            position:relative;
+            width:80px;
+            height:80px;
+            margin-top:-10px;
+        }
+        .lds-ellipsis div{
+            position:absolute;
+            top:33px;
+            width:10px;
+            height:10px;
+            border-radius:50%;
+            background:#134163;
+            animation-timing-function:cubic-bezier(0,1,1,0)
+        }
+        .lds-ellipsis div:nth-child(1){
+            left:8px;animation:lds-ellipsis1 .6s infinite
+        }.lds-ellipsis div:nth-child(2){left:8px;animation:lds-ellipsis2 .6s infinite}.lds-ellipsis div:nth-child(3){left:32px;animation:lds-ellipsis2 .6s infinite}.lds-ellipsis div:nth-child(4){left:56px;animation:lds-ellipsis3 .6s infinite}@keyframes lds-ellipsis1{0%{transform:scale(0)}100%{transform:scale(1)}}@keyframes lds-ellipsis3{0%{transform:scale(1)}100%{transform:scale(0)}}@keyframes lds-ellipsis2{0%{transform:translate(0,0)}100%{transform:translate(24px,0)}}</style>
+      <title>Astro POS</title>
+      <script defer="defer" src="./static/js/main.fe7da35a.js"></script>
+      <link href="./static/css/main.536d7389.css" rel="stylesheet">
+   </head>
+   <body>
+      <noscript>You need to enable JavaScript to run this app.</noscript>
+      <div id="root"></div>
+      <div class="center">
+          <img src="./assets/images/logo.png" alt="logo" style="max-height:100px;max-width:150px;margin-top:30px;"/>
+         
+         <div class="lds-ellipsis">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+         </div>
+         <span style="color:#ccc;margin-top:-20px;">Loading...</span>
+      </div>
+   </body>
+</html>

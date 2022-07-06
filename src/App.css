@@ -1,0 +1,298 @@
+@font-face {
+  font-family: orbitron;
+  src: url('../public/assets/fonts/Orbitron-Regular.ttf');
+}
+@font-face {
+  font-family: orbitron-black;
+  src: url('../public/assets/fonts/Orbitron-Black.ttf');
+}
+@font-face {
+  font-family: orbitron-bold;
+  src: url('../public/assets/fonts/Orbitron-Bold.ttf');
+}
+@font-face {
+  font-family: orbitron-semibold;
+  src: url('../public/assets/fonts/Orbitron-SemiBold.ttf');
+}
+@font-face {
+  font-family: orbitron-medium;
+  src: url('../public/assets/fonts/Orbitron-Medium.ttf');
+}
+@font-face {
+  font-family: orbitron-extrabold;
+  src: url('../public/assets/fonts/Orbitron-ExtraBold.ttf');
+}
+html, body{
+  height: 100%;
+  overflow: hidden;
+}
+body{
+  margin:0 auto;
+}
+
+body > div{
+  height:100%;
+}
+
+#root > div > div{
+  height: 100%;
+}
+.MuiDataGrid-root .MuiDataGrid-columnHeader--moving{
+  background:transparent !important;
+}
+.MuiDataGrid-columnSeparator {
+  visibility: hidden;
+} 
+.MuiAppBar-root h6{
+  font-family: 'orbitron';
+}  
+.subtitle1{ 
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical; 
+}
+
+.MuiTabs-indicator{
+  display: none;
+}
+.MuiTabs-flexContainer .MuiTab-root{
+  min-height:auto;
+  text-transform: capitalize;
+  max-width:auto;
+  flex:1;
+  border-radius:5px 5px 0 0;
+} 
+.MuiTabs-flexContainer .MuiTab-root.Mui-disabled{
+  background-color: #dcdcdc;
+  border:1px solid #ccc;
+}
+
+.MuiTabs-flexContainer .MuiTab-root.Mui-Selected{
+
+  border:0 0 1px 0 solid #ccc;
+}
+
+.tabcontent .MuiDataGrid-root{
+  border:0;
+}
+.tabcontent > div:first-child, .tabcontent > div:first-child > div:first-child {
+  height:100%;
+}
+
+.MuiTab-wrapper{
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+}
+
+.selectedRow{
+  background: #1E90FF;
+}
+
+.selectedRow > *{
+  color:#fff;
+}
+.MuiDrawer-paper{
+  width: 240px;
+}
+.MuiDataGrid-cell:focus{
+  outline: none !important;
+}
+.MuiDataGrid-cell:focus{
+  outline: none !important;
+}
+.MuiDataGrid-columnHeader--sortable{
+  outline: none !important;
+}
+.MuiDataGrid-columnHeader{
+  font-weight: bold !important;
+}
+.MuiDataGrid-columnHeader:focus, .MuiDataGrid-columnHeader--sortable:focus, .MuiDataGrid-columnHeader--sorted:focus, .MuiDataGrid-cell:focus-within{
+  outline: none !important;
+}
+
+.css-19r6kue-MuiContainer-root{
+  max-width: 100% !important;
+}
+
+.MuiDataGrid-row:nth-child(even){
+  /* background-color: rgba(235, 235, 235, .7);
+   */
+   background-color: #F4F6F8;
+}
+
+.MuiDataGrid-cell{
+  border: '1px solid #d9d9d9 !important';
+}
+
+.MuiDataGrid-columnHeader, .MuiDataGrid-cell{
+  border: '1px solid #d9d9d9';
+}
+.MuiDataGrid-columnsContainer, .MuiDataGrid-cell{
+  border: '1px solid #d9d9d9';
+}
+.MuiDataGrid-cell--withRenderer > div{
+  margin-left: 5px;
+}
+
+.MuiDataGrid-cell--withRenderer strong{
+  margin-left: -10px;
+}
+.MuiDataGrid-virtualScroller .MuiDataGrid-row:hover { 
+  background-color: #e1eef7 !important;
+  color: #134163;
+}
+
+.MuiTableRow-root:nth-child(even){
+   background-color: #F4F6F8;
+}
+.MuiTableBody-root .MuiTableRow-row:hover { 
+  background-color: #e1eef7 !important;
+  color: #134163;
+} 
+
+.launchScreen-logo{ 
+  width:80%;
+}
+
+.synccontainer{
+  position: absolute;
+  top: 0;
+  bottom: 50px;
+  display: flex;
+  right: 0;
+  flex-direction: row;
+  left: 0;
+}
+
+.MuiDataGrid-columnHeaderTitle{
+  font-weight:bold !important;
+}
+
+.MuiDataGrid-row{
+  cursor:pointer;
+}
+
+.MuiListItemIcon-root{
+  min-width:30px !important;
+}
+
+.techbtn .MuiCardContent-root{
+  padding:24px !important;
+}
+
+.btmbtn{
+  height:62px;
+  background:#134163 !important;
+}
+.btmbtn span{
+  color:#fff !important;
+}
+
+.btmbtn:disabled span{
+  color:#909090 !important;
+}
+
+.bgbtn,  .MuiButton-contained:not(.Mui-disabled){
+  background: #134163 !important;
+  border-color: #134163  !important;
+}
+.MuiButton-outlined{
+  color: #134163 !important;
+  border-color: #134163 !important ;
+}
+button.Mui-disabled{
+  background: rgba(0, 0, 0, 0.12) !important;
+  color:#fff !important;
+}
+.MuiCheckbox-colorSecondary.Mui-checked{
+  color: #134163 !important;
+}
+
+.MuiDataGrid-row  button{
+  margin-right: 0.75rem;
+  border-color: #134163 ;
+  background: #134163 !important;
+  color:#fff;
+}
+
+.footerbtn button.MuiButton-outlined{
+  color: rgba(0,0,0,0.87) !important;
+  border-color: rgba(0,0,0,0.87) !important ;
+  border-radius: 0;
+  border-left: 0;
+  font-weight:bold;
+  text-transform: capitalize;
+}
+
+.dashboard button.MuiButton-outlined{ 
+  border-color: #fff !important ;
+  border-radius: 0;
+  border-left: 0;
+  border-top: 0;
+  border-bottom: 0;
+  font-weight:bold;
+  text-transform: capitalize;
+}
+ 
+.footerbtn .grid:first-child button.MuiButton-outlined{
+  border-left: 1px solid rgba(0,0,0,0.87) !important;
+}
+
+.dashboard .grid:first-child button.MuiButton-outlined{
+  border-left: 1px solid #fff !important;
+}
+
+.footerbtn  button.MuiButton-outlined.Mui-disabled{
+  background:#f0f0f0;
+  color:#cccccc !important;
+}
+
+.footerbtn .nobottomborder button.MuiButton-outlined{
+  border-bottom: 0 !important;
+} 
+
+.MuiButtonBase-root.MuiButton-contained{
+  padding: 6px 16px !important;
+  border-radius: 4px !important;
+  color: white !important;
+
+}
+.MuiInputBase-formControl .MuiInputBase-input-MuiOutlinedInput-input, .MuiInputBase-input.MuiOutlinedInput-input{
+  padding: 16.5px 14px !important;
+}
+
+.MuiMenuItem-root .MuiMenuItem-gutters .MuiButtonBase-root, .MuiButtonBase-root.MuiMenuItem-root{
+  padding:  8px 16px !important;
+    width: 100%;
+    align-items: flex-start;
+    justify-content: flex-start;
+}
+:focus{
+  outline: unset !important;
+} 
+.MuiRadio-colorSecondary.Mui-checked{
+  color:#134163 !important;
+}
+
+button{
+  box-shadow:none !important;
+}
+.loginScreen_numberpad{
+  display:flex;
+  justify-content: center;
+  align-items:flex-start;
+  flex-direction:column;
+  width:45%;
+}
+
+/* 1024x768 */
+@media screen and (min-device-width:768px) and (max-device-width:1024px) {
+  /* .loginScreen_numberpad{
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    flex-direction:column;
+    width:45%;
+  } */
+}
