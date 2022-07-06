@@ -259,7 +259,7 @@ class Tips extends React.Component {
                     console.log("tips_amount",this.state.tips_amount);
                     if(this.state.total_tips !== Number(this.state.tips_amount)){
                         this.setState({isDisable: true});
-                        if(this.state.service_selected.length === isfilled){
+                        if(this.state.service_selected.length === isfilled  && this.state.tipe_type=='manual'){
                             this.setState({showError: true})
                         }
                     }

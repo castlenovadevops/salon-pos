@@ -372,11 +372,11 @@ export default class TicketController {
             const defsql = "select * from default_commission where businessId =  '" + businessdetail["id"] + "'"
             this.dataManager.getData(defsql).then(defres => {
                 var ownerid = '';
-                this.dataManager.getData("select * from user_business where role='Owner'").then(own => {
+                this.dataManager.getData("select * from users where staff_role='Owner'").then(own => {
                     console.log("OPWNER DETAIL")
                     console.log(defres)
                     if (own.length > 0)
-                        ownerid = own[0].business_owner_id;
+                        ownerid = own[0].id;
 
                     if (defres.length > 0) {
                         const sql = "select * from employee_salary where employeeId =  '" + selectedservice.employee_id + "'"
