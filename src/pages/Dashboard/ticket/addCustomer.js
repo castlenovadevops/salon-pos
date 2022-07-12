@@ -8,6 +8,7 @@ import GenerateRandomCode from 'react-random-code-generator';
 import TextFieldContent from '../../../components/formComponents/TextField';
 import ButtonContent from '../../../components/formComponents/Button';
 import PhoneNumberContent from '../../../components/formComponents/PhoneNumber';
+import AutoCompleteContent from '../../../components/formComponents/AutoComplete';
 import Moment from 'moment';
 
 import DesktopDatePicker from '@mui/lab/DesktopDatePicker';
@@ -15,8 +16,10 @@ import LocalizationProvider from '@mui/lab/LocalizationProvider';
 import AdapterDateFns from '@mui/lab/AdapterDateFns';
 
 import config from '../../../config/config';
+import TicketController from '../../../controller/TicketController';
 
 export default class AddCustomer extends React.Component {
+    ticketController = new TicketController();
     constructor(props){
         super(props);
         this.state={
@@ -41,7 +44,12 @@ export default class AddCustomer extends React.Component {
             open: false,
             vertical: 'top',
             horizontal: 'center',
-            businessdetail:{}
+            businessdetail:{},
+            address1:'',
+            address2:'',
+            city:'',
+            state:null,
+            zipcode:''
         }
         this.handlechange = this.handlechange.bind(this);
         this.onBlurField = this.onBlurField.bind(this);
@@ -97,6 +105,16 @@ export default class AddCustomer extends React.Component {
             }
 
         }
+        else if(e.target.name === "zipcode"){
+            //  console.log("zipcode",e.target.value.match( "^.{6,6}$"))
+            const numberPattern = new RegExp(/^[0-9\b]+$/);
+            if(e.target.value.toString().match( "^.{6,6}$")===null && numberPattern.test(e.target.value) && e.keyCode !== 69) { 
+              let statevbl = this.state
+              statevbl[e.target.name] = e.target.value;
+              this.setState(statevbl);
+              this.handleValidation();
+            }
+          }
         else {
             if((e.target.value.match( "^.{"+config.input+","+config.input+"}$")===null)) {
                 this.setState({ [e.target.name]: e.target.value });
@@ -134,14 +152,28 @@ export default class AddCustomer extends React.Component {
             formIsValid = false;
             this.setState({ isDisable: true })
         }
-        else{
-            this.setState({ isDisable: false })
-        }
+        
         //email
-        if (!fields.email) {
+        else if (!fields.email) {
             formIsValid = false;
             this.setState({ isDisable: true })
         }
+        else if (!fields.address1 && fields.address1 === '') {
+            formIsValid = false;
+            this.setState({ isDisable: true })
+          }
+          else if (!fields.city) {
+              formIsValid = false;
+              this.setState({ isDisable: true })
+          }
+          else if (!fields.state) {
+              formIsValid = false;
+              this.setState({ isDisable: true })
+          }
+          else if (!fields.zipcode) {
+              formIsValid = false;
+              this.setState({ isDisable: true })
+          }
         else{
             this.setState({ isDisable: false })
         }
@@ -193,27 +225,42 @@ export default class AddCustomer extends React.Component {
             member_id : this.state.member_id,
             name : this.state.name,
             email : this.state.email,
-            dob: this.state.dob,
+            dob: this.state.dob.toISOString(),
             phone: this.state.phone,
             first_visit : this.state.first_visit,
             last_visit : this.state.last_visit,
             visit_count : this.state.visit_count,
             total_spent : this.state.total_spent,
             loyality_point : this.state.loyality_point,
-            created_at: new Date(),
+            created_at: new Date().toISOString(),
             created_by: this.state.userdetail.id,
-            updated_at: new Date(),
+            updated_at: new Date().toISOString(),
             updated_by: this.state.userdetail.id,
             businessId: this.state.businessdetail.id,
-            status:'Active'
+            status:'Active',
+            address1 : this.state.address1,
+            address2 : this.state.address2,
+            city : this.state.city,
+            state : this.state.state,
+            zipcode : this.state.zipcode,
+            sync_status: 0
         }
-        
-        axios.post(config.root +"customer/saveorupdate/", customer_input).then(res=>{
-            var status = res.data["status"]; 
-            if(status === 200){
-                this.props.afterSubmit('Saved successfully.')
-            }
+        window.api.getSyncUniqueId().then(sync=>{
+            var syncid = sync.syncid; 
+            customer_input["sync_id"] = syncid;
+            customer_input["mode"] = 'POS';
+            this.ticketController.saveData({table_name:'customers', data:customer_input}).then(r=>{ 
+                this.props.afterSubmit('Saved successfully.');
+                this.setState({isLoading: false});
+            }) 
         })
+        
+        // axios.post(config.root +"customer/saveorupdate/", customer_input).then(res=>{
+        //     var status = res.data["status"]; 
+        //     if(status === 200){
+        //         this.props.afterSubmit('Saved successfully.')
+        //     }
+        // })
     }
 
     render(){
@@ -268,11 +315,35 @@ export default class AddCustomer extends React.Component {
                                             onChange={(e) => this.handlechangePhone(e)}
                                             />
                                         </Grid>
+                                        <Grid item xs={6}> 
+                                            <TextFieldContent fullWidth label="Address 1" required name="address1" value={this.state.address1} onChange={this.handlechange}/>
+                                        </Grid>
+                                        <Grid item xs={6}> 
+                                            <TextFieldContent fullWidth label="Address 2" name="address2" value={this.state.address2} onChange={this.handlechange}/>
+                                        </Grid>
+                                        <Grid item xs={6}> 
+                                        <TextFieldContent fullWidth label="City" required name="city" value={this.state.city} onChange={this.handlechange}/>
+                                        </Grid>
+                                        <Grid item xs={6}> 
+                                            <AutoCompleteContent 
+                                            fullWidth 
+                                            label="State"
+                                            required  
+                                            name="state" 
+                                            value={this.state.state} 
+                                            onChange={(event, newValue) => {
+                                                this.setState({state: newValue.value})
+                                            }}
+                                            /> 
+                                        </Grid>
+                                        <Grid item xs={6}> 
+                                        <TextFieldContent type="number" fullWidth label="Zipcode" required  name="zipcode" value={this.state.zipcode} onChange={this.handlechange}  /> 
+                                        </Grid>
                                         <Grid item xs={6}>
                                             <LocalizationProvider dateAdapter={AdapterDateFns}>
                                                 <DesktopDatePicker 
                                                     label="DOB"
-                                                    inputFormat="dd/MM/yyyy"
+                                                    inputFormat="MM/dd/yyyy"
                                                    
                                                     maxDate={new Date()}
                                                     value={this.state.dob}

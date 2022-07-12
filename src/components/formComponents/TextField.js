@@ -200,20 +200,22 @@ export default class TextFieldContent extends React.Component {
         onSelect = {(e) => {
           if(window.getSelection().toString().indexOf(".") > -1) selectedDot = true;
         }}
-        onKeyDown = {(e)=>{
-          // console.log("onKeyDown::",e.target.value)
+        onKeyDown = {(e)=>{ 
           if(e.target.name === "check_percentage"   || e.target.name === "cash_percentage" || e.target.name === "owner_percentage"   || e.target.name === "emp_percentage" ||
           e.target.name === "tax_value" || e.target.name === "employee_percentage" || e.target.name === "owner_percentage"||
           e.target.name === "check_percentage" || e.target.name === "cash_percentage" || e.target.name === "employee_percentage" || e.target.name === "owner_percentage" ||
           e.target.name === "discount_value" || e.target.name === "emp_division" ||e.target.name === "owner_division" || e.target.name === "service_price" || e.target.mame === "variable_price"
-          ||e.target.name === "price" || e.target.name === "cost"
-          ){  
-            // console.log(e.target.value+e.key);
-            if(e.key === 'e'  || e.key === "+" || e.key === "-" ){
+          ||e.target.name === "price" || e.target.name === "cost"){  
+            if(e.key === 'e'  || e.key === "+" || e.key === "-" ){ 
                 e.preventDefault();
             }
-            if(e.key === "." && (e.target.value==="" || e.target.value.length===0) ) {
-              
+
+          const numberPattern = new RegExp(/^[0-9\b]+$/); 
+
+          if( e.keyCode > 64 && e.keyCode < 91 ) {  
+              e.preventDefault(); 
+          }
+            if(e.key === "." && (e.target.value==="" || e.target.value.length===0) ) { 
                 e.preventDefault();
                
             }

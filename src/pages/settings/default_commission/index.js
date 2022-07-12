@@ -20,7 +20,10 @@ import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
 import DataManager from '../../../controller/datacontroller'
 
+import TicketController from '../../../controller/TicketController'
 export default class Commission extends React.Component {
+  dataManager= new DataManager();
+  ticketController = new TicketController();
   constructor(props) {
     super(props);
     this.state = {
@@ -93,6 +96,7 @@ export default class Commission extends React.Component {
         }
         ],
         isLoading: false,
+        mastertables:[]
     };
     
     this.logout = this.logout.bind(this);
@@ -106,6 +110,18 @@ export default class Commission extends React.Component {
       this.setState({businessdetail: JSON.parse(detail)}, ()=>{
        
       })
+
+
+      this.setState({mastertables:[
+        {
+          name: "default_commission",
+          tablename: 'default_commission',
+          progressText: "Synchronizing Commission...",
+          progresscompletion: 10,
+          url: config.root + `/settings/default_commission/list/` + JSON.parse(window.localStorage.getItem('businessdetail')).id,
+          syncurl:''
+        } 
+      ]} );
 
       var condition = navigator.onLine ? 'online' : 'offline';
       this.setState({isOnline: (condition=="online") ? true: false}, function (){
@@ -156,6 +172,43 @@ handlePageEvent(pagename){
   }
 
 
+  syncMasterData(mindex) {
+    if (mindex < this.state.mastertables.length) {
+        var tbldata = this.state.mastertables[mindex];
+        this.setState({downloadinMessage: tbldata.progressText}, ()=>{
+            console.log(mindex, "master index")
+            axios.get(tbldata.url).then((res) => {
+                var data = res.data["data"];
+                if (data instanceof Array) {
+                    console.log(tbldata.tablename, data.length)
+                    this.syncIndividualEntry(mindex, 0, data, tbldata)
+                }
+            })
+        })
+    } 
+}
+
+syncIndividualEntry(mindex, idx, data, tbldata) {
+    if (idx < data.length) {
+        var input = data[idx]; 
+        this.dataManager.saveData(`delete from ` + tbldata.tablename+ ` where (sync_status=1 and sync_id='`+input.sync_id+`') or id =`+input.id).then(res => {
+            input["sync_id"] = input["sync_id"] !== null && input["sync_id"] !== undefined ? input["sync_id"] : input["id"];
+            input["sync_status"] = 1;
+            this.ticketController.saveData({ table_name: tbldata.name, data: input }).then(r => {
+                this.syncIndividualEntry(mindex, idx + 1, data, tbldata);
+            })
+        })     
+    }
+    else {
+        this.setState({progress: tbldata.progress}, ()=>{
+            console.log(mindex, "master sync index")
+            this.syncMasterData(mindex + 1)
+        });
+    }
+}
+
+
+
     getCommisionList(){
        this.setState({isLoading: true});
         var userdetail = window.localStorage.getItem('employeedetail');
@@ -166,6 +219,9 @@ handlePageEvent(pagename){
                   if(this.state.commissionlist.length> 0){
                     this.setState({selectedcommission:this.state.commissionlist[0]},()=>{
                       console.log(this.state.selectedcommission);
+
+                this.syncMasterData(0);
+
                     });
                   }
                 });

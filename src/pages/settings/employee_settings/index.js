@@ -16,8 +16,10 @@ import config from '../../../config/config'
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
 import DataManager from '../../../controller/datacontroller'
-
+import TicketController from '../../../controller/TicketController'
 export default class EmployeeSetting extends React.Component {
+  dataManager= new DataManager();
+  ticketController = new TicketController();
     constructor(props) {
         super(props);
         this.state = {
@@ -73,7 +75,8 @@ export default class EmployeeSetting extends React.Component {
                 </strong>
                 ),
             }
-            ]
+            ],
+            mastertables:[]
         };
         this.handleCloseform = this.handleCloseform.bind(this);
 
@@ -136,7 +139,16 @@ handlePageEvent(pagename){
   
         }
         else {
+          this.setState({mastertables:[{
+            name: "employee_salary",
+            tablename: 'employee_salary',
+            progressText: "Synchronizing Salary Division...",
+            progresscompletion: 10,
+            url: config.root + `/settings/employee_salary/list/` + JSON.parse(window.localStorage.getItem('businessdetail')).id,
+            syncurl:''
+        }]},()=>{
           this.getEmpSalaryList()
+        });
         }
 
       })
@@ -146,6 +158,44 @@ handlePageEvent(pagename){
      
        
     }
+
+
+
+  syncMasterData(mindex) {
+    if (mindex < this.state.mastertables.length) {
+        var tbldata = this.state.mastertables[mindex];
+        this.setState({downloadinMessage: tbldata.progressText}, ()=>{
+            console.log(mindex, "master index")
+            axios.get(tbldata.url).then((res) => {
+                var data = res.data["data"];
+                if (data instanceof Array) {
+                    console.log(tbldata.tablename, data.length)
+                    this.syncIndividualEntry(mindex, 0, data, tbldata)
+                }
+            })
+        })
+    } 
+}
+
+syncIndividualEntry(mindex, idx, data, tbldata) {
+    if (idx < data.length) {
+        var input = data[idx]; 
+        this.dataManager.saveData(`delete from ` + tbldata.tablename+ ` where (sync_status=1 and sync_id='`+input.sync_id+`') or id =`+input.id).then(res => {
+            input["sync_id"] = input["sync_id"] !== null && input["sync_id"] !== undefined ? input["sync_id"] : input["id"];
+            input["sync_status"] = 1;
+            this.ticketController.saveData({ table_name: tbldata.name, data: input }).then(r => {
+                this.syncIndividualEntry(mindex, idx + 1, data, tbldata);
+            })
+        })     
+    }
+    else {
+        this.setState({progress: tbldata.progress}, ()=>{
+            console.log(mindex, "master sync index")
+            this.syncMasterData(mindex + 1)
+        });
+    }
+}
+
 
     getEmpSalaryList(){
         
@@ -229,11 +279,12 @@ handlePageEvent(pagename){
                 Employee Specific Setting
             </Typography> 
           </Stack>
-          {this.state.isOnline &&
+          {/* {this.state.isOnline && */}
            <div style={{boxShadow: " 0 4px 8px 0 rgba(0,0,0,0.2)", transition: "0.3s", height: '80%',background: 'white'}}>
            <div className="tabcontent" style={{ height: '100%', width: '100%', background: 'white',  }}>
              <EmployeeSettingForm />
-          </div></div> }
+          </div></div> 
+          {/* } */}
         </Container> : ''
         }  </Grid></Grid> 
         

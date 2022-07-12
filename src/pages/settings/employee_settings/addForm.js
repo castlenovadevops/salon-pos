@@ -61,7 +61,8 @@ export default class EmployeeSettingForm extends React.Component {
             perAlert_Open: false,
             alert_msg:'',
             employeelist:[],
-            searched:''
+            searched:'',
+            isOnline: false
         };
         this.handlechange = this.handlechange.bind(this);
         this.handleChangeEmp = this.handleChangeEmp.bind(this);
@@ -79,13 +80,30 @@ export default class EmployeeSettingForm extends React.Component {
         //         })
         //     }
         // }, 100);
+        var condition = navigator.onLine ? 'online' : 'offline';
+        this.setState({isOnline: (condition=="online") ? true: false})
+
         var userdetail = window.localStorage.getItem('employeedetail');
         if(userdetail !== undefined && userdetail !== null){
             this.setState({userdetail:JSON.parse(userdetail)})
         }
-        this.getEmployeeList();
+        // this.getEmployeeList();
         this.getDefault_DiscountDivision();
         this.getDefault_commission();
+        if(!this.state.isOnline) {
+      
+            const dataManager = new DataManager()
+            dataManager.getData("select * from users").then(response =>{
+                if (response instanceof Array) {
+                    this.setState({employeelist: response}, function(){
+                        console.log(this.state.employeelist)
+                    })
+                }
+            })
+        }
+        else {
+            this.getEmployeeList();
+        }
     }
     // static getDerivedStateFromProps(nextProps, prevState) {
     //     // setTimeout(() => {    
@@ -124,33 +142,64 @@ export default class EmployeeSettingForm extends React.Component {
     getDefault_DiscountDivision(){
         var businessdetail = window.localStorage.getItem('businessdetail');
         if(businessdetail !== undefined && businessdetail !== null){
-            axios.get(config.root+`/settings/default_discount/list/`+JSON.parse(businessdetail).id).then(res=>{ 
-                var status = res.data.status;
-                var data = res.data.data;
-                if(status === 200){
-                    if(data.length > 0){
-                        this.setState({owner_percentage : data[0].owner_percentage, employee_percentage : data[0].employee_percentage});
+            if(!this.state.isOnline) {
+                const dataManager = new DataManager()
+                dataManager.getData("select * from default_discount_division where businessId="+JSON.parse(businessdetail).id).then(response =>{
+                    if (response instanceof Array) {
+                        if(response.length > 0){
+                            this.setState({owner_percentage : response[0].owner_percentage, employee_percentage : response[0].employee_percentage});
+                        }
+
                     }
-                }
-                
-            })
+                })
+
+            }
+            else{
+                axios.get(config.root+`/settings/default_discount/list/`+JSON.parse(businessdetail).id).then(res=>{ 
+                    var status = res.data.status;
+                    var data = res.data.data;
+                    if(status === 200){
+                        if(data.length > 0){
+                            this.setState({owner_percentage : data[0].owner_percentage, employee_percentage : data[0].employee_percentage});
+                        }
+                    }
+                    
+                })
+            }
+            
         }
     }
     getDefault_commission(){
         var businessdetail = window.localStorage.getItem('businessdetail');
         if(businessdetail !== undefined && businessdetail !== null){
-            axios.get(config.root+`/settings/default_commission/list/`+JSON.parse(businessdetail).id).then(res=>{ 
-                var status = res.data.status;
-                var data = res.data.data;
-                if(status === 200){
-                    if(data.length > 0){
-                        this.setState({owner_percentage : data[0].owner_percentage,employee_percentage : data[0].emp_percentage,cash_percentage : data[0].cash_percentage, check_percentage : data[0].check_percentage}, function(){
-                            this.handleValidation();
-                        });
+            if(!this.state.isOnline) {
+                const dataManager = new DataManager()
+                dataManager.getData("select * from default_commission where businessId="+JSON.parse(businessdetail).id).then(response =>{
+                    if (response instanceof Array) {
+                        if(response.length > 0){
+                            this.setState({owner_percentage : response[0].owner_percentage,employee_percentage : response[0].emp_percentage,cash_percentage : response[0].cash_percentage, check_percentage : response[0].check_percentage}, function(){
+                                this.handleValidation();
+                            });
+                        }
                     }
-                }
-                
-            })
+                });
+
+            }else{
+                axios.get(config.root+`/settings/default_commission/list/`+JSON.parse(businessdetail).id).then(res=>{ 
+                    var status = res.data.status;
+                    var data = res.data.data;
+                    if(status === 200){
+                        if(data.length > 0){
+                            this.setState({owner_percentage : data[0].owner_percentage,employee_percentage : data[0].emp_percentage,cash_percentage : data[0].cash_percentage, check_percentage : data[0].check_percentage}, function(){
+                                this.handleValidation();
+                            });
+                        }
+                    }
+                    
+                })
+
+            }
+            
         }
     }
 
@@ -251,34 +300,73 @@ export default class EmployeeSettingForm extends React.Component {
     getEmp(id){
         var businessdetail = window.localStorage.getItem('businessdetail');
         if(businessdetail !== undefined && businessdetail !== null){
-            axios.get(config.root+`/settings/employee_salary/detail/`+id+`/`+JSON.parse(businessdetail).id).then(res=>{ 
-                var status = res.data.status;
-                var data = res.data.data;
-                if(status === 200){
-                    if(data.length >0){
-                        this.setState({isEdit : true,isDisable: false,employeeId: id}, function(){
-                            this.setState({owner_percentage: data[0].owner_percentage,
-                                employee_percentage:data[0].employee_percentage,
-                                cash_percentage:data[0].cash_percentage,
-                                check_percentage:data[0].check_percentage,
-                                minimum_salary:data[0].minimum_salary
-                            });
-                        })
-                    }else{
-                        this.setState({isEdit : false,isDisable: true,employeeId: id}, function(){
-                            this.setState({
-                                //owner_percentage: '',
-                                // employee_percentage:'',
-                                // cash_percentage:'',
-                                // check_percentage:'',
-                                minimum_salary:''
-                            });
-                            this.getDefault_commission();
-                        })
+            if(!this.state.isOnline) {
+                console.log("offline")
+                const dataManager = new DataManager()
+                dataManager.getData("select * from employee_salary where employeeId="+id+" and businessId="+JSON.parse(businessdetail).id).then(response =>{
+                    if (response instanceof Array) {
+                        // this.setState({employeelist: response}, function(){
+                        //     console.log(this.state.employeelist)
+                        // })
+                        console.log(response)
+                        if(response.length >0){
+                            this.setState({isEdit : true,isDisable: false,employeeId: id}, function(){
+                                this.setState({owner_percentage: response[0].owner_percentage,
+                                    employee_percentage:response[0].employee_percentage,
+                                    cash_percentage:response[0].cash_percentage,
+                                    check_percentage:response[0].check_percentage,
+                                    minimum_salary:response[0].minimum_salary
+                                });
+                            })
+                        }else{
+                            this.setState({isEdit : false,isDisable: true,employeeId: id}, function(){
+                                this.setState({
+                                    //owner_percentage: '',
+                                    // employee_percentage:'',
+                                    // cash_percentage:'',
+                                    // check_percentage:'',
+                                    minimum_salary:''
+                                });
+                                this.getDefault_commission();
+                            })
+                        }
                     }
-                }
+                })
+
+            }
+            else{
+                console.log("online")
+                axios.get(config.root+`/settings/employee_salary/detail/`+id+`/`+JSON.parse(businessdetail).id).then(res=>{ 
+                    var status = res.data.status;
+                    var data = res.data.data;
+                    if(status === 200){
+                        if(data.length >0){
+                            this.setState({isEdit : true,isDisable: false,employeeId: id}, function(){
+                                this.setState({owner_percentage: data[0].owner_percentage,
+                                    employee_percentage:data[0].employee_percentage,
+                                    cash_percentage:data[0].cash_percentage,
+                                    check_percentage:data[0].check_percentage,
+                                    minimum_salary:data[0].minimum_salary
+                                });
+                            })
+                        }else{
+                            this.setState({isEdit : false,isDisable: true,employeeId: id}, function(){
+                                this.setState({
+                                    //owner_percentage: '',
+                                    // employee_percentage:'',
+                                    // cash_percentage:'',
+                                    // check_percentage:'',
+                                    minimum_salary:''
+                                });
+                                this.getDefault_commission();
+                            })
+                        }
+                    }
+                
+                })
+
+            }
             
-            })
         }
         
     }
@@ -312,6 +400,14 @@ export default class EmployeeSettingForm extends React.Component {
         this.setState({searched: ""})
         this.requestSearch("");
     }
+    checkOnline(){
+        var condition = navigator.onLine ? 'online' : 'offline';
+        this.setState({isOnline: (condition=="online") ? true: false},function(){
+            if(this.state.isOnline){
+                this.saveEmployeeSalary();
+            }
+        })
+    }
     saveEmployeeSalary(){
         if(this.handleValidation()){
             var input =  Object.assign({},this.state);
@@ -335,6 +431,7 @@ export default class EmployeeSettingForm extends React.Component {
             delete input["alert_msg"];
             delete input["employeelist"];
             delete input["searched"];
+            delete input["isOnline"];
             input["updated_at"] = new Date().toISOString();
             input["created_at"] = new Date().toISOString();
             var businessdetail = window.localStorage.getItem('businessdetail');
@@ -499,8 +596,9 @@ export default class EmployeeSettingForm extends React.Component {
 
                                 
                                 <Stack direction="row" spacing={2} alignItems="center" justifyContent="center">
-                                        <ButtonContent size="large" variant="contained" onClick={()=>this.saveEmployeeSalary()} disabled={this.state.isDisable} label={this.state.isEdit ? 'Update' : 'Save' } />
-                                        
+                                    <div style={{ display : this.state.isOnline ? 'block':'none'}}>
+                                        <ButtonContent size="large" variant="contained" onClick={()=>this.checkOnline()} disabled={this.state.isDisable} label={this.state.isEdit ? 'Update' : 'Save' } />
+                                    </div>
                                 </Stack>
                             </Stack>
                         </form>

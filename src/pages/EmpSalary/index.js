@@ -471,14 +471,14 @@ export default class EmployeeReport extends React.Component {
                      </Stack>
 
                    
-                    {this.state.isOnline &&
+                    {/* {this.state.isOnline && */}
                     <div style={{height: '100%'}}>
                      <Stack spacing={3}>
                         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3}>
                             <LocalizationProvider dateAdapter={AdapterDateFns}>
                                 <DesktopDatePicker
                                     label="From"
-                                    inputFormat="dd/MM/yyyy"
+                                    inputFormat="MM/dd/yyyy"
                                     
                                     maxDate={new Date()}
                                     value={this.state.from_date}
@@ -489,7 +489,7 @@ export default class EmployeeReport extends React.Component {
                             <LocalizationProvider dateAdapter={AdapterDateFns}>
                                 <DesktopDatePicker
                                     label="To"
-                                    inputFormat="dd/MM/yyyy"
+                                    inputFormat="MM/dd/yyyy"
                                     minDate={this.state.from_date}
                                     maxDate={new Date()}
                                     value={this.state.to_date}
@@ -515,7 +515,7 @@ export default class EmployeeReport extends React.Component {
                         columns={this.state.columns} />
                     </div></div> 
                     </div>
-                    }
+                    {/* } */}
 
 
                 </Container> 

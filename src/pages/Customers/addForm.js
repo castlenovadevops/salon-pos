@@ -12,6 +12,7 @@ import ButtonContent from '../../components/formComponents/Button';
 import TextFieldContent from '../../components/formComponents/TextField';
 import LoaderContent from '../../components/formComponents/LoaderDialog';
 import PhoneNumberContent from '../../components/formComponents/PhoneNumber';
+import AutoCompleteContent from '../../components/formComponents/AutoComplete';
 import config from '../../config/config';
 import TicketController from '../../controller/TicketController';
 
@@ -40,7 +41,12 @@ export default class CustomerForm extends React.Component {
         customerSelected:{},
         isEdit: false,
         isLoading: false,
-        businessdetail:{}
+        businessdetail:{},
+        address1:'',
+        address2:'',
+        city:'',
+        state:null,
+        zipcode:''
     };
     this.handlechange = this.handlechange.bind(this);
     this.handleclose = this.handleclose.bind(this);
@@ -88,6 +94,16 @@ export default class CustomerForm extends React.Component {
         if((e.target.value.match( "^.{"+config.inputprice+","+config.inputprice+"}$")===null)) {
             this.setState({ [e.target.name]: e.target.value });
             this.handleValidation();
+        }
+      }
+      else if(e.target.name === "zipcode"){
+        //  console.log("zipcode",e.target.value.match( "^.{6,6}$"))
+        const numberPattern = new RegExp(/^[0-9\b]+$/);
+        if(e.target.value.toString().match( "^.{6,6}$")===null && numberPattern.test(e.target.value) && e.keyCode !== 69) { 
+          let statevbl = this.state
+          statevbl[e.target.name] = e.target.value;
+          this.setState(statevbl);
+          this.handleValidation();
         }
       }
       else{
@@ -176,6 +192,22 @@ export default class CustomerForm extends React.Component {
         formIsValid = false;
         this.setState({ isDisable: true })
       }
+      else if (!fields.address1 && fields.address1 === '') {
+          formIsValid = false;
+          this.setState({ isDisable: true })
+        }
+        else if (!fields.city) {
+            formIsValid = false;
+            this.setState({ isDisable: true })
+        }
+        else if (!fields.state) {
+            formIsValid = false;
+            this.setState({ isDisable: true })
+        }
+        else if (!fields.zipcode) {
+            formIsValid = false;
+            this.setState({ isDisable: true })
+        }
       else{
         this.setState({ isDisable: false })
       }
@@ -299,6 +331,25 @@ export default class CustomerForm extends React.Component {
               onChange={(e) => this.handlechangePhone(e)}
             />
           </Stack>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            <TextFieldContent fullWidth label="Address 1" required name="address1" value={this.state.address1} onChange={this.handlechange}/>
+            <TextFieldContent fullWidth label="Address 2" name="address2" value={this.state.address2} onChange={this.handlechange}  /> 
+          </Stack> 
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            <TextFieldContent fullWidth label="City" required name="city" value={this.state.city} onChange={this.handlechange}/>
+            {/* <TextFieldContent fullWidth label="State" required  name="state" value={this.state.state} onChange={this.handlechange}  />  */}
+            <AutoCompleteContent 
+              fullWidth 
+              label="State"
+              required  
+              name="state" 
+              value={this.state.state} 
+              onChange={(event, newValue) => {
+                this.setState({state: newValue.value})
+              }}
+              /> 
+            <TextFieldContent type="number" fullWidth label="Zipcode" required  name="zipcode" value={this.state.zipcode} onChange={this.handlechange}  /> 
+          </Stack> 
           {/* <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
             <TextFieldContent
               label="Total Spent"
@@ -330,7 +381,7 @@ export default class CustomerForm extends React.Component {
               <DesktopDatePicker
                 name="dob"
                 label="DOB"
-                inputFormat="dd/MM/yyyy"
+                inputFormat="MM/dd/yyyy"
                 maxDate={new Date()}
                 value={this.state.dob}
                 onChange={this.handleChangeDate}

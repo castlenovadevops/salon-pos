@@ -28,12 +28,16 @@ export default class CommissionForm extends React.Component {
             perAlert_Open: false,
             alert_msg:'',
             isLoading: false,
+            isOnline: false
         };
         this.handlechange = this.handlechange.bind(this);
         this.handleclose = this.handleclose.bind(this);
         this.handleCloseAlert = this.handleCloseAlert.bind(this);
     }
     componentDidMount(){
+        var condition = navigator.onLine ? 'online' : 'offline';
+        this.setState({isOnline: (condition=="online") ? true: false});
+
         setTimeout(() => { 
             if(this.props.discountToEdit !== undefined){
                 this.setState({discountSelected: this.props.discountToEdit,isEdit : true,isDisable:false}, function(){
@@ -122,6 +126,15 @@ export default class CommissionForm extends React.Component {
         }
         return formIsValid;
     }
+    checkOnline(){
+        var condition = navigator.onLine ? 'online' : 'offline';
+        this.setState({isOnline: (condition=="online") ? true: false},function(){
+            if(this.state.isOnline){
+                this.saveDiscountDivision();
+            }
+        })
+        
+    }
     saveDiscountDivision(){
         if(this.handleValidation()){
             this.setState({isLoading: true});
@@ -142,6 +155,7 @@ export default class CommissionForm extends React.Component {
               delete input["perAlert_Open"];
               delete input["alert_msg"];
               delete input["isLoading"];
+              delete input["isOnline"];
             //   input["created_at"] = new Date();
             //   input["updated_at"] = new Date();
               
@@ -168,7 +182,7 @@ export default class CommissionForm extends React.Component {
                             this.ticketController.saveData({table_name:'default_discount_division', data: input}).then(r=>{
 
                                 this.props.afterSubmit(msg);
-                                this.setState({isLoading: false});
+                                this.setState({isLoading: false,isOnline: true});
                             });
                         });
                       }
@@ -234,7 +248,10 @@ export default class CommissionForm extends React.Component {
                             </Stack>
                         </Stack>
                         <Stack direction="row" spacing={2} alignItems="center" justifyContent="center" style={{marginTop: 10}}>
-                            <ButtonContent  size="large" variant="contained" disabled={this.state.isDisable} label={this.state.isEdit ? 'Update' : 'Save' } onClick={()=>this.saveDiscountDivision()}/>
+                            <div style={{display : this.state.isOnline ? 'block':'none'}}>
+                            <ButtonContent  size="large" variant="contained" disabled={this.state.isDisable} label={this.state.isEdit ? 'Update' : 'Save' } onClick={()=>this.checkOnline()}/>
+                            </div>
+                            
                             {/* <ButtonContent  size="large" variant="outlined" label="Cancel" onClick={()=>this.handleclose()}/> */}
                         </Stack>
                     </form>

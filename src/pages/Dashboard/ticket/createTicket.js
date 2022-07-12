@@ -59,6 +59,7 @@ export default class CreateTicket extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
+            isPaidOnOpen:false,
             open: false,
             employeedetail:{},
             ticketCode:'',
@@ -290,6 +291,12 @@ export default class CreateTicket extends React.Component {
 
             this.setState({ticketSelected: ticket,isEdit : true}, function(){ 
                 console.log(this.state.ticketSelected);
+                if(this.state.ticketSelected.paid_status === 'paid'){
+                    this.setState({isPaidOnOpen: true})
+                }
+                else{
+                    this.setState({isPaidOnOpen: false})
+                }
                 if(this.state.ticketSelected.discount_totalamt !== 0 || this.state.ticketSelected.discount_totalamt !== null){
                     disInput = {
                         discount_id: this.state.ticketSelected.discount_id,
@@ -743,13 +750,21 @@ export default class CreateTicket extends React.Component {
             obj["discount"].discount_value = servicein.discount_value
             obj["discount"].discount_name = servicein.discount_name
             obj["discount"].total_discount_amount = servicein.total_discount_amount
-            if(servicein.uniquId === undefined || servicein.uniquId === ''){
+            console.log("$$$$$$$$$$$$$$$$$$")
+            console.log(servicein.uniquId, servicein.tax_type)
+            if((servicein.uniquId === undefined || servicein.uniquId === '')  && servicein.tax_type !=='default'){
                 sql = "SELECT st.*,t.tax_name,t.tax_type,t.tax_value from services_tax as st join taxes as t on t.sync_id==st.tax_id and t.status='active' where st.service_id='"+servicein.service_id+"' and st.status='active'"
+            }
+            else if((servicein.uniquId === undefined || servicein.uniquId === '') && servicein.tax_type ==='default'){
+                sql = "SELECT t.sync_id as tax_id,t.tax_name,t.tax_type,t.tax_value from taxes as t where t.isDefault=1 and t.status='active'"
             }
             else if(servicein.uniquId !== undefined){
                 sql = "SELECT st.*,t.tax_name,t.tax_type,t.tax_value from ticketservice_taxes as st join taxes as t on t.sync_id==st.tax_id and t.status='active' where st.serviceref_id='"+servicein.uniquId+"' and st.ticketref_id='"+servicein.ticketref_id+"' and st.isActive=1"
             } 
         } 
+        else if(servicein.tax_type ==='default'){
+            sql = "SELECT t.sync_id as tax_id, t.tax_name,t.tax_type,t.tax_value from taxes as t where t.isDefault=1 and t.status='active'"
+        }
         console.log("TAX SQL::::::")
         console.log(sql);
         this.state.dataManager.getData(sql).then(response =>{  
@@ -3637,9 +3652,10 @@ renderSelectedServices(isDisabled) {
                                 </Grid>
                                 
                                 <Grid item xs={4} container justify="flex-start"  style={{padding:'10px 0 10px 10px', display:'flex', flexDirection:'row'}}> 
-                                    <Typography id="modal-modal-title" variant="subtitle2" align="center"> 
-                                        {this.getEmployeeName(ser.employee_id)} 
-                                        </Typography>  
+                                <Typography id="modal-modal-title" variant="div" align="center" style={{display:'flex', width:'100%', flex:'1', justifyContent:'space-between'}}> 
+                                       <span style={{fontSize:'14px'}}> {this.getEmployeeName(ser.employee_id)}  </span>
+                                        <span style={{fontSize:'14px'}}>{ser.servicedetail.producttype==='product' ? '(R)' :''}</span>
+                                        </Typography>   
                                         {ser.discount.discount_id !== undefined && ser.discount.discount_id !== 0 &&  
                                             <Grid item xs={12} style={{ padding:'5px 0'}}>
                                                     <Typography id="modal-modal-title" variant="subtitle2" align="left" >{ser.discount.discount_name} ({ser.discount.discount_type === 'percentage'? '%' : '$' }{ser.discount.discount_value}) </Typography>
@@ -3848,7 +3864,7 @@ renderServicesList(isDisabled) {
                                     'white-space': 'pre-wrap',
                                     'text-overflow': 'ellipsis',fontSize:'14px',
                                     'height': '80px'}}  id="modal-modal-title" variant="subtitle2" align="center" >
-                                        {service.name}
+                                        {service.name}{service.producttype==='product' ? '(R)' :''}
                                     </Typography>
                             </div>
                         </Grid> 

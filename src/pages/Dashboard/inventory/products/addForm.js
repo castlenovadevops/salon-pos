@@ -1,8 +1,7 @@
 import React from 'react';
 // material
 import { Stack, FormControl, Chip, Checkbox, FormLabel, RadioGroup, FormControlLabel, Radio, InputLabel, Select, Input, MenuItem, Box, FormGroup, InputAdornment, Grid, Typography } from '@mui/material';
-// import { Link as RouterLink } from 'react-router-dom';
-import axios from 'axios';
+// import { Link as RouterLink } from 'react-router-dom'; 
 // components
 import TextFieldContent from '../../../../components/formComponents/TextField';
 // import TextAreaContent from '../../../../components/formComponents/TextArea';
@@ -84,7 +83,8 @@ export default class ProductForm extends React.Component {
             selected: [],
             selectedcategory: [],
             isLoading: false,
-            isTax_available: false
+            isTax_available: false,
+            isDefaultTax_available: false,
         };
         this.handlechange = this.handlechange.bind(this);
         this.handleradio = this.handleradio.bind(this);
@@ -119,10 +119,13 @@ export default class ProductForm extends React.Component {
                 })
             }
         }, 100);
+        this.getAllTax();
+        this.getDefaultTax();
         var businessdetail = window.localStorage.getItem('businessdetail');
         if (businessdetail !== undefined && businessdetail !== null) {
             this.setState({ businessdetail: JSON.parse(businessdetail) }, function () {
-                this.getAllTax();
+               
+                
                 this.getCategoryList()
             })
         }
@@ -162,7 +165,9 @@ export default class ProductForm extends React.Component {
     handlechange(e) {
         if (e.target.name == "price" || e.target.name == "cost") {
             if(e.target.value.length<8) {
-                console.log("PRICE::", e.target.value.match("^.{" + config.inputprice + "," + config.inputprice + "}$"), e.target.value.length)
+
+          const numberPattern = new RegExp(/^[0-9\b]+$/); 
+                console.log("PRICE::", e.keyCode)
                 if ((e.target.value.match("^.{" + config.inputprice + "," + config.inputprice + "}$") === null)) {
                     let statevbl = this.state
                     statevbl[e.target.name] = e.target.value;
@@ -170,6 +175,9 @@ export default class ProductForm extends React.Component {
                         console.log("1st ")
                     });
                     this.handleValidation();
+                }
+                else{
+
                 }
             }
             
@@ -272,6 +280,12 @@ export default class ProductForm extends React.Component {
 
         this.dataManager.getData(`select sync_id as id, tax_name, tax_type, tax_value, isDefault, created_at, updated_at, status from taxes where isDefault=1 and  status='active'`).then(res => {
             this.setState({ default_taxDetail: res }, () => {
+                console.log("default tax",this.state.default_taxDetail);
+                if(this.state.default_taxDetail.length > 0){
+                    this.setState({isDefaultTax_available: true});
+                }else{
+                    this.setState({isDefaultTax_available: false});
+                }
             });
         })
         // axios.get(config.root + `/tax/default/taxlist/` + this.state.businessdetail.id).then(res => {
@@ -351,6 +365,7 @@ export default class ProductForm extends React.Component {
                 delete input["isLoading"];
                 delete input["isTax_available"];
                 delete input["category_name"];
+                delete input["isDefaultTax_available"];
                 var userdetail = window.localStorage.getItem('employeedetail');
                 if (userdetail !== undefined && userdetail !== null) {
                     input["created_by"] = JSON.parse(userdetail).id;
@@ -631,15 +646,16 @@ export default class ProductForm extends React.Component {
 
                                     </Select>
                                 </FormControl>
-                                <TextFieldContent
+                                {this.state.pricetype !== 'variable'&& <> <TextFieldContent
                                     fullWidth
-                                    required={this.state.pricetype !== 'variable'}
+                                    required
                                     label="Service/Product Price"
                                     name="price"
                                     id="price"
                                     // type="number"
                                     value={this.state.price}
                                     onChange={this.handlechange}
+
                                     InputProps={{
                                         startAdornment: <InputAdornment position="start">$</InputAdornment>,
                                         // inputComponent: NumberFormatCustom
@@ -657,7 +673,36 @@ export default class ProductForm extends React.Component {
                                         startAdornment: <InputAdornment position="start">$</InputAdornment>,
                                         // inputComponent: NumberFormatCustom
                                     }}
+                                /></>}
+                                 {this.state.pricetype === 'variable'&& <> <TextFieldContent
+                                    fullWidth 
+                                    label="Service/Product Price"
+                                    name="price"
+                                    id="price"
+                                    // type="number"
+                                    style={{visibility:'hidden'}}
+                                    value={this.state.price}
+                                    onChange={this.handlechange}
+                                    InputProps={{
+                                        startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                                        // inputComponent: NumberFormatCustom
+                                    }}
                                 />
+                                <TextFieldContent
+                                    fullWidth
+                                    label="Service/Product Cost"
+                                    name="cost"
+                                    id="cost"
+                                    style={{visibility:'hidden'}}
+                                    // type="number"
+                                    value={this.state.cost}
+                                    onChange={this.handlechange}
+                                    InputProps={{
+                                        startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                                        // inputComponent: NumberFormatCustom
+                                    }}
+                                /></>}
+
                             </Stack>
                             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                                 <TextFieldContent
@@ -686,9 +731,10 @@ export default class ProductForm extends React.Component {
                                     <FormLabel component="legend" style={{ marginTop: '10px', display: !this.state.isTax_available ? 'block' : 'none' }}>No Tax Found!</FormLabel>
                                 </FormControl>
                             </Stack>
-                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} style={{ display: this.state.isDefault ? 'block' : 'none', }}>
+                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} style={{display: (this.state.isDefault && this.state.isTax_available)  ? 'block':'none'}}>
                                 <Box sx={{ display: 'flex', alignItems: 'flex-end', }}>
-                                    {/* <FormControl sx={{ m: 3 }} component="fieldset" variant="standard" style={{ marginTop: -40 }}> */}
+                                    {/* <FormControl sx={{ m: 3 }} component="fieldset" variant="standard" > */}
+                                    <div style={{display: this.state.isDefaultTax_available ? 'block': 'none'}}>    
                                         {this.state.default_taxDetail.map((v, i) => {
                                             return <><Checkbox 
                                             value={v.id}
@@ -710,9 +756,11 @@ export default class ProductForm extends React.Component {
 
                                         })}
                                     {/* </FormControl> */}
+                                    </div>
+                                    <FormLabel component="legend" style={{marginTop:'10px',display: !this.state.isDefaultTax_available  ? 'block': 'none'}}>No Default Tax Found!</FormLabel>
                                 </Box>
                             </Stack>
-                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} style={{ display: this.state.isCustom ? 'block' : 'none' }}>
+                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} style={{display: (this.state.isCustom && this.state.isTax_available)  ? 'block':'none'}}>
                                 <Box sx={{ display: 'flex', alignItems: 'flex-start' , flexDirection:'column'}}>
                                  
 

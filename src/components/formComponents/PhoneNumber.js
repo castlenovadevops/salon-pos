@@ -54,6 +54,7 @@ export default class PhoneNumberContent extends React.Component {
               onBlur={this.validationCheck}
               required={this.props.required}
               disabled={this.props.disabled}
+              disableDropdown='true'
               sx={{
                 svg:{
                   height:"20px"

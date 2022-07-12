@@ -8,6 +8,7 @@ import ButtonContent from '../../components/formComponents/Button';
 import TextFieldContent from '../../components/formComponents/TextField';
 import LoaderContent from '../../components/formComponents/LoaderDialog';
 import PhoneNumberContent from '../../components/formComponents/PhoneNumber';
+import AutoCompleteContent from '../../components/formComponents/AutoComplete';
 import config from '../../config/config';
 // ----------------------------------------------------------------------
 export default class EmployeeForm extends React.Component {
@@ -41,7 +42,7 @@ export default class EmployeeForm extends React.Component {
         address1:'',
         address2:'',
         city:'',
-        state:'',
+        state:null,
         zipcode:''
     };
     this.handlechange = this.handlechange.bind(this);
@@ -98,8 +99,8 @@ export default class EmployeeForm extends React.Component {
 
         if(e.target.name === "zipcode"){
           //  console.log("zipcode",e.target.value.match( "^.{6,6}$"))
-          if(e.target.value.toString().match( "^.{6,6}$")===null) {
-          
+          const numberPattern = new RegExp(/^[0-9\b]+$/);
+          if(e.target.value.toString().match( "^.{6,6}$")===null && numberPattern.test(e.target.value) && e.keyCode !== 69) { 
             let statevbl = this.state
             statevbl[e.target.name] = e.target.value;
             this.setState(statevbl);
@@ -137,9 +138,10 @@ export default class EmployeeForm extends React.Component {
         }
         this.handleValidation();
         
-      }else{
-        this.setState({passcode: ''});
-      }
+      } 
+      // else{
+      //   this.setState({passcode: ''});
+      // }
     }
 
     handlechangePhone(e){
@@ -428,7 +430,18 @@ export default class EmployeeForm extends React.Component {
           </Stack> 
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
             <TextFieldContent fullWidth label="City" required name="city" value={this.state.city} onChange={this.handlechange}/>
-            <TextFieldContent fullWidth label="State" required  name="state" value={this.state.state} onChange={this.handlechange}  /> 
+            {/* <TextFieldContent fullWidth label="State" required  name="state" value={this.state.state} onChange={this.handlechange}  /> 
+             */}
+             <AutoCompleteContent 
+              fullWidth 
+              label="State"
+              required  
+              name="state" 
+              value={this.state.state} 
+              onChange={(event, newValue) => {
+                this.setState({state: newValue.value})
+              }}
+              /> 
             <TextFieldContent type="number" fullWidth label="Zipcode" required  name="zipcode" value={this.state.zipcode} onChange={this.handlechange}  /> 
           </Stack> 
 

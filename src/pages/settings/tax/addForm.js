@@ -329,7 +329,7 @@ export default class TaxForm extends React.Component {
                                         control={
                                             <Checkbox value={this.state.isDefault} name="isDefault" onChange={(e) => { this.handleCheckbox(e); }} />
                                         }
-                                        label="isDefault"
+                                        label="Default"
                                     />
                                 </FormGroup>
 

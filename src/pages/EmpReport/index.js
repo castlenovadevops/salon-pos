@@ -1783,7 +1783,7 @@ export default class EmployeeReport extends React.Component {
                                                 <LocalizationProvider dateAdapter={AdapterDateFns} fullWidth >
                                                     <DesktopDatePicker
                                                         label="From"
-                                                        inputFormat="dd/MM/yyyy"
+                                                        inputFormat="MM/dd/yyyy"
                                                         maxDate={new Date()}
                                                         style={{marginRight:'10px'}}
                                                         value={this.state.from_date}
@@ -1797,7 +1797,7 @@ export default class EmployeeReport extends React.Component {
                                                             style={{marginLeft:'10px'}}>
                                                         <DesktopDatePicker
                                                             label="To"
-                                                            inputFormat="dd/MM/yyyy"
+                                                            inputFormat="MM/dd/yyyy"
                                                             minDate={this.state.from_date}
                                                             maxDate={new Date()}
                                                             value={this.state.to_date} 

@@ -155,7 +155,7 @@ export default class TicketController {
                             }
 
                             this.saveData({ table_name: "employee_commission_detail", data: disemp_input }).then(res => {
-                                this.saveTicketService(0, ticketid, ticketDetail, stateinput.services_taken, userdetail);
+                                this.saveTicketService(0, ticketid, ticketDetail, stateinput.services_taken, userdetail,stateinput);
                             })
 
                         }
@@ -198,7 +198,7 @@ export default class TicketController {
                     }
                     else {
                         //console.log("")
-                        this.saveTicketService(0, ticketid, ticketDetail, stateinput.services_taken, userdetail);
+                        this.saveTicketService(0, ticketid, ticketDetail, stateinput.services_taken, userdetail,stateinput);
                     }
                 })
 
@@ -235,68 +235,73 @@ export default class TicketController {
             })
         }
         else {
-            this.saveTicketService(0, ticketid, ticketDetail, stateinput.services_taken, userdetail);
+            this.saveTicketService(0, ticketid, ticketDetail, stateinput.services_taken, userdetail,stateinput);
         }
     }
 
-    async saveTicketService(idx, ticketid, ticketDetail, services_taken, userdetail) {
+    async saveTicketService(idx, ticketid, ticketDetail, services_taken, userdetail,stateinput) {
 
         window.api.invoke('evantcall', 'saveTicketService save called ' + idx).then(r => {
 
         })
         console.log("SAVE TICKET SERTIC#E: idx ", idx, services_taken)
-        if (idx < services_taken.length) {
-            console.log("IF SAVE TICKET SERTIC#E: idx ", idx )
-            var obj = services_taken[idx];
-            obj["ticket_id"] = ticketid;
-            obj["service_id"] = obj.servicedetail.service_id
-            obj["ticketref_id"] = ticketDetail.sync_id
-            window.api.getSyncUniqueId().then(syncres => {
-                var syncid = syncres.syncid;
-                var service_input = {
-                    // ticket_id: ticketid,
-                    service_id: obj.servicedetail.service_id,
-                    employee_id: obj.employee_id,
-                    service_cost: obj.subtotal,
-                    service_quantity: obj.qty,
-                    istax_selected: 0,
-                    perunit_cost: obj.perunit_cost,
-                    discount_id: obj.discount.discount_id !== undefined ? obj.discount.discount_id : 0,
-                    discount_type: obj.discount.discount_type !== undefined ? obj.discount.discount_type : 0,
-                    discount_value: obj.discount.discount_value !== undefined ? obj.discount.discount_value : 0,
-                    total_discount_amount: obj.discountamount,
-                    tips_amount: obj.tips_amount !== undefined ? obj.tips_amount : 0,
-                    isActive: 1,
-                    isSpecialRequest: obj.isSpecialRequest !== undefined ? obj.isSpecialRequest : 0,
-                    created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
-                    created_by: userdetail.id,
-                    process: obj.process !== undefined ? obj.process : '',
-                    previousticketid: obj.previousticketid !== undefined ? obj.previousticketid : '',
-                    ticketref_id: ticketDetail.sync_id,
-                    sync_id: syncid,
-                    sync_status: 0,
-                    sort_number: idx + 1,
-                }
-                this.saveData({ table_name: 'ticket_services', data: service_input }).then(sres => {
-                    console.log("table_name: 'ticket_services'", sres)
-                    if (sres.length > 0) {
-                        var ticketservice_id = sres[0].id;
-                        obj["id"] = ticketservice_id;
-                        obj["sync_id"] = syncid;
-                        this.saveTaxes(ticketid, ticketservice_id, obj, 0, idx, ticketDetail, services_taken, userdetail)
+        if(!stateinput.isPaidOnOpen){
+            if (idx < services_taken.length) {
+                console.log("IF SAVE TICKET SERTIC#E: idx ", idx )
+                var obj = services_taken[idx];
+                obj["ticket_id"] = ticketid;
+                obj["service_id"] = obj.servicedetail.service_id
+                obj["ticketref_id"] = ticketDetail.sync_id
+                window.api.getSyncUniqueId().then(syncres => {
+                    var syncid = syncres.syncid;
+                    var service_input = {
+                        // ticket_id: ticketid,
+                        service_id: obj.servicedetail.service_id,
+                        employee_id: obj.employee_id,
+                        service_cost: obj.subtotal,
+                        service_quantity: obj.qty,
+                        istax_selected: 0,
+                        perunit_cost: obj.perunit_cost,
+                        discount_id: obj.discount.discount_id !== undefined ? obj.discount.discount_id : 0,
+                        discount_type: obj.discount.discount_type !== undefined ? obj.discount.discount_type : 0,
+                        discount_value: obj.discount.discount_value !== undefined ? obj.discount.discount_value : 0,
+                        total_discount_amount: obj.discountamount,
+                        tips_amount: obj.tips_amount !== undefined ? obj.tips_amount : 0,
+                        isActive: 1,
+                        isSpecialRequest: obj.isSpecialRequest !== undefined ? obj.isSpecialRequest : 0,
+                        created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
+                        created_by: userdetail.id,
+                        process: obj.process !== undefined ? obj.process : '',
+                        previousticketid: obj.previousticketid !== undefined ? obj.previousticketid : '',
+                        ticketref_id: ticketDetail.sync_id,
+                        sync_id: syncid,
+                        sync_status: 0,
+                        sort_number: idx + 1,
                     }
+                    this.saveData({ table_name: 'ticket_services', data: service_input }).then(sres => {
+                        console.log("table_name: 'ticket_services'", sres)
+                        if (sres.length > 0) {
+                            var ticketservice_id = sres[0].id;
+                            obj["id"] = ticketservice_id;
+                            obj["sync_id"] = syncid;
+                            this.saveTaxes(ticketid, ticketservice_id, obj, 0, idx, ticketDetail, services_taken, userdetail,stateinput)
+                        }
+                    })
+
                 })
+            }
+            else {
 
-            })
+            }
         }
-        else {
-
+        else{
+            
         }
 
     }
 
 
-    saveTaxes(ticketid, tsid, selectedservice, tidx, idx, ticketDetail, services_taken, userdetail) {
+    saveTaxes(ticketid, tsid, selectedservice, tidx, idx, ticketDetail, services_taken, userdetail,stateinput) {
         console.log(selectedservice.taxes.length, ":::::Tax ,length")
 
         console.log("TAX LENGETH ticket ctrler", selectedservice)
@@ -321,16 +326,16 @@ export default class TicketController {
                 ////console.log(taxinput);
                 var thisobj = this;
                 this.saveData({ table_name: 'ticketservice_taxes', data: taxinput }).then(r => {
-                    thisobj.saveTaxes(ticketid, tsid, selectedservice, tidx + 1, idx, ticketDetail, services_taken, userdetail)
+                    thisobj.saveTaxes(ticketid, tsid, selectedservice, tidx + 1, idx, ticketDetail, services_taken, userdetail,stateinput)
                 })
             });
         }
         else {
-            this.saveRequestNotes(ticketid, selectedservice, idx, ticketDetail, services_taken, userdetail)
+            this.saveRequestNotes(ticketid, selectedservice, idx, ticketDetail, services_taken, userdetail,stateinput)
         }
     }
 
-    async saveRequestNotes(ticketid, selectedservice, idx, ticketDetail, services_taken, userdetail) {
+    async saveRequestNotes(ticketid, selectedservice, idx, ticketDetail, services_taken, userdetail,stateinput) {
         var requestnotes = selectedservice.requestNotes;
         var thisobj = this;
         //console.log("Saviong requestnotes")
@@ -349,16 +354,16 @@ export default class TicketController {
                 input["sync_status"] = 0;
                 this.saveData({ table_name: 'ticketservice_requestnotes', data: input }).then(r => {
                     //console.log("saved requestnotes")
-                    thisobj.saveEmpCommission(ticketid, selectedservice, idx, ticketDetail, services_taken, userdetail)
+                    thisobj.saveEmpCommission(ticketid, selectedservice, idx, ticketDetail, services_taken, userdetail,stateinput)
                 })
             });
         }
         else {
-            thisobj.saveEmpCommission(ticketid, selectedservice, idx, ticketDetail, services_taken, userdetail)
+            thisobj.saveEmpCommission(ticketid, selectedservice, idx, ticketDetail, services_taken, userdetail,stateinput)
         }
     }
 
-    async saveEmpCommission(ticketid, selectedservice, idx, ticketDetail, services_taken, userdetail) {
+    async saveEmpCommission(ticketid, selectedservice, idx, ticketDetail, services_taken, userdetail,stateinput) {
         var businessdetail = {}
         var detail = window.localStorage.getItem('businessdetail');
         businessdetail = JSON.parse(detail);
@@ -409,7 +414,10 @@ export default class TicketController {
                                 ticketserviceref_id: selectedservice.sync_id,
                                 sync_status: 0,
                                 sync_id: csyncid + "service",
-                                isActive:1
+                                isActive:1,
+                                totalamount:selectedservice.qty * selectedservice.perunit_cost,
+                                owner_percent:owner_percentage,
+                                emp_percent:employee_percentage
                             }
                             window.api.invoke('evantcall', emp_input)
                             //////console.log("emp inpout");
@@ -434,7 +442,10 @@ export default class TicketController {
                                 ticketserviceref_id: selectedservice.sync_id,
                                 sync_status: 0,
                                 sync_id: csyncid + "ownercommission",
-                                isActive:1
+                                isActive:1,
+                                totalamount:selectedservice.qty * selectedservice.perunit_cost,
+                                owner_percent:owner_percentage,
+                                emp_percent:employee_percentage
                             }
                             window.api.invoke('evantcall', owner_input)
                             console.log("OWNER INPUT ##########")
@@ -470,7 +481,7 @@ export default class TicketController {
                                 ticketserviceref_id: selectedservice.sync_id,
                                 sync_status: 0,
                                 sync_id: csyncid + "tips",
-                                isActive:1
+                                isActive:1, 
                             }
 
 
@@ -513,7 +524,7 @@ export default class TicketController {
                                             ticketserviceref_id: selectedservice.sync_id,
                                             sync_status: 0,
                                             sync_id: csyncid + "owner-discount",
-                                            isActive:1
+                                            isActive:1, 
                                         }
 
                                         this.saveData({ table_name: 'employee_commission_detail', data: disemp_inputif }).then(res => {
@@ -677,7 +688,10 @@ export default class TicketController {
                             ticketserviceref_id: selectedservice.sync_id,
                             sync_status: 0,
                             sync_id: csyncid + "service",
-                            isActive:1
+                            isActive:1,
+                            totalamount:selectedservice.qty * selectedservice.perunit_cost,
+                            owner_percent:0,
+                            emp_percent:100
                         }
                         //////console.log(input);
                         this.saveData({ table_name: 'employee_commission_detail', data: input }).then(res => {
@@ -892,7 +906,7 @@ export default class TicketController {
                     window.api.invoke('evantcall', 'saveTicketService before save called').then(r => {
 
                     })
-                    this.saveTicketService(idx + 1, ticketid, ticketDetail, services_taken, userdetail);
+                    this.saveTicketService(idx + 1, ticketid, ticketDetail, services_taken, userdetail,stateinput);
                 })
             });
 

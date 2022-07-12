@@ -97,6 +97,9 @@ App/desktop1
 build
 userdata
 out
+src copy
+srcbagya
+
 # APP SSL Certificates
 .ssl
 

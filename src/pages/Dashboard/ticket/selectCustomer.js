@@ -129,7 +129,7 @@ export default class SelectCustomer extends React.Component {
             // })
 
             const dataManager = new DataManager()
-            dataManager.getData("select sync_id as id, member_id, name, email, dob, first_visit, last_visit, visit_count, total_spent, loyality_point, created_at, created_by, updated_at, updated_by, status, phone, businessId, sync_status, sync_id  from customers").then(response =>{
+            dataManager.getData("select sync_id as id, member_id, name, email, dob, first_visit, last_visit, visit_count, total_spent, loyality_point,address1, address2, city,state, zipcode, created_at, created_by, updated_at, updated_by, status, phone, businessId, sync_status, sync_id  from customers").then(response =>{
                 if (response instanceof Array) {
                     this.setState({customers: response, origincustomers: response, isLoading: false}, function(){
                         // console.log(this.state.customerlist)
@@ -174,7 +174,7 @@ export default class SelectCustomer extends React.Component {
             <div style={{height: '100%', marginTop: 5}}>
                 {this.state.isLoading &&  <LoadingModal show={this.state.isLoading}></LoadingModal>}
 
-                <Container maxWidth="xl" style={{width: "100%", height: '70%'}}>
+                <Container maxWidth="xl" style={{width: "100%", height: '80%'}}>
 
                 {!this.state.isAddCustomerOpen && 
                     <div style={{height: '100%', background: 'transparent'}}>
@@ -234,7 +234,7 @@ export default class SelectCustomer extends React.Component {
                     <div style={{border:'1px solid',right:0, bottom:0,top:'0',left:'0',position:'absolute'}}>
                         <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
                         </div>
-                        <div style={{background:'#fff', height:'80%', width:'900px', position:'relative', borderRadius: 10}}>
+                        <div style={{background:'#fff', height:'100%', width:'900px', position:'relative', borderRadius: 10}}>
                         
                             <ModalTitleBar onClose={()=>this.handleCloseCustomer()} title="Add Customer"/> 
                             

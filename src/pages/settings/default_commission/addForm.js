@@ -30,12 +30,16 @@ export default class CommissionForm extends React.Component {
             perAlert_Open: false,
             alert_msg:'',
             isLoading: false,
+            isOnline: false
         };
         this.handlechange = this.handlechange.bind(this);
         this.handleclose = this.handleclose.bind(this);
         this.handleCloseAlert = this.handleCloseAlert.bind(this);
     }
     componentDidMount(){
+        var condition = navigator.onLine ? 'online' : 'offline';
+        this.setState({isOnline: (condition=="online") ? true: false})
+
         setTimeout(() => { 
             if(this.props.commissionToEdit !== undefined){
                 this.setState({commissionSelected: this.props.commissionToEdit,isEdit : true,isDisable:false}, function(){
@@ -179,6 +183,16 @@ export default class CommissionForm extends React.Component {
         }
         return formIsValid;
     }
+
+    checkOnline(){
+        var condition = navigator.onLine ? 'online' : 'offline';
+        this.setState({isOnline: (condition=="online") ? true: false},function(){
+            if(this.state.isOnline){
+                this.saveCommision();
+            }
+        })
+        
+    }
     saveCommision(){
         // console.log("saveCommision",this.state.owner_percentage)
         if(this.handleValidation()){
@@ -201,6 +215,7 @@ export default class CommissionForm extends React.Component {
               delete input["alert_msg"];
               delete input["isLoading"];
               delete input["businessdetail"]; 
+              delete input["isOnline"];
               
               var userdetail = window.localStorage.getItem('employeedetail');
                 if(userdetail !== undefined && userdetail !== null){
@@ -322,8 +337,11 @@ export default class CommissionForm extends React.Component {
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}></Stack>
                     
                 </Stack>
-                <Stack direction="row" spacing={2} alignItems="center" justifyContent="center" style={{marginTop: 10}}>
-                    <ButtonContent  size="large" variant="contained" disabled={this.state.isDisable} label={this.state.isEdit ? 'Update' : 'Save' } onClick={()=>this.saveCommision()}/>
+                <Stack direction="row" spacing={2} alignItems="center" justifyContent="center" style={{marginTop: 10}} >
+                    <div style={{ display : this.state.isOnline ? 'block':'none'}}>
+                    <ButtonContent  size="large" variant="contained" disabled={this.state.isDisable} label={this.state.isEdit ? 'Update' : 'Save' } onClick={()=>this.checkOnline()}/>
+                    </div>
+                    
                     {/* <ButtonContent  size="large" variant="outlined" label="Cancel" onClick={()=>this.handleclose()}/> */}
                 </Stack>
             </form>
