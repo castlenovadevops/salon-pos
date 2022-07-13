@@ -383,10 +383,10 @@ export default class EmployeeReport extends React.Component {
             this.setState({isLoading: true})
 
 
-            this.dataManager.getData(`select u.*, sum(ts.service_cost) as ServiceAmount, sum(ts.tips_amount) as Tips, sum(ts.total_discount_amount) as Discount from users AS u left join  ticket_services as ts on ts.employee_id= u.id where ticketref_id in (select sync_id from ticket where DATE(created_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`' and isDelete=0) group by u.id`).then(res=>{ 
+            this.dataManager.getData(`select u.*, sum(ts.service_cost) as ServiceAmount, sum(ts.tips_amount) as Tips, sum(ts.total_discount_amount) as Discount from users AS u left join  ticket_services as ts on ts.employee_id= u.id where ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where DATE(paid_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`') and isDelete=0 and paid_status='paid') group by u.id`).then(res=>{ 
 
                     this.setState({isLoading: false, employee_reportlist: res})
-                    // console.log(res)
+                    console.log(res)
                     
             })
 

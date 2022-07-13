@@ -435,9 +435,9 @@ export default class CreateTicket extends React.Component {
 
     getServices(category_id){
         this.setState({selected_category:category_id});
-        var sql = "select * from services_category where category_id =  '"+category_id+"' and lower(status) = 'active' and service_id in (select sync_id from services where  status='Active')" 
+        var sql = "select * from services_category where category_id =  '"+category_id+"' and lower(status) = 'active' and service_id in (select sync_id from services where  status='Active') group by service_id" 
         if(this.state.searchtext !== ''){
-            sql = "select * from services_category where service_id in (select sync_id from services where lower(name) like '%"+this.state.searchtext+"%' and status='Active') and category_id =  '"+category_id+"' and  lower(status) = 'active'" 
+            sql = "select * from services_category where service_id in (select sync_id from services where lower(name) like '%"+this.state.searchtext+"%' and status='Active') and category_id =  '"+category_id+"' and  lower(status) = 'active' group by service_id" 
         } 
         console.log(sql);
         this.state.dataManager.getData(sql) 
@@ -3743,6 +3743,43 @@ afterSubmitVariablePrice(value) {
     else {
         var servicein = this.state.selectedservice
         console.log("change price", servicein)
+        // var obj = {
+        //     "servicedetail": servicein,
+        //     discount:{},
+        //     taxes:[],
+        //     subtotal: servicein.service_cost != undefined ? servicein.service_cost : servicein.price,
+        //     taxamount:0,
+        //     discountamount:servicein.total_discount_amount !== undefined ?  servicein.total_discount_amount :0,
+        //     qty: servicein.service_quantity != undefined ?  servicein.service_quantity : 1,
+        //     perunit_cost: value,
+        //     employee_id:  (servicein.employee_id !== null && servicein.employee_id !== undefined ? Number(servicein.employee_id) : Number(this.state.technician_id))  ,
+        //     isSpecialRequest: 0,
+        //     process:''
+        // }
+      
+        // var sql = "SELECT st.*,t.tax_name,t.tax_type,t.tax_value from services_tax as st join taxes as t on t.id=st.tax_id and t.status='active' where service_id='"+servicein.id+"' and st.status='active'";
+        
+        // if(this.state.isEdit){
+        //     obj["discount"].discount_id = servicein.discount_id
+        //     obj["discount"].discount_type = servicein.discount_type
+        //     obj["discount"].discount_value = servicein.discount_value
+        //     obj["discount"].discount_name = servicein.discount_name
+        //     obj["discount"].total_discount_amount = servicein.total_discount_amount
+           
+        // } 
+
+        // console.log(sql)
+        // this.state.dataManager.getData(sql).then(response =>{  
+        //     console.log("tax response", response)
+        //     obj.taxes = response; 
+        //     var services = this.state.services_taken;
+        //     services.push(obj);
+        //     this.setState({services_taken: services, priceVariablePopup: false}, ()=>{ 
+        //         this.setState({tipsdiscountEnabled: false})
+        //         this.calculateTotal();
+            
+        //     })
+        // });
         var obj = {
             "servicedetail": servicein,
             discount:{},
@@ -3751,33 +3788,49 @@ afterSubmitVariablePrice(value) {
             taxamount:0,
             discountamount:servicein.total_discount_amount !== undefined ?  servicein.total_discount_amount :0,
             qty: servicein.service_quantity != undefined ?  servicein.service_quantity : 1,
-            perunit_cost: value,
+            perunit_cost:servicein.perunit_cost != undefined ? servicein.perunit_cost : servicein.price,
             employee_id:  (servicein.employee_id !== null && servicein.employee_id !== undefined ? Number(servicein.employee_id) : Number(this.state.technician_id))  ,
-            isSpecialRequest: 0,
-            process:''
+            isSpecialRequest: servicein.isSpecialRequest !== undefined ? servicein.isSpecialRequest: 0,
+            process:servicein.process !== undefined ? servicein.process : '',
+            requestNotes: servicein.requestNotes !== undefined ? servicein.requestNotes : '',
+            tips_amount: servicein.tips_amount !== undefined ? servicein.tips_amount : 0,
+            sort_number: this.state.services_taken.length+1
         }
-      
-        var sql = "SELECT st.*,t.tax_name,t.tax_type,t.tax_value from services_tax as st join taxes as t on t.id=st.tax_id and t.status='active' where service_id='"+servicein.id+"' and st.status='active'";
-        
+        ////console.log(obj);
+        console.log("SERVICEIN:::::", servicein)
+        var sql = "SELECT st.*,t.tax_name,t.tax_type,t.tax_value from services_tax as st join taxes as t on t.sync_id=st.tax_id and t.status='active' where service_id='"+servicein.service_id+"' and st.status='active'";
+
         if(this.state.isEdit){
             obj["discount"].discount_id = servicein.discount_id
             obj["discount"].discount_type = servicein.discount_type
             obj["discount"].discount_value = servicein.discount_value
             obj["discount"].discount_name = servicein.discount_name
             obj["discount"].total_discount_amount = servicein.total_discount_amount
-           
+            console.log("$$$$$$$$$$$$$$$$$$")
+            console.log(servicein.uniquId, servicein.tax_type)
+            if((servicein.uniquId === undefined || servicein.uniquId === '')  && servicein.tax_type !=='default'){
+                sql = "SELECT st.*,t.tax_name,t.tax_type,t.tax_value from services_tax as st join taxes as t on t.sync_id==st.tax_id and t.status='active' where st.service_id='"+servicein.service_id+"' and st.status='active'"
+            }
+            else if((servicein.uniquId === undefined || servicein.uniquId === '') && servicein.tax_type ==='default'){
+                sql = "SELECT t.sync_id as tax_id,t.tax_name,t.tax_type,t.tax_value from taxes as t where t.isDefault=1 and t.status='active'"
+            }
+            else if(servicein.uniquId !== undefined){
+                sql = "SELECT st.*,t.tax_name,t.tax_type,t.tax_value from ticketservice_taxes as st join taxes as t on t.sync_id==st.tax_id and t.status='active' where st.serviceref_id='"+servicein.uniquId+"' and st.ticketref_id='"+servicein.ticketref_id+"' and st.isActive=1"
+            } 
         } 
-
-        console.log(sql)
+        else if(servicein.tax_type ==='default'){
+            sql = "SELECT t.sync_id as tax_id, t.tax_name,t.tax_type,t.tax_value from taxes as t where t.isDefault=1 and t.status='active'"
+        }
+        console.log("TAX SQL::::::")
+        console.log(sql);
         this.state.dataManager.getData(sql).then(response =>{  
-            console.log("tax response", response)
-            obj.taxes = response; 
+            console.log("tax response :::::: ", response)
+            obj.taxes = response.length > 0 ?  response : []; 
             var services = this.state.services_taken;
             services.push(obj);
-            this.setState({services_taken: services, priceVariablePopup: false}, ()=>{ 
-                this.setState({tipsdiscountEnabled: false})
+            this.setState({services_taken: services}, ()=>{ 
+                this.setState({tipsdiscountEnabled: false,priceVariablePopup: false})
                 this.calculateTotal();
-            
             })
         });
 

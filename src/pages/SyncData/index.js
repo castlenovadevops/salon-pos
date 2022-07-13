@@ -295,7 +295,15 @@ export default class SettingsSync extends React.Component {
         if (idx < data.length) {
             var input = data[idx]; 
             delete input["category_name"]
-
+            if(tbldata.tablename === 'employee_salary'){
+                delete input["firstName"];
+                delete input["lastName"];
+            }
+            if(tbldata.tablename === 'ticket'){
+                delete input["name"];
+                delete input["email"];
+                delete input["pay_mode"];
+            }
             input["sync_id"] = input["sync_id"] !== null && input["sync_id"] !== undefined ? input["sync_id"] : input["id"];
             input["id"] = input["id"] !== null && input["id"] !== undefined ? input["id"] : input["sync_id"];
             var sql = `delete from ` + tbldata.tablename+ ` where (sync_status=1 and sync_id='`+input.sync_id+`') or id ='`+input.id+`'`;

@@ -8,8 +8,7 @@ import DashboardApp from './pages/Dashboard';
 import SyncData from './pages/SyncData'; 
 // import IdleTimer from 'react-idle-timer';
 
-import TicketManager from './controller/TicketManager';
-import SyncManager from './controller/syncManager';
+import TicketManager from './controller/TicketManager'; 
 import DataManager from './controller/datacontroller'
 import NetworkManager from './utils/networkmanager'; 
 import { DialogContentText, Dialog, DialogTitle, DialogContent, DialogActions} from '@material-ui/core/';  
@@ -45,8 +44,7 @@ export default class App extends React.Component {
       perAlert_Open: false,
       alert_msg: '',
       isLoading: false,
-      dataManager: new DataManager(),
-      syncDataManager: new SyncManager(),
+      dataManager: new DataManager(), 
       isAutoSyncing: false
     };
     this.onAfterSubmit = this.onAfterSubmit.bind(this); 

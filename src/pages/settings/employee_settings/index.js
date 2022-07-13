@@ -183,6 +183,15 @@ syncIndividualEntry(mindex, idx, data, tbldata) {
         this.dataManager.saveData(`delete from ` + tbldata.tablename+ ` where (sync_status=1 and sync_id='`+input.sync_id+`') or id =`+input.id).then(res => {
             input["sync_id"] = input["sync_id"] !== null && input["sync_id"] !== undefined ? input["sync_id"] : input["id"];
             input["sync_status"] = 1;
+            if(tbldata.tablename === 'employee_salary'){
+              delete input["firstName"];
+              delete input["lastName"];
+            }
+            if(tbldata.tablename === 'ticket'){
+                delete input["name"];
+                delete input["email"];
+                delete input["pay_mode"];
+            }
             this.ticketController.saveData({ table_name: tbldata.name, data: input }).then(r => {
                 this.syncIndividualEntry(mindex, idx + 1, data, tbldata);
             })

@@ -429,20 +429,20 @@ export default class ProductForm extends React.Component {
             })
         }
         else {
-            this.saveTaxes(input)
+            this.saveTaxes(input,serviceid)
         }
     }
 
-    saveTaxes(input) {
-        var taxes = this.state.taxes;
-        this.dataManager.saveData("update services_tax set status='inactive' where service_id='" + input.sync_id + "'").then(r => {
+    saveTaxes(input,serviceid) {
+        var taxes = this.state.taxes; 
+        this.dataManager.saveData("update services_tax set status='inactive' where service_id='" +serviceid + "'").then(r => {
             if (this.state.tax_type === 'default') {
                 var taxInput1 = {};
                 window.api.getSyncUniqueId().then(sync => {
                     var syncid = sync.syncid;
                     var userdetail = window.localStorage.getItem('employeedetail');
                     var taxinput = {
-                        service_id: input.sync_id,
+                        service_id: serviceid,
                         sync_status: 0,
                         tax_id: this.state.default_taxDetail[0].id,
                         tax_type: this.state.tax_type,
@@ -465,7 +465,7 @@ export default class ProductForm extends React.Component {
                 })
             }
             else if (this.state.tax_type === 'custom') { 
-                this.saveTaxData(0, taxes, input) 
+                this.saveTaxData(0, taxes, input,serviceid) 
             }
             else{
                 this.finishSaveData()
@@ -473,7 +473,7 @@ export default class ProductForm extends React.Component {
         })
     }
 
-    saveTaxData(idx, taxes, input) {
+    saveTaxData(idx, taxes, input,serviceid) {
         if (idx < taxes.length) {
 
             window.api.getSyncUniqueId().then(sync => {
@@ -481,7 +481,7 @@ export default class ProductForm extends React.Component {
 
                 var userdetail = window.localStorage.getItem('employeedetail');
                 var taxinput = {
-                    service_id: input.sync_id,
+                    service_id: serviceid,
                     sync_status: 0,
                     tax_id: taxes[idx],
                     tax_type: this.state.tax_type,
@@ -500,7 +500,7 @@ export default class ProductForm extends React.Component {
                 taxinput["created_at"] = new Date().toISOString();
                 taxinput["updated_at"] = new Date().toISOString();
                 this.ticketController.saveData({ table_name: 'services_tax', data: taxinput }).then(r => {
-                    this.saveTaxData(idx + 1, taxes, input)
+                    this.saveTaxData(idx + 1, taxes, input,serviceid)
                 })
             })
         }
