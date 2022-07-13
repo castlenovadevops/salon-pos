@@ -105,28 +105,28 @@ export default class EmployeeReport extends React.Component {
                     </div>
                     )
                 },
-                {
-                    field: 'totalsalarygiven',
-                    headerName: 'Paid',
-                    minWidth: 100,
-                    editable: false,
-                    renderCell: (params) => (
-                    <div>
-                        $  { Number(params.row.totalsalarygiven).toFixed(2)}  
-                    </div>
-                    )
-                },
-                {
-                    field: '',
-                    headerName: 'Balance',
-                    minWidth: 100,
-                    editable: false,
-                    renderCell: (params) => (
-                    <div>
-                        $  { Number((params.row.totalsalary/100)-params.row.totalsalarygiven).toFixed(2)}  
-                    </div>
-                    )
-                },
+                // {
+                //     field: 'totalsalarygiven',
+                //     headerName: 'Paid',
+                //     minWidth: 100,
+                //     editable: false,
+                //     renderCell: (params) => (
+                //     <div>
+                //         $  { Number(params.row.totalsalarygiven).toFixed(2)}  
+                //     </div>
+                //     )
+                // },
+                // {
+                //     field: '',
+                //     headerName: 'Balance',
+                //     minWidth: 100,
+                //     editable: false,
+                //     renderCell: (params) => (
+                //     <div>
+                //         $  { Number((params.row.totalsalary/100)-params.row.totalsalarygiven).toFixed(2)}  
+                //     </div>
+                //     )
+                // },
                 {
                     field: 'Action',
                     headerName:'Action',
@@ -381,10 +381,10 @@ export default class EmployeeReport extends React.Component {
         console.log(empid)
         this.setState({ selectedEmp: row }, ()=>{
             var commissiondetail = {owner_percentage:0, employee_percentage:100, cash_percentage: 50, check_percentage: 50};
-            var sql = `select ts.id,strftime('%m/%d', (select created_at from ticket where sync_id=ts.ticketref_id)) AS ticket_date, ts.service_cost as Amount, ts.tips_amount as Tips, ts.total_discount_amount as Discount from ticket_services as ts where ts.ticketref_id in (select  ticketref_id from ticket_payment where DATE(paid_at) between '`+ this.state.from_date.toISOString().substring(0,10)+`' and '`+ this.state.to_date.toISOString().substring(0,10)+`' ) and ts.isActive=1 and ts.employee_id = `+empid;
+            var sql = `select ts.id,strftime('%m/%d', (select created_at from ticket where sync_id=ts.ticketref_id)) AS ticket_date, (select totalamount from employee_commission_detail where ticketserviceref_id = ts.sync_id) as Amount, ts.tips_amount as Tips, ts.total_discount_amount as Discount from ticket_services as ts where ts.ticketref_id in (select  ticketref_id from ticket_payment where DATE(paid_at) between '`+ this.state.from_date.toISOString().substring(0,10)+`' and '`+ this.state.to_date.toISOString().substring(0,10)+`' and ticketref_id in (select sync_id from ticket where isDelete=0 and paid_status='paid') ) and ts.isActive=1 and ts.employee_id = `+empid;
             var commsql = `select sum(ec.totalamount) as ServiceAmount,sum(ec.cash_amt) as CashAmount, ec.owner_percent, ec.emp_percent from employee_commission_detail as ec join ticket_services as ts on ts.sync_id=ec.ticketserviceref_id and ts.isActive=1 where ec.cash_type_for='service' and ec.employeeId=`+empid+` and ts.ticketref_id in (select ticketref_id from ticket_payment where DATE(paid_at)  between '`+ this.state.from_date.toISOString().substring(0,10)+`' and '`+ this.state.to_date.toISOString().substring(0,10)+`') and ts.isActive=1  group by ec.owner_percent, ec.emp_percent`;
             if(this.state.from_date === this.state.to_date){
-                sql = `select ts.id,strftime('%m/%d', (select created_at from ticket where sync_id=ts.ticketref_id)) AS ticket_date, ts.service_cost as Amount, ts.tips_amount as Tips, ts.total_discount_amount as Discount from ticket_services as ts where ts.ticketref_id in (select sync_id from ticket where DATE(created_at) = '`+ this.state.from_date.toISOString().substring(0,10)+`') and ts.isActive=1 and ts.employee_id = `+empid
+                sql = `select ts.id,strftime('%m/%d', (select created_at from ticket where sync_id=ts.ticketref_id)) AS ticket_date, (select totalamount from employee_commission_detail where ticketserviceref_id = ts.sync_id) as Amount, ts.tips_amount as Tips, ts.total_discount_amount as Discount from ticket_services as ts where ts.ticketref_id in (select  ticketref_id from ticket_payment where DATE(paid_at) = '`+ this.state.from_date.toISOString().substring(0,10)+`' and ticketref_id in (select sync_id from ticket where isDelete=0 and paid_status='paid') ) and ts.isActive=1 and ts.employee_id = `+empid
                 commsql = `select sum(ec.totalamount) as ServiceAmount,sum(ec.cash_amt) as CashAmount, ec.owner_percent, ec.emp_percent from employee_commission_detail as ec join ticket_services as ts on ts.sync_id=ec.ticketserviceref_id and ts.isActive=1 where ec.cash_type_for='service' and ec.employeeId=`+empid+` and ts.ticketref_id in (select ticketref_id from ticket_payment where DATE(paid_at) = '`+ this.state.from_date.toISOString().substring(0,10)+`') and ts.isActive=1  group by ec.owner_percent, ec.emp_percent`
             } 
             this.dataManager.getData(`select * from default_commission`).then(defcom=>{
@@ -458,6 +458,7 @@ export default class EmployeeReport extends React.Component {
         var businessdetail = window.localStorage.getItem('businessdetail');
         if(businessdetail !== undefined && businessdetail !== null){
             this.setState({isLoading: true}) 
+            // this.dataManager.getData(`select u.id as id, u.*,(select sum(totalamount) from employee_commission_detail where isActive=1 and ticketserviceref_id in (select sync_id from ticket_services where employee_id=u.id and  isActive=1 and  ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where DATE(paid_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`') and isDelete=0 and paid_status='paid'))) as ServiceAmount,(select sum((totalamount*emp_percent)) from employee_commission_detail where cash_type_for='service' and  employeeId=u.id and ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where DATE(paid_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`') and isDelete=0 and paid_status='paid')) as totalsalary,(select sum(Amount) from emp_payment where employeeId=u.id) as totalsalarygiven, sum(ts.tips_amount) as Tips, sum(ts.total_discount_amount) as Discount from users AS u left join  ticket_services as ts on ts.employee_id= u.id where ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where DATE(paid_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`') and isDelete=0 and paid_status='paid') group by u.id`).then(res=>{  
               this.dataManager.getData(`select u.id as id, u.*, sum(ts.service_cost) as ServiceAmount,(select sum((totalamount*emp_percent)) from employee_commission_detail where cash_type_for='service' and  employeeId=u.id and ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where DATE(paid_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`') and isDelete=0 and paid_status='paid')) as totalsalary,(select sum(Amount) from emp_payment where employeeId=u.id) as totalsalarygiven, sum(ts.tips_amount) as Tips, sum(ts.total_discount_amount) as Discount from users AS u left join  ticket_services as ts on ts.employee_id= u.id where ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where DATE(paid_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`') and isDelete=0 and paid_status='paid') group by u.id`).then(res=>{  
                 console.log(res);
                     this.setState({isLoading: false, employee_reportlist: res}) 
