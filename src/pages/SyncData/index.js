@@ -223,6 +223,14 @@ export default class SettingsSync extends React.Component {
                 syncurl:'/employee_commission/save'
             },
             {
+                name: "emp_payment",
+                tablename: 'emp_payment',
+                progressText: "Synchronizing Tickets...",
+                progresscompletion: 10,
+                url: config.root + `/payment/getPayments/` + JSON.parse(window.localStorage.getItem('businessdetail')).id,
+                syncurl:'/payment/savePayment'
+            },
+            {
                 name: "staff_clockLog",
                 tablename: 'staff_clockLog',
                 progressText: "Synchronizing Logs...",

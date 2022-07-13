@@ -3788,7 +3788,7 @@ afterSubmitVariablePrice(value) {
             taxamount:0,
             discountamount:servicein.total_discount_amount !== undefined ?  servicein.total_discount_amount :0,
             qty: servicein.service_quantity != undefined ?  servicein.service_quantity : 1,
-            perunit_cost:servicein.perunit_cost != undefined ? servicein.perunit_cost : servicein.price,
+            perunit_cost: value,
             employee_id:  (servicein.employee_id !== null && servicein.employee_id !== undefined ? Number(servicein.employee_id) : Number(this.state.technician_id))  ,
             isSpecialRequest: servicein.isSpecialRequest !== undefined ? servicein.isSpecialRequest: 0,
             process:servicein.process !== undefined ? servicein.process : '',

@@ -3,6 +3,10 @@ import axios from 'axios';
 import Moment from 'moment';
 import { Card, Stack, Container, Typography,TextField, Grid } from '@mui/material';
 
+import AppBar from '@material-ui/core/AppBar';
+import Toolbar from '@material-ui/core/Toolbar'; 
+import IconButton from '@material-ui/core/IconButton';
+import CloseIcon from '@mui/icons-material/Close'; 
 import DesktopDatePicker from '@mui/lab/DesktopDatePicker';
 import LocalizationProvider from '@mui/lab/LocalizationProvider';
 import AdapterDateFns from '@mui/lab/AdapterDateFns'; 
@@ -46,21 +50,21 @@ export default class EmployeeReport extends React.Component {
                     </div>
                     )
                 },
-                {
-                    field: 'staff_role',
-                    headerName: 'Role',
-                    minWidth: 100,
-                    editable: false,
-                    renderCell: (params) => (
-                    <div>
-                         {params.row.staff_role !== null ? params.row.staff_role !== '' ? params.row.staff_role : '--' : '--'} 
-                    </div>
-                    )
-                },
+                // {
+                //     field: 'staff_role',
+                //     headerName: 'Role',
+                //     minWidth: 100,
+                //     editable: false,
+                //     renderCell: (params) => (
+                //     <div>
+                //          {params.row.staff_role !== null ? params.row.staff_role !== '' ? params.row.staff_role : '--' : '--'} 
+                //     </div>
+                //     )
+                // },
                 {
                     field: 'totalservice_price',
-                    headerName: 'Total Service Price',
-                    minWidth: 150,
+                    headerName: 'Service Price',
+                    minWidth: 120,
                     editable: false,
                     renderCell: (params) => (
                     <div>
@@ -70,8 +74,8 @@ export default class EmployeeReport extends React.Component {
                 },
                 {
                     field: 'total_tips',
-                    headerName: 'Total Tips',
-                    minWidth: 150,
+                    headerName: 'Tips',
+                    minWidth: 100,
                     editable: false,
                     renderCell: (params) => (
                     <div>
@@ -81,12 +85,45 @@ export default class EmployeeReport extends React.Component {
                 },
                 {
                     field: 'total_discount',
-                    headerName: 'Total Discount',
-                    minWidth: 150,
+                    headerName: 'Discount',
+                    minWidth: 100,
                     editable: false,
                     renderCell: (params) => (
                     <div>
                         $  { Number(params.row.Discount).toFixed(2)}  
+                    </div>
+                    )
+                },
+                {
+                    field: 'totalsalary',
+                    headerName: 'Payout',
+                    minWidth: 100,
+                    editable: false,
+                    renderCell: (params) => (
+                    <div>
+                        $  { Number(params.row.totalsalary/100).toFixed(2)}  
+                    </div>
+                    )
+                },
+                {
+                    field: 'totalsalarygiven',
+                    headerName: 'Paid',
+                    minWidth: 100,
+                    editable: false,
+                    renderCell: (params) => (
+                    <div>
+                        $  { Number(params.row.totalsalarygiven).toFixed(2)}  
+                    </div>
+                    )
+                },
+                {
+                    field: '',
+                    headerName: 'Balance',
+                    minWidth: 100,
+                    editable: false,
+                    renderCell: (params) => (
+                    <div>
+                        $  { Number((params.row.totalsalary/100)-params.row.totalsalarygiven).toFixed(2)}  
                     </div>
                     )
                 },
@@ -112,7 +149,12 @@ export default class EmployeeReport extends React.Component {
                         label="Print"/> 
 
                         }    
-                           
+                         {/* { Number(params.row.ServiceAmount-params.row.totalsalarygiven) > 0 &&  <ButtonContent permission_id = "pos_pay_salary" permission_label="Show Pay salary"
+                        color="success" 
+                        variant="contained" 
+                        size="small" 
+                        onClick={()=>this.payAmount(params.row)} 
+                        label="Pay"/> } */}
                     
                     </strong>
                     ),
@@ -121,13 +163,15 @@ export default class EmployeeReport extends React.Component {
             from_date:new Date(),
             to_date:new Date(),
             employee_details:[],
-            
-           
+            showPaypopup:false,
+            commission: {},
+            ticketslist:[],
+            allcommission:[]
          };
          this.handlechangeFromDate = this.handlechangeFromDate.bind(this);
          this.handlechangeToDate = this.handlechangeToDate.bind(this);
          this.submiteReport = this.submiteReport.bind(this)
-
+         this.payAmount = this.payAmount.bind(this);
     this.logout = this.logout.bind(this);
     this.handleCloseMenu = this.handleCloseMenu.bind(this) 
     this.handleClick = this.handleClick.bind(this);
@@ -331,6 +375,39 @@ export default class EmployeeReport extends React.Component {
             })
         })
       }
+
+      payAmount(row){
+        var empid = row.id;
+        console.log(empid)
+        this.setState({ selectedEmp: row }, ()=>{
+            var commissiondetail = {owner_percentage:0, employee_percentage:100, cash_percentage: 50, check_percentage: 50};
+            var sql = `select ts.id,strftime('%m/%d', (select created_at from ticket where sync_id=ts.ticketref_id)) AS ticket_date, ts.service_cost as Amount, ts.tips_amount as Tips, ts.total_discount_amount as Discount from ticket_services as ts where ts.ticketref_id in (select  ticketref_id from ticket_payment where DATE(paid_at) between '`+ this.state.from_date.toISOString().substring(0,10)+`' and '`+ this.state.to_date.toISOString().substring(0,10)+`' ) and ts.isActive=1 and ts.employee_id = `+empid;
+            var commsql = `select sum(ec.totalamount) as ServiceAmount,sum(ec.cash_amt) as CashAmount, ec.owner_percent, ec.emp_percent from employee_commission_detail as ec join ticket_services as ts on ts.sync_id=ec.ticketserviceref_id and ts.isActive=1 where ec.cash_type_for='service' and ec.employeeId=`+empid+` and ts.ticketref_id in (select ticketref_id from ticket_payment where DATE(paid_at)  between '`+ this.state.from_date.toISOString().substring(0,10)+`' and '`+ this.state.to_date.toISOString().substring(0,10)+`') and ts.isActive=1  group by ec.owner_percent, ec.emp_percent`;
+            if(this.state.from_date === this.state.to_date){
+                sql = `select ts.id,strftime('%m/%d', (select created_at from ticket where sync_id=ts.ticketref_id)) AS ticket_date, ts.service_cost as Amount, ts.tips_amount as Tips, ts.total_discount_amount as Discount from ticket_services as ts where ts.ticketref_id in (select sync_id from ticket where DATE(created_at) = '`+ this.state.from_date.toISOString().substring(0,10)+`') and ts.isActive=1 and ts.employee_id = `+empid
+                commsql = `select sum(ec.totalamount) as ServiceAmount,sum(ec.cash_amt) as CashAmount, ec.owner_percent, ec.emp_percent from employee_commission_detail as ec join ticket_services as ts on ts.sync_id=ec.ticketserviceref_id and ts.isActive=1 where ec.cash_type_for='service' and ec.employeeId=`+empid+` and ts.ticketref_id in (select ticketref_id from ticket_payment where DATE(paid_at) = '`+ this.state.from_date.toISOString().substring(0,10)+`') and ts.isActive=1  group by ec.owner_percent, ec.emp_percent`
+            } 
+            this.dataManager.getData(`select * from default_commission`).then(defcom=>{
+                if(defcom.length > 0){
+                    commissiondetail = defcom[0];
+                    commissiondetail["employee_percentage"] = commissiondetail["emp_percentage"];
+                }
+                this.dataManager.getData(`select * from employee_salary where employeeId=`+row.id).then(empsal=>{
+                    if(empsal.length > 0){
+                        commissiondetail = empsal[0];
+                    }
+                    this.dataManager.getData(sql ).then(res=>{
+                        this.dataManager.getData(commsql).then(comm=>{
+                            console.log("tickets list", res)
+                            this.setState({ticketslist : res, commission: commissiondetail, allcommission:comm }, ()=>{
+                                this.setState({showPaypopup:true})
+                            })
+                        })
+                    })
+                })
+            }) 
+        })
+      }
       
       handleClickInvent(opt){
         if(opt === 'inventory')
@@ -380,14 +457,10 @@ export default class EmployeeReport extends React.Component {
     getEmpReportList(){
         var businessdetail = window.localStorage.getItem('businessdetail');
         if(businessdetail !== undefined && businessdetail !== null){
-            this.setState({isLoading: true})
-
-
-            this.dataManager.getData(`select u.*, sum(ts.service_cost) as ServiceAmount, sum(ts.tips_amount) as Tips, sum(ts.total_discount_amount) as Discount from users AS u left join  ticket_services as ts on ts.employee_id= u.id where ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where DATE(paid_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`') and isDelete=0 and paid_status='paid') group by u.id`).then(res=>{ 
-
-                    this.setState({isLoading: false, employee_reportlist: res})
-                    console.log(res)
-                    
+            this.setState({isLoading: true}) 
+              this.dataManager.getData(`select u.id as id, u.*, sum(ts.service_cost) as ServiceAmount,(select sum((totalamount*emp_percent)) from employee_commission_detail where cash_type_for='service' and  employeeId=u.id and ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where DATE(paid_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`') and isDelete=0 and paid_status='paid')) as totalsalary,(select sum(Amount) from emp_payment where employeeId=u.id) as totalsalarygiven, sum(ts.tips_amount) as Tips, sum(ts.total_discount_amount) as Discount from users AS u left join  ticket_services as ts on ts.employee_id= u.id where ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where DATE(paid_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`') and isDelete=0 and paid_status='paid') group by u.id`).then(res=>{  
+                console.log(res);
+                    this.setState({isLoading: false, employee_reportlist: res}) 
             })
 
             // axios.get(config.root+"/employee_commission/list/"+JSON.parse(businessdetail).id).then((res)=>{  
@@ -420,7 +493,10 @@ export default class EmployeeReport extends React.Component {
         })
     }
     handleCloseReport(){
-        this.setState({isEmpSelected: false});
+        this.setState({isEmpSelected: false, showPaypopup: false}, ()=>{ 
+            this.getEmpDetails()
+            this.getEmpReportList()
+        });
     }
     handlechangeFromDate(e){
         this.setState({from_date: e});
@@ -510,7 +586,7 @@ export default class EmployeeReport extends React.Component {
                     <div className="tabcontent" style={{ height: '80%', width: '100%', background: 'white',  }}>
                     {/* <Card sx={{mt:2}}  style={{height: '80%'}}> */}
                         <TableContent  permission_id = "pos_list_salary" permission_label="Show list salary"
-                        style={{height: '100%'}} 
+                        style={{height: '100%'}}  onRowClick={(data)=>{this.payAmount(data.row)}}
                         data={this.state.employee_reportlist} 
                         columns={this.state.columns} />
                     </div></div> 
@@ -525,11 +601,57 @@ export default class EmployeeReport extends React.Component {
                     <div style={{border:'1px solid',right:0, bottom:0,top:'0',left:'0',position:'absolute', zIndex:'999999'}}>
                         <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
                         </div>
-                        <div style={{background:'#fff', height:'80%',  width:'80%', margin:'10% auto 0', position:'relative'}}>
+                        <div style={{background:'#fff', height:'80%',  width:'80%', margin:'10% auto 0', position:'relative'}}> 
+                        <Stack direction="column" alignItems="center" justifyContent="space-between" mb={5} style={{ marginTop: 0, marginBottom:0}}>
                         
-                            <ModalTitleBar onClose={()=>this.handleCloseReport()} title="Report Details"/>
+                    <Typography variant="title" gutterBottom> <b>{this.state.selected_emp.businessName}</b></Typography>
+                        <Typography variant="subtitle2" gutterBottom><b>Salary Report</b></Typography>
+                        <Typography variant="subtitle2" gutterBottom> {this.state.from_date.toISOString().substring(0,10).replace(/-/g,"/")} - {this.state.to_date.toISOString().substring(0,10).replace(/-/g,"/")}</Typography>
+                         <Typography variant="subtitle2" gutterBottom>Employee: <b> {this.state.selected_emp.firstName+" "+this.state.selected_emp.lastName} </b></Typography>
+                       {/* <Typography variant="subtitle2" gutterBottom>Total Tips: $ {this.state.selected_emp.total_tips}</Typography> */}
+
+                    </Stack>
+                            {/* <ModalTitleBar onClose={()=>this.handleCloseReport()} title="Report Details"/> */}
                             <div style={{height:'600px', overflow:'auto'}}>
                                 <ReportView empSelected={this.state.selectedEmp}/>
+                            </div>
+                        </div>
+                    </div>
+                </div>}
+
+                {this.state.showPaypopup && <div>
+                    <div style={{border:'1px solid',right:0, bottom:0,top:'0',left:'0',position:'absolute', zIndex:'999999'}}>
+                        <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
+                        </div>
+                        <div style={{background:'#fff', height:'90%',  width:'90%', margin:'0 auto', position:'relative'}}>
+                        
+                        <AppBar  color="primary" style={{ position: 'relative',background: 'transparent', boxShadow: 'none' }}>
+  <Toolbar>
+      
+  <Stack direction="row" alignItems="center" justifyContent="space-between"  mb={5} style={{ marginTop: 0, marginBottom:0,width:'80%'}}>
+                        
+                        {/* <Typography variant="title"  gutterBottom> <b>{this.state.selectedEmp.businessName}</b></Typography> */}
+                            <Typography variant="subtitle2" style={{color:"#000", fontFamily:'"Roboto", "Helvetica", "Arial", sans-serif'}} gutterBottom><b>{this.state.selectedEmp.firstName+" "+this.state.selectedEmp.lastName} Salary Report</b></Typography>
+                            <Typography variant="subtitle2" style={{color:"#000", fontFamily:'"Roboto", "Helvetica", "Arial", sans-serif'}} gutterBottom> {this.state.from_date.toISOString().substring(0,10).replace(/-/g,"/")} - {this.state.to_date.toISOString().substring(0,10).replace(/-/g,"/")}</Typography> 
+    
+                        </Stack>
+
+                        <div style={{marginLeft: "auto",marginRight: -12}}>
+                        
+                        <IconButton
+                        edge="start"
+                        onClick={()=>this.handleCloseReport()}
+                        aria-label="close"
+                        style={{"color":'#134163'}}
+                        >
+                        <CloseIcon />
+                        </IconButton>
+                        </div>
+                    </Toolbar>
+                    </AppBar>
+
+                            <div style={{height:'600px', overflow:'auto'}}>
+                            <ReportView allcommission={this.state.allcommission} commission={this.state.commission} empSelected={this.state.selectedEmp} ticketslist={this.state.ticketslist} from_date={this.state.from_date} to_date={this.state.to_date}/>
                             </div>
                         </div>
                     </div>

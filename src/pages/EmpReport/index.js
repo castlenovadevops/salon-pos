@@ -344,6 +344,7 @@ export default class EmployeeReport extends React.Component {
 
         var profitsql= `select sum(cash_amt) as profit from employee_commission_detail as ec where ec.cash_type_for='ownercommission' and  ec.ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where   DATE(paid_at) between '`+input.from_date+`' and '`+input.to_date+`') and isDelete=0 and businessId=`+input.businessId+` and paid_status='paid')`;
 
+
         if(input.from_date == input.to_date){
             cashsql = `select SUM(ticket_amt) as PaidAmount, pay_mode, card_type from ticket_payment where isActive=1 and  ticketref_id in   (select sync_id from ticket where  sync_id in (select ticketref_id from ticket_payment where   DATE(paid_at) = '`+input.from_date+`')  and
             isDelete=0 and businessId=`+input.businessId+` and paid_status='paid')  group by pay_mode, card_type` 
