@@ -1,6 +1,6 @@
 {
     "appId": "com.fmt.salon",
-    "productName": "Salon",
+    "productName": "Astro POS",
     "copyright": "FMT",
     "directories": {
         "app": ".",

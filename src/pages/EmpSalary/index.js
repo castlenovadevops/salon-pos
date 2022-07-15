@@ -204,8 +204,9 @@ export default class EmployeeReport extends React.Component {
                         minWidth: 150,
                         editable: false,
                         renderCell: (params) => (
-                        <div>
-                            $ { Number(params.row.CheckAmount).toFixed(2)} 
+                        <div style={{display:'flex', justifyContent:'flex-start', flexDirection:'column'}}>
+                            <div>$ { Number(params.row.CheckAmount).toFixed(2)} </div>
+                            <div style={{fontSize:'13px', color:'#999'}}>{params.row.checknumber}</div>
                         </div>
                         )
                     },    
@@ -637,9 +638,9 @@ export default class EmployeeReport extends React.Component {
     }
 
     getTransactions(){
-                var sql = `select t.sync_id as id,t.CashAmount, t.CheckAmount, t.created_at,t.fromDate, t.toDate, u.firstName, u.lastName from emp_payment as t join users as u on u.id=t.employeeId where Date(t.created_at) between '`+this.state.txnfrom_date.toISOString().substring(0,10)+`' and '`+this.state.txnto_date.toISOString().substring(0,10)+`'`
+                var sql = `select t.sync_id as id,t.CashAmount, t.CheckAmount,t.checknumber, t.created_at,t.fromDate, t.toDate, u.firstName, u.lastName from emp_payment as t join users as u on u.id=t.employeeId where Date(t.created_at) between '`+this.state.txnfrom_date.toISOString().substring(0,10)+`' and '`+this.state.txnto_date.toISOString().substring(0,10)+`'`
                 if(this.state.txnfrom_date === this.state.txnto_date){
-                    sql = `select t.sync_id as id, t.CashAmount, t.CheckAmount, t.created_at,t.fromDate, t.toDate, u.firstName, u.lastName from emp_payment as t join users as u on u.id=t.employeeId where Date(t.created_at) = '`+this.state.txnfrom_date.toISOString().substring(0,10)+`'`
+                    sql = `select t.sync_id as id, t.CashAmount, t.CheckAmount,t.checknumber, t.created_at,t.fromDate, t.toDate, u.firstName, u.lastName from emp_payment as t join users as u on u.id=t.employeeId where Date(t.created_at) = '`+this.state.txnfrom_date.toISOString().substring(0,10)+`'`
                 }
                 if(this.state.txnstaffid > 0){
                     sql += ` and t.employeeId=`+this.state.txnstaffid
@@ -919,16 +920,14 @@ export default class EmployeeReport extends React.Component {
                     <div style={{border:'1px solid',right:0, bottom:0,top:'0',left:'0',position:'absolute', zIndex:'999999'}}>
                         <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
                         </div>
-                        <div style={{background:'#fff', height:'90%',  width:'90%', margin:'0 auto', position:'relative'}}>
+                        <div style={{background:'#fff', height:'50%',  width:'50%', margin:'20% auto', position:'relative'}}>
                         
                         <AppBar  color="primary" style={{ position: 'relative',background: 'transparent', boxShadow: 'none' }}>
   <Toolbar>
       
-  <Stack direction="row" alignItems="center" justifyContent="space-between"  mb={5} style={{ marginTop: 0, marginBottom:0,width:'50%'}}>
-                        
-                        {/* <Typography variant="title"  gutterBottom> <b>{this.state.selectedEmp.businessName}</b></Typography> */}
+  <Stack direction="column" alignItems="center" justifyContent="space-between"  mb={5} style={{ marginTop: 0, marginBottom:0, marginLeft:'0'}}> 
                             <Typography variant="subtitle2" style={{color:"#000", fontFamily:'"Roboto", "Helvetica", "Arial", sans-serif'}} gutterBottom><b>{this.state.selectedEmp.firstName+" "+this.state.selectedEmp.lastName} Salary Report</b></Typography>
-                            <Typography variant="subtitle2" style={{color:"#000", fontFamily:'"Roboto", "Helvetica", "Arial", sans-serif'}} gutterBottom> {this.state.from_date.toISOString().substring(0,10).replace(/-/g,"/")} - {this.state.to_date.toISOString().substring(0,10).replace(/-/g,"/")}</Typography> 
+                            <Typography variant="subtitle2" style={{color:"#000", fontFamily:'"Roboto", "Helvetica", "Arial", sans-serif'}} gutterBottom> {Moment(this.state.from_date).format("MM/DD/YYYY")} - {Moment(this.state.to_date).format("MM/DD/YYYY")}</Typography> 
     
                         </Stack>
 
@@ -946,8 +945,9 @@ export default class EmployeeReport extends React.Component {
                     </Toolbar>
                     </AppBar>
 
-                            <div style={{height:'600px', overflow:'auto'}}>
-                            <PayView allcommission={this.state.allcommission} commission={this.state.commission} empSelected={this.state.selectedEmp} ticketslist={this.state.ticketslist} from_date={this.state.from_date} to_date={this.state.to_date}/>
+                            <div style={{overflow:'auto'}}>
+                            <PayView allcommission={this.state.allcommission} commission={this.state.commission} empSelected={this.state.selectedEmp} ticketslist={this.state.ticketslist} from_date={this.state.from_date} to_date={this.state.to_date} 
+                            onClose={()=>this.handleCloseReport()}/>
                             </div>
                         </div>
                     </div>

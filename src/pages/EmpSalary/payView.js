@@ -1,11 +1,13 @@
 import React from 'react';
 import axios from 'axios';
 import config from '../../config/config';
-import { Stack, Container, Typography, Grid,TextField } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import { Stack, Container, Typography, Grid,TextField, AppBar, Toolbar, IconButton } from '@mui/material';
 import DataManager from '../../controller/datacontroller';
 import TicketController from '../../controller/TicketController';
 import ButtonContent from '../../components/formComponents/Button';
 import Moment from 'moment';
+
 export default class ReportView extends React.Component  {
     dataManager = new DataManager();
     ticketController = new TicketController();
@@ -72,7 +74,10 @@ export default class ReportView extends React.Component  {
             transactions:[],
             disablePay: true,
             topaycash: 0,
-            topaycheck:0
+            topaycheck:0,
+            checknumber:'',
+            errorText:'',
+            showError: false
         }
     }
     componentDidMount(){ 
@@ -82,8 +87,8 @@ export default class ReportView extends React.Component  {
     getData(){
         if(this.props.empSelected !== undefined){ 
             this.setState({allcommission:this.props.allcommission, commission:this.props.commission, selected_emp: this.props.empSelected, ticket_details: this.props.ticketslist, from_date: this.props.from_date, to_date: this.props.to_date}, function() {
-                console.log(this.props)
-                console.log(this.state.ticketslist, this.state.allcommission) 
+                // console.log(this.props)
+                // console.log(this.state.ticketslist, this.state.allcommission) 
 
                 var totalpayable  = 0;
                 this.state.allcommission.forEach(elmt=>{
@@ -103,29 +108,29 @@ export default class ReportView extends React.Component  {
                     })
                 })       
                 
-                    console.log(this.state.selected_emp)
-                    this.dataManager.getData(`select Sum(amount) as Amount from emp_payment where employeeId=`+this.state.selected_emp.id).then(paid=>{
-                        if(paid.length > 0){
-                            console.log(paid)
-                        this.setState({paidamount:paid[0].Amount !== null ? paid[0].Amount  : 0})
-                        }
-                        this.dataManager.getData(`select Sum(amount) as Amount, pay_mode from emp_payment where employeeId=`+this.state.selected_emp.id+` group by pay_mode`).then(detil=>{
-                            detil.forEach(det=>{
-                                if(det.pay_mode === 'Cash' && det.Amount !== null && det.Amount > 0){
-                                    this.setState({  topaycash: this.state.topaycash-det["Amount"]}, ()=>{
-                                        this.checkvalidation();
-                                    })
-                                }
+                    // console.log(this.state.selected_emp)
+                    // this.dataManager.getData(`select Sum(amount) as Amount from emp_payment where employeeId=`+this.state.selected_emp.id).then(paid=>{
+                    //     if(paid.length > 0){
+                    //         console.log(paid)
+                    //     this.setState({paidamount:paid[0].Amount !== null ? paid[0].Amount  : 0})
+                    //     }
+                    //     this.dataManager.getData(`select Sum(amount) as Amount, pay_mode from emp_payment where employeeId=`+this.state.selected_emp.id+` group by pay_mode`).then(detil=>{
+                    //         detil.forEach(det=>{
+                    //             if(det.pay_mode === 'Cash' && det.Amount !== null && det.Amount > 0){
+                    //                 this.setState({  topaycash: this.state.topaycash-det["Amount"]}, ()=>{
+                    //                     this.checkvalidation();
+                    //                 })
+                    //             }
 
-                                if(det.pay_mode === 'Check' && det.Amount !== null && det.Amount > 0){
-                                    this.setState({  topaycheck: this.state.topaycheck - det["Amount"]}, ()=>{
-                                        this.checkvalidation();
-                                    })
-                                }
-                            })
-                        })
-                    })
-
+                    //             if(det.pay_mode === 'Check' && det.Amount !== null && det.Amount > 0){
+                    //                 this.setState({  topaycheck: this.state.topaycheck - det["Amount"]}, ()=>{
+                    //                     this.checkvalidation();
+                    //                 })
+                    //             }
+                    //         })
+                    //     })
+                    // })
+                    
                     this.getTransactions();
             }); 
         }
@@ -138,6 +143,16 @@ export default class ReportView extends React.Component  {
         })
     }
 
+    payConfirm(){
+        console.log()
+        if(Number(this.state.checkpay) >= 1 && this.state.checknumber === ''){
+            this.setState({ errorText:"Please enter check number." })
+        }
+        else{
+        this.setState({showPaypopup: true})
+        }
+    }
+
     payAmount(){
         // if(this.state.cashpay>0){
             var input = {
@@ -148,7 +163,8 @@ export default class ReportView extends React.Component  {
                 created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
                 isActive:1,
                 fromDate: this.state.from_date.toISOString().substring(0,10),
-                toDate: this.state.to_date.toISOString().substring(0,10)
+                toDate: this.state.to_date.toISOString().substring(0,10),
+                checknumber:this.state.checknumber
             }
             var userdetail = window.localStorage.getItem('employeedetail');
             if(userdetail !== undefined && userdetail !== null){
@@ -157,7 +173,8 @@ export default class ReportView extends React.Component  {
             window.api.getSyncUniqueId().then(sync=>{ 
                 input["sync_id"] = sync.syncid;
                 this.ticketController.saveData({table_name:'emp_payment', data:input}).then(()=>{
-                    this.getData()
+                    this.getData();
+                    this.props.onClose();
                 })
             })
 
@@ -187,13 +204,22 @@ export default class ReportView extends React.Component  {
     }
 
     checkvalidation(){
+        this.setState({errorText:''})
         if(this.state.topaycash <= 0 && this.state.topaycheck <= 0){
             console.log("if condi 1")
             this.setState({disablePay: true})
         }
-        else if((this.state.cashpay <=0 && this.state.checkpay <=0) || (this.state.cashpay > this.state.topaycash || this.state.checkpay > this.state.topaycheck)){
-            console.log("if condi 2")
+        else if((this.state.cashpay <=0 && this.state.checkpay <=0)){ 
             this.setState({disablePay:true})
+        } 
+        else if(this.state.cashpay > this.state.topaycash){
+            this.setState({disablePay:true, errorText:"Cash amount should be less than $"+this.state.topaycash })
+        } 
+        else if(this.state.checkpay > this.state.topaycheck){ 
+            this.setState({disablePay:true, errorText:"Check amount should be less than $"+this.state.topaycheck })
+        }
+        else if(Number(this.state.checkpay) > 0 && Number(this.state.checkpay) < 1){
+            this.setState({disablePay:true, errorText:"Check amount should not be less than $1"})
         }
         else{
             console.log("if condi 13", this.state.topaycash, this.state.topaycheck, this.state.cashpay, this.state.checkpay)
@@ -303,13 +329,13 @@ export default class ReportView extends React.Component  {
 
                     {this.state.selectedTab === 'payments' && <>
                             <Stack direction='row'>
-                            <div style={{width:'100%', display:'flex', flexDirection:'column'}}>
+                            <div style={{width:'100%', display:'flex',fontSize:'13px', flexDirection:'column'}}>
                                 <b>Total Payable:${Number(this.state.totalpayable).toFixed(2)}</b>
-                                <div style={{display:'flex', flexDireciton:'row', justifyContent:'space-between', padding:'1rem'}}>
+                                <div style={{display:'flex', flexDireciton:'row', justifyContent:'space-between', padding:'0'}}>
                                     <b>By Cash: ${Number(this.state.topaycash).toFixed(2)}</b> 
                                     <b>By Check: ${Number(this.state.topaycheck).toFixed(2)}</b>
                                 </div>
-                                <div style={{display:'flex', flexDireciton:'row'}}> 
+                                <div style={{display:'flex',fontSize:'13px', flexDireciton:'row', padding:0}}> 
                                     <TextField
                                         variant="outlined"
                                         value={this.state.cashpay}
@@ -337,8 +363,20 @@ export default class ReportView extends React.Component  {
                                             
                                             } 
                                         }}
-                                        style={{margin:'1rem'}}
+                                        style={{margin:'1rem 0'}}
                                     />
+                                    <TextField
+                                        variant="outlined" 
+                                        label="By Cash"
+                                        placeholder="Cash Amount" 
+                                        InputProps={{
+                                        startAdornment: <b>$</b>
+                                        }} 
+                                        style={{margin:'1rem 0', visibility:'hidden'}}
+                                    />
+                                </div>
+                                <div style={{display:'flex', flexDirection:'row'}}>
+                                    
                                     <TextField
                                         variant="outlined"
                                         value={this.state.checkpay}
@@ -368,16 +406,46 @@ export default class ReportView extends React.Component  {
                                                 
                                             }
                                         }}
-                                        style={{margin:'1rem'}}
+                                        style={{margin:'1rem 0'}}
                                     />
-                                    </div>
+                                    {this.state.checkpay >= 1 && <TextField
+                                        variant="outlined"
+                                        value={this.state.checknumber}
+                                        onChange={(e)=>{
+                                            this.setState({checknumber: e.target.value}, ()=>{
+                                                this.checkvalidation();
+                                            })
+                                        }}
+                                        label="Check Number"
+                                        placeholder="Check Number"  
+                                        onKeyDown = {(e)=>{ 
+                                            if(e.target.value.length >= 50){
+                                                e.preventDefault()
+                                            }
+                                        //     if(e.key === 'e'  || e.key === "+" || e.key === "-" ){ 
+                                        //         e.preventDefault();
+                                        //     } 
+                                
+                                        // if( e.keyCode > 64 && e.keyCode < 91 ) {  
+                                        //     e.preventDefault(); 
+                                        // }
+                                        //     if(e.key === "." && (e.target.value==="" || e.target.value.length===0) ) { 
+                                        //         e.preventDefault();
+                                            
+                                        //     } 
+                                        }}
+                                        style={{margin:'1rem 0 1rem 1rem'}}
+                                    />}
 
+                                    </div>
+                                    {this.state.errorText != '' && <div style={{display:'flex', justifyContent:'center', marginBottom:'1rem'}}><span style={{fontSize:'12px', fontWeight:'bold', color:'red'}}>{this.state.errorText}</span></div>}
                                 <ButtonContent permission_id = "pos_pay_salary" permission_label="Show Pay salary"
                                     color="success" 
                                     variant="contained" 
                                     size="small" 
+                                    style={{width:'200px', margin:'0 auto'}}
                                     disabled={this.state.disablePay}
-                                    onClick={()=>this.payAmount()} 
+                                    onClick={()=>this.payConfirm()} 
                                     label="Pay"/>
                             </div>
 
@@ -402,7 +470,61 @@ export default class ReportView extends React.Component  {
                             </div> */}
                             </Stack>
                     </>}
-                    
+                    {this.state.showPaypopup && <div>
+                    <div style={{border:'1px solid',right:0, bottom:0,top:'0',left:'0',position:'absolute', zIndex:'999999'}}>
+                        <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
+                        </div>
+                        <div style={{background:'#fff', height:'100%',  width:'100%', position:'relative'}}>
+                        
+                        <AppBar  color="primary" style={{ position: 'relative',background: 'transparent', boxShadow: 'none' }}>
+  <Toolbar> 
+
+                        <div style={{marginLeft: "auto",marginRight: -12}}>
+                        
+                            <IconButton
+                            edge="start"
+                            onClick={()=>{
+                                this.setState({showPaypopup: false})
+                            }}
+                            aria-label="close"
+                            style={{"color":'#134163'}}
+                            >
+                                <CloseIcon />
+                            </IconButton>
+                        </div>
+                    </Toolbar>
+                    </AppBar>
+
+                            <div style={{overflow:'auto', textAlign:'center'}}>
+                                <p>Do you want to confirm the amount?</p>
+
+                                <div style={{display:'flex', flexDirection:'column',padding:'1rem'}}>
+                                    <div style={{display:'flex', flexDirection:'row'}}>
+                                        <b> Cash : </b>
+                                        <b>${this.state.cashpay}</b>
+                                    </div>
+                                    <div style={{display:'flex', flexDirection:'row'}}>
+                                        <b> Check : </b>
+                                        <b>${this.state.checkpay} </b>
+                                    </div>
+                                    <div style={{display:'flex', flexDirection:'row', marginBottom:'2rem'}}>
+                                        <b> Check Number: </b>
+                                        <b>{this.state.checknumber} </b>
+                                    </div>
+                                    <div style={{dispaly:'flex', justifyContent:'center'}}>
+                                        <ButtonContent permission_id = "pos_pay_salary" permission_label="Show Pay salary"
+                                        color="success" 
+                                        variant="contained" 
+                                        size="small" 
+                                        disabled={this.state.disablePay}
+                                        onClick={()=>this.payAmount()} 
+                                        label="Pay"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>}
                 </Container>
             </div>
         )

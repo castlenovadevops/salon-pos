@@ -62,7 +62,8 @@ export default class EmployeeSettingForm extends React.Component {
             alert_msg:'',
             employeelist:[],
             searched:'',
-            isOnline: false
+            isOnline: false,
+            offlineCheckAlert: false,
         };
         this.handlechange = this.handlechange.bind(this);
         this.handleChangeEmp = this.handleChangeEmp.bind(this);
@@ -81,7 +82,7 @@ export default class EmployeeSettingForm extends React.Component {
         //     }
         // }, 100);
         var condition = navigator.onLine ? 'online' : 'offline';
-        this.setState({isOnline: (condition=="online") ? true: false})
+        this.setState({isOnline: (condition==="online") ? true: false})
 
         var userdetail = window.localStorage.getItem('employeedetail');
         if(userdetail !== undefined && userdetail !== null){
@@ -402,9 +403,11 @@ export default class EmployeeSettingForm extends React.Component {
     }
     checkOnline(){
         var condition = navigator.onLine ? 'online' : 'offline';
-        this.setState({isOnline: (condition=="online") ? true: false},function(){
+        this.setState({isOnline: (condition==="online") ? true: false},function(){
             if(this.state.isOnline){
                 this.saveEmployeeSalary();
+            }else{
+                this.setState({offlineCheckAlert: true });
             }
         })
     }
@@ -432,6 +435,7 @@ export default class EmployeeSettingForm extends React.Component {
             delete input["employeelist"];
             delete input["searched"];
             delete input["isOnline"];
+            delete input["offlineCheckAlert"];
             input["updated_at"] = new Date().toISOString();
             input["created_at"] = new Date().toISOString();
             var businessdetail = window.localStorage.getItem('businessdetail');
@@ -596,9 +600,9 @@ export default class EmployeeSettingForm extends React.Component {
 
                                 
                                 <Stack direction="row" spacing={2} alignItems="center" justifyContent="center">
-                                    <div style={{ display : this.state.isOnline ? 'block':'none'}}>
+                                    {/* <div style={{ display : this.state.isOnline ? 'block':'none'}}> */}
                                         <ButtonContent size="large" variant="contained" onClick={()=>this.checkOnline()} disabled={this.state.isDisable} label={this.state.isEdit ? 'Update' : 'Save' } />
-                                    </div>
+                                    {/* </div> */}
                                 </Stack>
                             </Stack>
                         </form>
@@ -623,6 +627,30 @@ export default class EmployeeSettingForm extends React.Component {
                     <ButtonContent  size="large" variant="outlined" label="OK" onClick={()=>this.handleCloseAlert()}/>
                 </DialogActions>
             </Dialog>
+
+            <Dialog
+                open={this.state.offlineCheckAlert}
+                onClose={()=>{
+                    this.setState({offlineCheckAlert: false})
+                }}
+                aria-labelledby="alert-dialog-title"
+                aria-describedby="alert-dialog-description"
+            >
+                <DialogTitle id="alert-dialog-title">
+                {"Alert"}
+                </DialogTitle>
+                <DialogContent>
+                <DialogContentText id="alert-dialog-description">
+                    {"No Internet available! Please check your connection."}
+                </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <ButtonContent  size="large" variant="outlined" label="OK" onClick={()=>{
+                        this.setState({offlineCheckAlert: false})
+                    }}/>
+                </DialogActions>
+            </Dialog>
+
             </div>
             
             

@@ -244,7 +244,7 @@ export default class TicketController {
         window.api.invoke('evantcall', 'saveTicketService save called ' + idx).then(r => {
 
         })
-        console.log("SAVE TICKET SERTIC#E: idx ", idx, services_taken)
+        console.log("SAVE TICKET SERTIC#E: idx ", idx, services_taken, stateinput.isPaidOnOpen)
         if( !stateinput.isPaidOnOpen){
             if(idx == 0){
                 this.updateData({ table_name: 'ticket_services', data: { isActive:2, sync_status: 0 }, query_field: 'ticketref_id', query_value: ticketid }).then(r => {

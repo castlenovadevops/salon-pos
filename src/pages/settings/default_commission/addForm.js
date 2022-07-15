@@ -30,7 +30,8 @@ export default class CommissionForm extends React.Component {
             perAlert_Open: false,
             alert_msg:'',
             isLoading: false,
-            isOnline: false
+            isOnline: false,
+            offlineCheckAlert: false,
         };
         this.handlechange = this.handlechange.bind(this);
         this.handleclose = this.handleclose.bind(this);
@@ -38,14 +39,19 @@ export default class CommissionForm extends React.Component {
     }
     componentDidMount(){
         var condition = navigator.onLine ? 'online' : 'offline';
-        this.setState({isOnline: (condition=="online") ? true: false})
+        this.setState({isOnline: (condition==="online") ? true: false})
 
         setTimeout(() => { 
             if(this.props.commissionToEdit !== undefined){
-                this.setState({commissionSelected: this.props.commissionToEdit,isEdit : true,isDisable:false}, function(){
+                this.setState({commissionSelected: this.props.commissionToEdit,isEdit : true}, function(){
                     let statevbl = this.state
                     statevbl = this.state.commissionSelected;
                     this.setState(statevbl);
+                    // if(!this.state.isOnline){
+                    //     this.setState({isDisable: true});
+                    // }else{
+                    //     this.setState({isDisable: false});
+                    // }
                 })
             }
         }, 100);
@@ -76,10 +82,10 @@ export default class CommissionForm extends React.Component {
     handlekeypress(e){
        
         if(e.target.name === "check_percentage"   || e.target.name === "cash_percentage" || e.target.name === "owner_percentage"   || e.target.name === "emp_percentage"){
-            if(e.key == 'e'  || e.key == "+" || e.key == "-"){
+            if(e.key === 'e'  || e.key === "+" || e.key === "-"){
                 e.preventDefault();
             }
-            if(e.key == "." && (e.target.value=="" || e.target.value.length==0) ) {
+            if(e.key === "." && (e.target.value==="" || e.target.value.length===0) ) {
                 e.preventDefault();
                
             }
@@ -186,9 +192,11 @@ export default class CommissionForm extends React.Component {
 
     checkOnline(){
         var condition = navigator.onLine ? 'online' : 'offline';
-        this.setState({isOnline: (condition=="online") ? true: false},function(){
+        this.setState({isOnline: (condition==="online") ? true: false},function(){
             if(this.state.isOnline){
                 this.saveCommision();
+            }else{
+                this.setState({offlineCheckAlert: true });
             }
         })
         
@@ -216,6 +224,7 @@ export default class CommissionForm extends React.Component {
               delete input["isLoading"];
               delete input["businessdetail"]; 
               delete input["isOnline"];
+              delete input["offlineCheckAlert"];
               
               var userdetail = window.localStorage.getItem('employeedetail');
                 if(userdetail !== undefined && userdetail !== null){
@@ -338,9 +347,9 @@ export default class CommissionForm extends React.Component {
                     
                 </Stack>
                 <Stack direction="row" spacing={2} alignItems="center" justifyContent="center" style={{marginTop: 10}} >
-                    <div style={{ display : this.state.isOnline ? 'block':'none'}}>
+                    {/* <div style={{ display : this.state.isOnline ? 'block':'none'}}> */}
                     <ButtonContent  size="large" variant="contained" disabled={this.state.isDisable} label={this.state.isEdit ? 'Update' : 'Save' } onClick={()=>this.checkOnline()}/>
-                    </div>
+                    {/* </div> */}
                     
                     {/* <ButtonContent  size="large" variant="outlined" label="Cancel" onClick={()=>this.handleclose()}/> */}
                 </Stack>
@@ -362,6 +371,29 @@ export default class CommissionForm extends React.Component {
                 </DialogContent>
                 <DialogActions>
                     <ButtonContent  size="large" variant="outlined" label="OK" onClick={()=>this.handleCloseAlert()}/>
+                </DialogActions>
+            </Dialog>
+
+            <Dialog
+                open={this.state.offlineCheckAlert}
+                onClose={()=>{
+                    this.setState({offlineCheckAlert: false})
+                }}
+                aria-labelledby="alert-dialog-title"
+                aria-describedby="alert-dialog-description"
+            >
+                <DialogTitle id="alert-dialog-title">
+                {"Alert"}
+                </DialogTitle>
+                <DialogContent>
+                <DialogContentText id="alert-dialog-description">
+                    {"No Internet available! Please check your connection."}
+                </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <ButtonContent  size="large" variant="outlined" label="OK" onClick={()=>{
+                        this.setState({offlineCheckAlert: false})
+                    }}/>
                 </DialogActions>
             </Dialog>
             </div>

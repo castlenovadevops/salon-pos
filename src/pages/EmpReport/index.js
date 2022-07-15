@@ -673,32 +673,40 @@ export default class EmployeeReport extends React.Component {
                     reportType:this.state.tabName
                 }
                 
-        var supplysql = `select SUM(service_cost) as PaidAmount from ticket_services as ts join ticket_payment as tp on tp.ticketref_id=ts.ticketref_id where tp.isActive=1 and  tp.ticketref_id in   (select sync_id from ticket where ts.employee_id=`+emp+` and sync_id in (select ticketref_id from ticket_payment where   DATE(paid_at) between '`+input.from_date+`' and '`+input.to_date+`') and isDelete=0 and businessId=`+input.businessId+` and paid_status='paid') and ts.service_id in (select sync_id from services where producttype='product')`
+        var supplysql = `select SUM(service_cost) as PaidAmount from ticket_services as ts join ticket_payment as tp on tp.ticketref_id=ts.ticketref_id where tp.isActive=1 and  tp.ticketref_id in   (select sync_id from ticket where ts.employee_id=`+emp+` and sync_id in (select ticketref_id from ticket_payment where   DATE(paid_at) between '`+input.from_date+`' and '`+input.to_date+`') and isDelete=0 and businessId=`+input.businessId+` and paid_status='paid') and ts.service_id in (select sync_id from services where producttype='product')`;
 
-        this.dataManager.getData(supplysql).then(da=>{
-            var supplyamt = da.length > 0 ? da[0].PaidAmount : 0;
+        var nettsql= `select sum(cash_amt) as nett from employee_commission_detail as ec where ec.cash_type_for='service' and ec.employeeId=`+emp+` and  ec.ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where   DATE(paid_at) between '`+input.from_date+`' and '`+input.to_date+`') and isDelete=0 and businessId=`+input.businessId+` and paid_status='paid')`;
 
-            if(empreport.length === 0){
-                var empdetail = this.state.employeelist.filter(r=>r.id === emp);
-                finalreport.push({
-                    employee_id: emp,
-                    firstName: empdetail[0].firstName,
-                    lastName: empdetail[0].lastName,
-                    tickets:[],
-                    discountdata: discountdata,
-                    supplies_amt : supplyamt
-                })
-            } 
-            else{
-                empreport[0].supplies_amt = supplyamt;
-                finalreport.push(empreport[0]);
-            }
-            if(j === this.state.selectedemps.length-1 ){ 
-                console.log("$$$$$$$$$")
-                console.log(finalreport)
-                this.setState({isLoading: false,  empReport:finalreport, showDatePopup: false})
-            }
-        })
+
+        this.dataManager.getData(nettsql).then(nett=>{
+            this.dataManager.getData(supplysql).then(da=>{
+                var supplyamt = da.length > 0 ? da[0].PaidAmount : 0;
+                var nettamt = nett.length > 0 ? nett[0].nett : 0;
+
+                if(empreport.length === 0){
+                    var empdetail = this.state.employeelist.filter(r=>r.id === emp);
+                    finalreport.push({
+                        employee_id: emp,
+                        firstName: empdetail[0].firstName,
+                        lastName: empdetail[0].lastName,
+                        tickets:[],
+                        discountdata: discountdata,
+                        supplies_amt : supplyamt,
+                        nett:nettamt
+                    })
+                } 
+                else{
+                    empreport[0].supplies_amt = supplyamt;
+                    empreport[0].nett = nettamt
+                    finalreport.push(empreport[0]);
+                }
+                if(j === this.state.selectedemps.length-1 ){ 
+                    console.log("$$$$$$$$$")
+                    console.log(finalreport)
+                    this.setState({isLoading: false,  empReport:finalreport, showDatePopup: false})
+                }
+            })
+        });
                 
           });
         }
@@ -1290,6 +1298,12 @@ export default class EmployeeReport extends React.Component {
                             <Grid item xs={4}>${Number(totalAmount).toFixed(2)}</Grid>
                         </Grid> 
 
+
+
+                        <Grid container style={{textTransform:'capitalize', fontWeight:'700', display:'flex', alignItems:'center', justifyContent:'space-between',  width:'100%',}}>
+                            <Grid item xs={8}>Nett</Grid>
+                            <Grid item xs={4}>${emp.nett !== null ? Number(emp.nett).toFixed(2) : '0.00'}</Grid>
+                        </Grid> 
                         </div>)
                 }
                 else{ 

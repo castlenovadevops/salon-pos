@@ -71,11 +71,11 @@ export default class ProductForm extends React.Component {
             selectOptions: [],
             serviceSelected: {},
             isEdit: false,
-            tax_type: 'notax',
+            tax_type: 'default',
             default_taxDetail: [],
             all_taxDetail: [],
             isCustom: false,
-            isDefault: false,
+            isDefault: true,
             taxes: [],
             service_taxes: [],
             edited_taxes: [],
@@ -436,7 +436,7 @@ export default class ProductForm extends React.Component {
     saveTaxes(input,serviceid) {
         var taxes = this.state.taxes; 
         this.dataManager.saveData("update services_tax set status='inactive' where service_id='" +serviceid + "'").then(r => {
-            if (this.state.tax_type === 'default') {
+            if (this.state.tax_type === 'default' && this.state.isDefaultTax_available) {
                 var taxInput1 = {};
                 window.api.getSyncUniqueId().then(sync => {
                     var syncid = sync.syncid;
@@ -739,6 +739,7 @@ export default class ProductForm extends React.Component {
                                             return <><Checkbox 
                                             value={v.id}
                                          checked
+                                         disabled
                                          label={v.tax_name + " (" + v.tax_value + " " + v.tax_type + ")"}
                                          onChange={(e) => { this.handleCheckbox(e); }}
                                          inputProps={{ 'aria-label': 'controlled' }}
