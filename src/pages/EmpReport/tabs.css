@@ -3,7 +3,7 @@
     float: left;
     border-right: 1px solid #f0f0f0;
     background-color: #f0f0f0;
-    width: 30%;
+    width: 20%;
     height: 100%;
   }
   
@@ -38,7 +38,7 @@
   .tabcontent {
     float: left;
     padding: 0px 12px 1rem; 
-    width: 70%;
+    width: 80%;
     border-left: none;
     height: 100%;
     overflow: auto;

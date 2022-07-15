@@ -67,7 +67,7 @@ export default class ReportView extends React.Component  {
             totalpayable:0,
             cashpay:0,
             checkpay:0,
-            selectedTab:'payout',
+            selectedTab:'payments',
             paidamount:0, 
             transactions:[],
             disablePay: true,
@@ -83,7 +83,7 @@ export default class ReportView extends React.Component  {
         if(this.props.empSelected !== undefined){ 
             this.setState({allcommission:this.props.allcommission, commission:this.props.commission, selected_emp: this.props.empSelected, ticket_details: this.props.ticketslist, from_date: this.props.from_date, to_date: this.props.to_date}, function() {
                 console.log(this.props)
-                console.log(this.state.ticket_details) 
+                console.log(this.state.ticketslist, this.state.allcommission) 
 
                 var totalpayable  = 0;
                 this.state.allcommission.forEach(elmt=>{
@@ -104,27 +104,27 @@ export default class ReportView extends React.Component  {
                 })       
                 
                     console.log(this.state.selected_emp)
-                    // this.dataManager.getData(`select Sum(amount) as Amount from emp_payment where employeeId=`+this.state.selected_emp.id).then(paid=>{
-                    //     if(paid.length > 0){
-                    //         console.log(paid)
-                    //     this.setState({paidamount:paid[0].Amount !== null ? paid[0].Amount  : 0})
-                    //     }
-                    //     this.dataManager.getData(`select Sum(amount) as Amount, pay_mode from emp_payment where employeeId=`+this.state.selected_emp.id+` group by pay_mode`).then(detil=>{
-                    //         detil.forEach(det=>{
-                    //             if(det.pay_mode === 'Cash' && det.Amount !== null && det.Amount > 0){
-                    //                 this.setState({  topaycash: this.state.topaycash-det["Amount"]}, ()=>{
-                    //                     this.checkvalidation();
-                    //                 })
-                    //             }
+                    this.dataManager.getData(`select Sum(amount) as Amount from emp_payment where employeeId=`+this.state.selected_emp.id).then(paid=>{
+                        if(paid.length > 0){
+                            console.log(paid)
+                        this.setState({paidamount:paid[0].Amount !== null ? paid[0].Amount  : 0})
+                        }
+                        this.dataManager.getData(`select Sum(amount) as Amount, pay_mode from emp_payment where employeeId=`+this.state.selected_emp.id+` group by pay_mode`).then(detil=>{
+                            detil.forEach(det=>{
+                                if(det.pay_mode === 'Cash' && det.Amount !== null && det.Amount > 0){
+                                    this.setState({  topaycash: this.state.topaycash-det["Amount"]}, ()=>{
+                                        this.checkvalidation();
+                                    })
+                                }
 
-                    //             if(det.pay_mode === 'Check' && det.Amount !== null && det.Amount > 0){
-                    //                 this.setState({  topaycheck: this.state.topaycheck - det["Amount"]}, ()=>{
-                    //                     this.checkvalidation();
-                    //                 })
-                    //             }
-                    //         })
-                    //     })
-                    // })
+                                if(det.pay_mode === 'Check' && det.Amount !== null && det.Amount > 0){
+                                    this.setState({  topaycheck: this.state.topaycheck - det["Amount"]}, ()=>{
+                                        this.checkvalidation();
+                                    })
+                                }
+                            })
+                        })
+                    })
 
                     this.getTransactions();
             }); 
@@ -139,36 +139,16 @@ export default class ReportView extends React.Component  {
     }
 
     payAmount(){
-        if(this.state.cashpay>0){
+        // if(this.state.cashpay>0){
             var input = {
                 employeeId: this.state.selected_emp.id,
                 businessId: JSON.parse(window.localStorage.getItem('businessdetail')).id,
-                amount:this.state.cashpay,
-                pay_mode:'Cash',
-                created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
-                isActive:1
-            }
-            var userdetail = window.localStorage.getItem('employeedetail');
-            if(userdetail !== undefined && userdetail !== null){
-                input["created_by"] = JSON.parse(userdetail).id;  
-            }
-            window.api.getSyncUniqueId().then(sync=>{ 
-                input["sync_id"] = sync.syncid;
-                this.ticketController.saveData({table_name:'emp_payment', data:input}).then(()=>{
-                    this.getData()
-                })
-            })
-
-        }
-        if(this.state.checkpay>0){
-            var input = {
-                employeeId: this.state.selected_emp.id,
-                businessId: JSON.parse(window.localStorage.getItem('businessdetail')).id,
-                amount:this.state.checkpay,
-                pay_mode:'Check',
+                CashAmount:this.state.cashpay,
+                CheckAmount:this.state.checkpay, 
                 created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
                 isActive:1,
-                sync_status:0
+                fromDate: this.state.from_date.toISOString().substring(0,10),
+                toDate: this.state.to_date.toISOString().substring(0,10)
             }
             var userdetail = window.localStorage.getItem('employeedetail');
             if(userdetail !== undefined && userdetail !== null){
@@ -181,7 +161,29 @@ export default class ReportView extends React.Component  {
                 })
             })
 
-        }
+        // }
+        // if(this.state.checkpay>0){
+        //     var input = {
+        //         employeeId: this.state.selected_emp.id,
+        //         businessId: JSON.parse(window.localStorage.getItem('businessdetail')).id,
+        //         amount:this.state.checkpay,
+        //         pay_mode:'Check',
+        //         created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
+        //         isActive:1,
+        //         sync_status:0
+        //     }
+        //     var userdetail = window.localStorage.getItem('employeedetail');
+        //     if(userdetail !== undefined && userdetail !== null){
+        //         input["created_by"] = JSON.parse(userdetail).id;  
+        //     }
+        //     window.api.getSyncUniqueId().then(sync=>{ 
+        //         input["sync_id"] = sync.syncid;
+        //         this.ticketController.saveData({table_name:'emp_payment', data:input}).then(()=>{
+        //             this.getData()
+        //         })
+        //     })
+
+        // }
     }
 
     checkvalidation(){
@@ -228,25 +230,23 @@ export default class ReportView extends React.Component  {
                         height:' calc(100% - 48px)',
                         marginTop: '1rem',
                         overflow: 'auto'}}>
-                   <div style={{width:'50%', fontSize:'13px'}}> <Grid container>
+                   <div style={{width:'50%'}}> <Grid container>
                         <Grid item xs={3}><b>Date</b></Grid> 
                         <Grid item xs={3}><b>Amount</b></Grid>
                         <Grid item xs={3}><b>Tip</b></Grid>
                         <Grid item xs={3}><b>Discount</b></Grid> 
                     </Grid>
                     {this.state.ticket_details.map(elmt=>{
-                        if(elmt.Amount != null){
                         return <>
                             <Grid container>
                                 <Grid item xs={3}>
-                                     {elmt.ticket_date}
+                                    <b>{elmt.ticket_date}</b>
                                 </Grid> 
                                 <Grid item xs={3}>{Number(elmt.Amount).toFixed(2)}</Grid>
                                 <Grid item xs={3}>{Number(elmt.Tips).toFixed(2)}</Grid>
                                 <Grid item xs={3}>{Number(elmt.Discount).toFixed(2)}</Grid> 
                             </Grid>
                         </>
-                        }
                     })}
                     </div> 
 
@@ -294,16 +294,16 @@ export default class ReportView extends React.Component  {
                                 <Grid item xs={6}><b>Check({this.state.commission.check_percentage+"%"})</b></Grid>
                                 <Grid item xs={6}><b>${Number(this.state.totalpayable * (this.state.commission.check_percentage / 100)).toFixed(2)}</b></Grid>
                             </Grid>
-                            {/* <Grid container style={{margin:'0.5rem 0'}}>
+                            <Grid container style={{margin:'0.5rem 0'}}>
                                 <Grid item xs={6}><b>Paid Amount</b></Grid>
                                 <Grid item xs={6}><b>${Number(this.state.paidamount).toFixed(2)}</b></Grid>
-                            </Grid> */}
+                            </Grid>
                     </div> 
                     </Stack> </>}
 
                     {this.state.selectedTab === 'payments' && <>
                             <Stack direction='row'>
-                            <div style={{width:'50%', display:'flex', flexDirection:'column'}}>
+                            <div style={{width:'100%', display:'flex', flexDirection:'column'}}>
                                 <b>Total Payable:${Number(this.state.totalpayable).toFixed(2)}</b>
                                 <div style={{display:'flex', flexDireciton:'row', justifyContent:'space-between', padding:'1rem'}}>
                                     <b>By Cash: ${Number(this.state.topaycash).toFixed(2)}</b> 
@@ -381,7 +381,7 @@ export default class ReportView extends React.Component  {
                                     label="Pay"/>
                             </div>
 
-                            <div style={{width:'50%', paddingLeft:'1rem', borderLeft:'1px solid #f0f0f0'}}>
+                            {/* <div style={{width:'50%', paddingLeft:'1rem', borderLeft:'1px solid #f0f0f0'}}>
                                 <h3>Transactions</h3>
                                 {this.state.transactions.length == 0 && <p style={{padding:'1rem', fontSize:'12px'}}><b>No transactions added yet.</b></p>}
                                 {this.state.transactions.length > 0 &&
@@ -399,7 +399,7 @@ export default class ReportView extends React.Component  {
                                         <Grid item xs={4}>{txn.pay_mode}</Grid> 
                                     </Grid>
                                 })}
-                            </div>
+                            </div> */}
                             </Stack>
                     </>}
                     

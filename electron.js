@@ -23,7 +23,7 @@ const db = new sqlite3.Database(
   }
 );
 
-Menu.setApplicationMenu(null);
+// Menu.setApplicationMenu(null);
 const createWindow = () => {
 
   splash = new BrowserWindow({width: 600, height: 300, alwaysOnTop: true, frame: false});

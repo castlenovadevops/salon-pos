@@ -245,53 +245,116 @@ export default class TicketController {
 
         })
         console.log("SAVE TICKET SERTIC#E: idx ", idx, services_taken)
-        if(!stateinput.isPaidOnOpen){
-            if (idx < services_taken.length) {
-                console.log("IF SAVE TICKET SERTIC#E: idx ", idx )
-                var obj = services_taken[idx];
-                obj["ticket_id"] = ticketid;
-                obj["service_id"] = obj.servicedetail.service_id
-                obj["ticketref_id"] = ticketDetail.sync_id
-                window.api.getSyncUniqueId().then(syncres => {
-                    var syncid = syncres.syncid;
-                    var service_input = {
-                        // ticket_id: ticketid,
-                        service_id: obj.servicedetail.service_id,
-                        employee_id: obj.employee_id,
-                        service_cost: obj.subtotal,
-                        service_quantity: obj.qty,
-                        istax_selected: 0,
-                        perunit_cost: obj.perunit_cost,
-                        discount_id: obj.discount.discount_id !== undefined ? obj.discount.discount_id : 0,
-                        discount_type: obj.discount.discount_type !== undefined ? obj.discount.discount_type : 0,
-                        discount_value: obj.discount.discount_value !== undefined ? obj.discount.discount_value : 0,
-                        total_discount_amount: obj.discountamount,
-                        tips_amount: obj.tips_amount !== undefined ? obj.tips_amount : 0,
-                        isActive: 1,
-                        isSpecialRequest: obj.isSpecialRequest !== undefined ? obj.isSpecialRequest : 0,
-                        created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
-                        created_by: userdetail.id,
-                        process: obj.process !== undefined ? obj.process : '',
-                        previousticketid: obj.previousticketid !== undefined ? obj.previousticketid : '',
-                        ticketref_id: ticketDetail.sync_id,
-                        sync_id: syncid,
-                        sync_status: 0,
-                        sort_number: idx + 1,
-                    }
-                    this.saveData({ table_name: 'ticket_services', data: service_input }).then(sres => {
-                        console.log("table_name: 'ticket_services'", sres)
-                        if (sres.length > 0) {
-                            var ticketservice_id = sres[0].id;
-                            obj["id"] = ticketservice_id;
-                            obj["sync_id"] = syncid;
-                            this.saveTaxes(ticketid, ticketservice_id, obj, 0, idx, ticketDetail, services_taken, userdetail,stateinput)
-                        }
-                    })
+        if( !stateinput.isPaidOnOpen){
+            if(idx == 0){
+                this.updateData({ table_name: 'ticket_services', data: { isActive:2, sync_status: 0 }, query_field: 'ticketref_id', query_value: ticketid }).then(r => {
 
+                    this.updateData({ table_name: 'ticketservice_taxes', data: {  isActive:2,sync_status: 0 }, query_field: 'ticketref_id', query_value:ticketid}).then(r => {
+
+                        this.updateData({ table_name: 'ticketservice_requestnotes', data: {  isActive:2,sync_status: 0 }, query_field: 'ticketref_id', query_value: ticketid}).then(r => {
+
+                            this.updateData({ table_name: 'ticket_payment', data: {  isActive:2,sync_status: 0 }, query_field: 'ticketref_id', query_value: ticketid }).then(r => {
+
+                                this.updateData({ table_name: 'employee_commission_detail', data: {  isActive:2,sync_status: 0 }, query_field: 'ticketref_id', query_value:ticketid }).then(r => {
+                                    
+                                    if (idx < services_taken.length) {
+                                        console.log("IF SAVE TICKET SERTICE: idx ", idx )
+                                        var obj = services_taken[idx];
+                                        obj["ticket_id"] = ticketid;
+                                        obj["service_id"] = obj.servicedetail.service_id
+                                        obj["ticketref_id"] = ticketDetail.sync_id
+                                        window.api.getSyncUniqueId().then(syncres => {
+                                            var syncid = syncres.syncid;
+                                            var service_input = {
+                                                // ticket_id: ticketid,
+                                                service_id: obj.servicedetail.service_id,
+                                                employee_id: obj.employee_id,
+                                                service_cost: obj.subtotal,
+                                                service_quantity: obj.qty,
+                                                istax_selected: 0,
+                                                perunit_cost: obj.perunit_cost,
+                                                discount_id: obj.discount.discount_id !== undefined ? obj.discount.discount_id : 0,
+                                                discount_type: obj.discount.discount_type !== undefined ? obj.discount.discount_type : 0,
+                                                discount_value: obj.discount.discount_value !== undefined ? obj.discount.discount_value : 0,
+                                                total_discount_amount: obj.discountamount,
+                                                tips_amount: obj.tips_amount !== undefined ? obj.tips_amount : 0,
+                                                isActive: 1,
+                                                isSpecialRequest: obj.isSpecialRequest !== undefined ? obj.isSpecialRequest : 0,
+                                                created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
+                                                created_by: userdetail.id,
+                                                process: obj.process !== undefined ? obj.process : '',
+                                                previousticketid: obj.previousticketid !== undefined ? obj.previousticketid : '',
+                                                ticketref_id: ticketDetail.sync_id,
+                                                sync_id: syncid,
+                                                sync_status: 0,
+                                                sort_number: idx + 1,
+                                            }
+                                            this.saveData({ table_name: 'ticket_services', data: service_input }).then(sres => {
+                                                console.log("table_name: 'ticket_services'", sres)
+                                                if (sres.length > 0) {
+                                                    var ticketservice_id = sres[0].id;
+                                                    obj["id"] = ticketservice_id;
+                                                    obj["sync_id"] = syncid;
+                                                    this.saveTaxes(ticketid, ticketservice_id, obj, 0, idx, ticketDetail, services_taken, userdetail,stateinput)
+                                                }
+                                            })
+
+                                        })
+                                    }
+                                    else {
+
+                                    }
+                                })
+                            })
+                        })
+                    })
                 })
             }
-            else {
+            else{
+                if (idx < services_taken.length) {
+                    console.log("IF SAVE TICKET SERTICE: idx ", idx )
+                    var obj = services_taken[idx];
+                    obj["ticket_id"] = ticketid;
+                    obj["service_id"] = obj.servicedetail.service_id
+                    obj["ticketref_id"] = ticketDetail.sync_id
+                    window.api.getSyncUniqueId().then(syncres => {
+                        var syncid = syncres.syncid;
+                        var service_input = {
+                            // ticket_id: ticketid,
+                            service_id: obj.servicedetail.service_id,
+                            employee_id: obj.employee_id,
+                            service_cost: obj.subtotal,
+                            service_quantity: obj.qty,
+                            istax_selected: 0,
+                            perunit_cost: obj.perunit_cost,
+                            discount_id: obj.discount.discount_id !== undefined ? obj.discount.discount_id : 0,
+                            discount_type: obj.discount.discount_type !== undefined ? obj.discount.discount_type : 0,
+                            discount_value: obj.discount.discount_value !== undefined ? obj.discount.discount_value : 0,
+                            total_discount_amount: obj.discountamount,
+                            tips_amount: obj.tips_amount !== undefined ? obj.tips_amount : 0,
+                            isActive: 1,
+                            isSpecialRequest: obj.isSpecialRequest !== undefined ? obj.isSpecialRequest : 0,
+                            created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
+                            created_by: userdetail.id,
+                            process: obj.process !== undefined ? obj.process : '',
+                            previousticketid: obj.previousticketid !== undefined ? obj.previousticketid : '',
+                            ticketref_id: ticketDetail.sync_id,
+                            sync_id: syncid,
+                            sync_status: 0,
+                            sort_number: idx + 1,
+                        }
+                        this.saveData({ table_name: 'ticket_services', data: service_input }).then(sres => {
+                            console.log("table_name: 'ticket_services'", sres)
+                            if (sres.length > 0) {
+                                var ticketservice_id = sres[0].id;
+                                obj["id"] = ticketservice_id;
+                                obj["sync_id"] = syncid;
+                                this.saveTaxes(ticketid, ticketservice_id, obj, 0, idx, ticketDetail, services_taken, userdetail,stateinput)
+                            }
+                        })
 
+                    })
+                }
             }
         }
         else{
@@ -369,43 +432,317 @@ export default class TicketController {
         businessdetail = JSON.parse(detail);
         var employeedetail = {}
         var detail1 = window.localStorage.getItem('employeedetail');
-        employeedetail = JSON.parse(detail1);
+        employeedetail = JSON.parse(detail1); 
+        if(selectedservice.servicedetail.producttype === 'service'){
+            // Service Commission Calculation for Employee & owner for ticket services - Start
+            window.api.getSyncUniqueId().then(syndata => {
+                var csyncid = syndata.syncid;
+                const defsql = "select * from default_commission where businessId =  '" + businessdetail["id"] + "'"
+                this.dataManager.getData(defsql).then(defres => {
+                    var ownerid = '';
+                    this.dataManager.getData("select * from users where staff_role='Owner'").then(own => {
+                        console.log("OPWNER DETAIL")
+                        console.log(defres)
+                        if (own.length > 0)
+                            ownerid = own[0].id;
 
-        // Service Commission Calculation for Employee & owner for ticket services - Start
-        window.api.getSyncUniqueId().then(syndata => {
-            var csyncid = syndata.syncid;
-            const defsql = "select * from default_commission where businessId =  '" + businessdetail["id"] + "'"
-            this.dataManager.getData(defsql).then(defres => {
-                var ownerid = '';
-                this.dataManager.getData("select * from users where staff_role='Owner'").then(own => {
-                    console.log("OPWNER DETAIL")
-                    console.log(defres)
-                    if (own.length > 0)
-                        ownerid = own[0].id;
+                        if (defres.length > 0) {
+                            const sql = "select * from employee_salary where employeeId =  '" + selectedservice.employee_id + "'"
 
-                    if (defres.length > 0) {
-                        const sql = "select * from employee_salary where employeeId =  '" + selectedservice.employee_id + "'"
+                            this.dataManager.getData(sql).then(response => {
 
-                        this.dataManager.getData(sql).then(response => {
+                                var owner_percentage = defres[0].owner_percentage;
+                                var employee_percentage = defres[0].emp_percentage;
+                                var per_amt = 0;
+                                if (response.length > 0) {
+                                    owner_percentage = response[0].owner_percentage;
+                                    employee_percentage = response[0].employee_percentage;
+                                }
 
-                            var owner_percentage = defres[0].owner_percentage;
-                            var employee_percentage = defres[0].emp_percentage;
-                            var per_amt = 0;
-                            if (response.length > 0) {
-                                owner_percentage = response[0].owner_percentage;
-                                employee_percentage = response[0].employee_percentage;
+                                console.log("owner employee perccent",employee_percentage, owner_percentage);
+                                //Employee Service Commission Calculation 
+                                per_amt = (employee_percentage / 100) * selectedservice.qty * selectedservice.perunit_cost;
+                                var emp_input = {
+                                    employeeId: selectedservice.employee_id,
+                                    businessId: businessdetail["id"],
+                                    // ticket_id: selectedservice.ticket_id,
+                                    // ticket_serviceId: selectedservice.id,
+                                    cash_type_for: 'service',
+                                    cash_amt: per_amt,
+                                    created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
+                                    created_by: employeedetail.id,
+                                    updated_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
+                                    updated_by: employeedetail.id,
+                                    ticketref_id: selectedservice.ticketref_id,
+                                    ticketserviceref_id: selectedservice.sync_id,
+                                    sync_status: 0,
+                                    sync_id: csyncid + "service",
+                                    isActive:1,
+                                    totalamount:selectedservice.qty * selectedservice.perunit_cost,
+                                    owner_percent:owner_percentage,
+                                    emp_percent:employee_percentage
+                                }
+                                window.api.invoke('evantcall', emp_input)
+                                //////console.log("emp inpout");
+                                //////console.log(emp_input);
+                                this.saveData({ table_name: 'employee_commission_detail', data: emp_input }).then(res => {
+                                    //////console.log("1.saved to saveTicketEmployeeCommission")
+                                })
+                                //Owner Service Commission Calculation
+                                per_amt = (owner_percentage / 100) * selectedservice.qty * selectedservice.perunit_cost;
+                                var owner_input = {
+                                    employeeId: ownerid,
+                                    businessId: businessdetail["id"],
+                                    // ticket_id: selectedservice.ticket_id,
+                                    // ticket_serviceId: selectedservice.id,
+                                    cash_type_for: 'ownercommission',
+                                    cash_amt: per_amt,
+                                    created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
+                                    created_by: employeedetail.id,
+                                    updated_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
+                                    updated_by: employeedetail.id,
+                                    ticketref_id: selectedservice.ticketref_id,
+                                    ticketserviceref_id: selectedservice.sync_id,
+                                    sync_status: 0,
+                                    sync_id: csyncid + "ownercommission",
+                                    isActive:1,
+                                    totalamount:selectedservice.qty * selectedservice.perunit_cost,
+                                    owner_percent:owner_percentage,
+                                    emp_percent:employee_percentage
+                                }
+                                window.api.invoke('evantcall', owner_input)
+                                console.log("OWNER INPUT ##########")
+                                console.log(owner_input);
+                                console.log("OWNER INPUT ##########")
+                                this.saveData({ table_name: 'employee_commission_detail', data: owner_input }).then(res => {
+                                    //console.log("2.saved to owner saveTicketEmployeeCommission")
+                                })
+
+
+                            })
+
+                            //Service Commission Calculation for technician_id for ticket - end
+
+                            //Tips Calculation -Start
+                            if (selectedservice.tips_amount !== 0) {
+                                //console.log("TIPS SAVING TICKETCONTROLLER::::")
+                                //console.log(selectedservice);
+                                //console.log("TIPS SAVING TICKETCONTROLLER::::")
+
+                                var emp_inputelse = {
+                                    employeeId: selectedservice.employee_id,
+                                    businessId: businessdetail["id"],
+                                    // ticket_id: selectedservice.ticket_id,
+                                    // ticket_serviceId: selectedservice.id,
+                                    cash_type_for: 'tips',
+                                    cash_amt: selectedservice.tips_amount,
+                                    created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
+                                    created_by: employeedetail.id,
+                                    updated_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
+                                    updated_by: employeedetail.id,
+                                    ticketref_id: selectedservice.ticketref_id,
+                                    ticketserviceref_id: selectedservice.sync_id,
+                                    sync_status: 0,
+                                    sync_id: csyncid + "tips",
+                                    isActive:1, 
+                                }
+
+
+                                this.saveData({ table_name: 'employee_commission_detail', data: emp_inputelse }).then(res => {
+                                    ////////console.log"4.tips_amount saved to saveTicketEmployeeCommission")
+                                })
                             }
+                            //Tips Calculation -End
 
-                            console.log("owner employee perccent",employee_percentage, owner_percentage);
-                            //Employee Service Commission Calculation 
-                            per_amt = (employee_percentage / 100) * selectedservice.qty * selectedservice.perunit_cost;
-                            var emp_input = {
+                            console.log(" CTRL DISCOUNT CALC", selectedservice, selectedservice.discount_id)
+                            //Discount Calculation
+                            if (selectedservice.discount.discount_id !== 0 && selectedservice.discount.discount_id !== undefined) {
+
+
+                                this.dataManager.getData("select * from discounts where id=" + selectedservice.discount.discount_id).then(disres => {
+                                    var selectedDiscount = [];
+                                    if (disres.length > 0) {
+                                        let dis = disres;
+
+                                        let dis_amt = 0
+                                        if (dis[0].division_type === 'owner') {
+                                            if (dis[0].discount_type === 'amount') {
+                                                dis_amt = dis[0].discount_value
+                                            } else {
+                                                dis_amt = (dis[0].discount_value / 100) * selectedservice.qty * selectedservice.perunit_cost;
+                                            }
+                                            var disemp_inputif = {
+                                                employeeId: ownerid,
+                                                // employeeId: service_input.employee_id,
+                                                businessId: businessdetail["id"],
+                                                // ticket_id: selectedservice.ticket_id,
+                                                // ticket_serviceId: selectedservice.id,
+                                                cash_type_for: 'owner-discount',
+                                                cash_amt: dis_amt,
+                                                created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
+                                                created_by: employeedetail.id,
+                                                updated_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
+                                                updated_by: employeedetail.id,
+                                                ticketref_id: selectedservice.ticketref_id,
+                                                ticketserviceref_id: selectedservice.sync_id,
+                                                sync_status: 0,
+                                                sync_id: csyncid + "owner-discount",
+                                                isActive:1, 
+                                            }
+
+                                            this.saveData({ table_name: 'employee_commission_detail', data: disemp_inputif }).then(res => {
+                                                ////////console.log"5.employee_commission/save/")
+                                            })
+
+                                        }
+                                        else if (dis[0].division_type === 'employee') {
+                                            if (dis[0].discount_type === 'amount') {
+                                                dis_amt = dis[0].discount_value
+                                            } else {
+                                                dis_amt = (dis[0].discount_value / 100) * selectedservice.qty * selectedservice.perunit_cost;
+                                            }
+                                            var disemp_inputelse = {
+                                                employeeId: selectedservice.employee_id,
+                                                businessId: businessdetail["id"],
+                                                // ticket_id: selectedservice.ticket_id,
+                                                // ticket_serviceId: selectedservice.id,
+                                                cash_type_for: 'emp-discount',
+                                                cash_amt: dis_amt,
+                                                created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
+                                                created_by: employeedetail.id,
+                                                updated_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
+                                                updated_by: employeedetail.id,
+                                                ticketref_id: selectedservice.ticketref_id,
+                                                ticketserviceref_id: selectedservice.sync_id,
+                                                sync_status: 0,
+                                                sync_id: csyncid + "owner-discount",
+                                                isActive:1
+                                            }
+
+                                            this.saveData({ table_name: 'employee_commission_detail', data: disemp_inputelse }).then(res => {
+                                                ////////console.log"6.employee_commission/save/")
+                                            })
+                                        }
+                                        else {
+                                            let owner_division = dis[0].owner_division;
+                                            let emp_division = dis[0].emp_division;
+                                            if (dis[0].discount_type === 'amount') {
+                                                dis_amt = dis[0].discount_value * (owner_division / 100);
+                                                var emp_dis_amt = dis[0].discount_value * (emp_division / 100)
+                                                //Owner
+                                                var owner_dis_inputif = {
+                                                    employeeId: ownerid,
+                                                    businessId: businessdetail["id"],
+                                                    // ticket_id: selectedservice.ticket_id,
+                                                    // ticket_serviceId: selectedservice.id,
+                                                    cash_type_for: 'owneremp-discount',
+                                                    cash_amt: dis_amt,
+                                                    created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
+                                                    created_by: employeedetail.id,
+                                                    updated_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
+                                                    updated_by: employeedetail.id,
+                                                    ticketref_id: selectedservice.ticketref_id,
+                                                    ticketserviceref_id: selectedservice.sync_id,
+                                                    sync_status: 0,
+                                                    sync_id: csyncid + "owneremp-discountowner",
+                                                    isActive:1
+                                                }
+
+                                                this.saveData({ table_name: 'employee_commission_detail', data: owner_dis_inputif }).then(res => {
+                                                    ////////console.log"7.employee_commission/save/")
+                                                })
+
+                                                //Employee
+                                                var emp_dis_inputif = {
+                                                    employeeId: selectedservice.employee_id,
+                                                    businessId: businessdetail["id"],
+                                                    // ticket_id: selectedservice.ticket_id,
+                                                    // ticket_serviceId: selectedservice.id,
+                                                    cash_type_for: 'emp-discount',
+                                                    cash_amt: emp_dis_amt,
+                                                    created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
+                                                    created_by: employeedetail.id,
+                                                    updated_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
+                                                    updated_by: employeedetail.id,
+                                                    ticketref_id: selectedservice.ticketref_id,
+                                                    ticketserviceref_id: selectedservice.sync_id,
+                                                    sync_status: 0,
+                                                    sync_id: csyncid + "emp-discount",
+                                                    isActive:1
+                                                }
+
+
+                                                this.saveData({ table_name: 'employee_commission_detail', data: emp_dis_inputif }).then(res => {
+                                                    ////////console.log"8.employee_commission/save/")
+                                                })
+
+                                            } else {
+                                                let owner_dis_amt = (owner_division / 100) * (dis[0].discount_value / 100) * selectedservice.qty * selectedservice.perunit_cost;
+                                                let emp_dis_amt = (emp_division / 100) * (dis[0].discount_value / 100) * selectedservice.qty * selectedservice.perunit_cost;
+
+
+                                                //Owner
+                                                var owner_per_inputelse = {
+                                                    employeeId: ownerid,
+                                                    businessId: businessdetail["id"],
+                                                    // ticket_id: selectedservice.ticket_id,
+                                                    // ticket_serviceId: selectedservice.id,
+                                                    cash_type_for: 'owner-discount',
+                                                    cash_amt: owner_dis_amt,
+                                                    created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
+                                                    created_by: employeedetail.id,
+                                                    updated_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
+                                                    updated_by: employeedetail.id,
+                                                    ticketref_id: selectedservice.ticketref_id,
+                                                    ticketserviceref_id: selectedservice.sync_id,
+                                                    sync_status: 0,
+                                                    sync_id: csyncid + "owner-discount",
+                                                    isActive:1
+                                                }
+
+                                                this.saveData({ table_name: 'employee_commission_detail', data: owner_per_inputelse }).then(res => {
+                                                    ////////console.log"9.employee_commission/save/")
+                                                })
+                                                //Employee
+                                                var emp_per_inputelse = {
+                                                    employeeId: selectedservice.employee_id,
+                                                    businessId: businessdetail["id"],
+                                                    // ticket_id: selectedservice.ticket_id,
+                                                    // ticket_serviceId: selectedservice.id,
+                                                    cash_type_for: 'owneremp-discount',
+                                                    cash_amt: emp_dis_amt,
+                                                    created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
+                                                    created_by: employeedetail.id,
+                                                    updated_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
+                                                    updated_by: employeedetail.id,
+                                                    ticketref_id: selectedservice.ticketref_id,
+                                                    ticketserviceref_id: selectedservice.sync_id,
+                                                    sync_status: 0,
+                                                    sync_id: csyncid + "owneremp-discountemp",
+                                                    isActive:1
+                                                }
+
+                                                this.saveData({ table_name: 'employee_commission_detail', data: emp_per_inputelse }).then(res => {
+                                                    ////////console.log"10.employee_commission/save/")
+                                                })
+
+                                            }
+                                        }
+                                    }
+                                });
+
+                            }
+                        }
+                        else {
+                            console.log("EMP RES CAKKKKKKK")
+                            //Employee Service Commission Calculation
+                            var input = {
                                 employeeId: selectedservice.employee_id,
                                 businessId: businessdetail["id"],
                                 // ticket_id: selectedservice.ticket_id,
                                 // ticket_serviceId: selectedservice.id,
                                 cash_type_for: 'service',
-                                cash_amt: per_amt,
+                                cash_amt: selectedservice.qty * selectedservice.perunit_cost,
                                 created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
                                 created_by: employeedetail.id,
                                 updated_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
@@ -416,394 +753,61 @@ export default class TicketController {
                                 sync_id: csyncid + "service",
                                 isActive:1,
                                 totalamount:selectedservice.qty * selectedservice.perunit_cost,
-                                owner_percent:owner_percentage,
-                                emp_percent:employee_percentage
+                                owner_percent:0,
+                                emp_percent:100
                             }
-                            window.api.invoke('evantcall', emp_input)
-                            //////console.log("emp inpout");
-                            //////console.log(emp_input);
-                            this.saveData({ table_name: 'employee_commission_detail', data: emp_input }).then(res => {
-                                //////console.log("1.saved to saveTicketEmployeeCommission")
-                            })
-                            //Owner Service Commission Calculation
-                            per_amt = (owner_percentage / 100) * selectedservice.qty * selectedservice.perunit_cost;
-                            var owner_input = {
-                                employeeId: ownerid,
-                                businessId: businessdetail["id"],
-                                // ticket_id: selectedservice.ticket_id,
-                                // ticket_serviceId: selectedservice.id,
-                                cash_type_for: 'ownercommission',
-                                cash_amt: per_amt,
-                                created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
-                                created_by: employeedetail.id,
-                                updated_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
-                                updated_by: employeedetail.id,
-                                ticketref_id: selectedservice.ticketref_id,
-                                ticketserviceref_id: selectedservice.sync_id,
-                                sync_status: 0,
-                                sync_id: csyncid + "ownercommission",
-                                isActive:1,
-                                totalamount:selectedservice.qty * selectedservice.perunit_cost,
-                                owner_percent:owner_percentage,
-                                emp_percent:employee_percentage
-                            }
-                            window.api.invoke('evantcall', owner_input)
-                            console.log("OWNER INPUT ##########")
-                            console.log(owner_input);
-                            console.log("OWNER INPUT ##########")
-                            this.saveData({ table_name: 'employee_commission_detail', data: owner_input }).then(res => {
-                                //console.log("2.saved to owner saveTicketEmployeeCommission")
+                            //////console.log(input);
+                            this.saveData({ table_name: 'employee_commission_detail', data: input }).then(res => {
+                                //////console.log("3.saved to saveTicketEmployeeCommission")
                             })
 
+                            //Service Commission Calculation for technician_id for ticket - end
 
-                        })
-
-                        //Service Commission Calculation for technician_id for ticket - end
-
-                        //Tips Calculation -Start
-                        if (selectedservice.tips_amount !== 0) {
-                            //console.log("TIPS SAVING TICKETCONTROLLER::::")
-                            //console.log(selectedservice);
-                            //console.log("TIPS SAVING TICKETCONTROLLER::::")
-
-                            var emp_inputelse = {
-                                employeeId: selectedservice.employee_id,
-                                businessId: businessdetail["id"],
-                                // ticket_id: selectedservice.ticket_id,
-                                // ticket_serviceId: selectedservice.id,
-                                cash_type_for: 'tips',
-                                cash_amt: selectedservice.tips_amount,
-                                created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
-                                created_by: employeedetail.id,
-                                updated_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
-                                updated_by: employeedetail.id,
-                                ticketref_id: selectedservice.ticketref_id,
-                                ticketserviceref_id: selectedservice.sync_id,
-                                sync_status: 0,
-                                sync_id: csyncid + "tips",
-                                isActive:1, 
-                            }
-
-
-                            this.saveData({ table_name: 'employee_commission_detail', data: emp_inputelse }).then(res => {
-                                ////////console.log"4.tips_amount saved to saveTicketEmployeeCommission")
-                            })
-                        }
-                        //Tips Calculation -End
-
-                        console.log(" CTRL DISCOUNT CALC", selectedservice, selectedservice.discount_id)
-                        //Discount Calculation
-                        if (selectedservice.discount.discount_id !== 0 && selectedservice.discount.discount_id !== undefined) {
-
-
-                            this.dataManager.getData("select * from discounts where id=" + selectedservice.discount.discount_id).then(disres => {
-                                var selectedDiscount = [];
-                                if (disres.length > 0) {
-                                    let dis = disres;
-
-                                    let dis_amt = 0
-                                    if (dis[0].division_type === 'owner') {
-                                        if (dis[0].discount_type === 'amount') {
-                                            dis_amt = dis[0].discount_value
-                                        } else {
-                                            dis_amt = (dis[0].discount_value / 100) * selectedservice.qty * selectedservice.perunit_cost;
-                                        }
-                                        var disemp_inputif = {
-                                            employeeId: ownerid,
-                                            // employeeId: service_input.employee_id,
-                                            businessId: businessdetail["id"],
-                                            // ticket_id: selectedservice.ticket_id,
-                                            // ticket_serviceId: selectedservice.id,
-                                            cash_type_for: 'owner-discount',
-                                            cash_amt: dis_amt,
-                                            created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
-                                            created_by: employeedetail.id,
-                                            updated_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
-                                            updated_by: employeedetail.id,
-                                            ticketref_id: selectedservice.ticketref_id,
-                                            ticketserviceref_id: selectedservice.sync_id,
-                                            sync_status: 0,
-                                            sync_id: csyncid + "owner-discount",
-                                            isActive:1, 
-                                        }
-
-                                        this.saveData({ table_name: 'employee_commission_detail', data: disemp_inputif }).then(res => {
-                                            ////////console.log"5.employee_commission/save/")
-                                        })
-
-                                    }
-                                    else if (dis[0].division_type === 'employee') {
-                                        if (dis[0].discount_type === 'amount') {
-                                            dis_amt = dis[0].discount_value
-                                        } else {
-                                            dis_amt = (dis[0].discount_value / 100) * selectedservice.qty * selectedservice.perunit_cost;
-                                        }
-                                        var disemp_inputelse = {
-                                            employeeId: selectedservice.employee_id,
-                                            businessId: businessdetail["id"],
-                                            // ticket_id: selectedservice.ticket_id,
-                                            // ticket_serviceId: selectedservice.id,
-                                            cash_type_for: 'emp-discount',
-                                            cash_amt: dis_amt,
-                                            created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
-                                            created_by: employeedetail.id,
-                                            updated_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
-                                            updated_by: employeedetail.id,
-                                            ticketref_id: selectedservice.ticketref_id,
-                                            ticketserviceref_id: selectedservice.sync_id,
-                                            sync_status: 0,
-                                            sync_id: csyncid + "owner-discount",
-                                            isActive:1
-                                        }
-
-                                        this.saveData({ table_name: 'employee_commission_detail', data: disemp_inputelse }).then(res => {
-                                            ////////console.log"6.employee_commission/save/")
-                                        })
-                                    }
-                                    else {
-                                        let owner_division = dis[0].owner_division;
-                                        let emp_division = dis[0].emp_division;
-                                        if (dis[0].discount_type === 'amount') {
-                                            dis_amt = dis[0].discount_value * (owner_division / 100);
-                                            var emp_dis_amt = dis[0].discount_value * (emp_division / 100)
-                                            //Owner
-                                            var owner_dis_inputif = {
-                                                employeeId: ownerid,
-                                                businessId: businessdetail["id"],
-                                                // ticket_id: selectedservice.ticket_id,
-                                                // ticket_serviceId: selectedservice.id,
-                                                cash_type_for: 'owneremp-discount',
-                                                cash_amt: dis_amt,
-                                                created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
-                                                created_by: employeedetail.id,
-                                                updated_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
-                                                updated_by: employeedetail.id,
-                                                ticketref_id: selectedservice.ticketref_id,
-                                                ticketserviceref_id: selectedservice.sync_id,
-                                                sync_status: 0,
-                                                sync_id: csyncid + "owneremp-discountowner",
-                                                isActive:1
-                                            }
-
-                                            this.saveData({ table_name: 'employee_commission_detail', data: owner_dis_inputif }).then(res => {
-                                                ////////console.log"7.employee_commission/save/")
-                                            })
-
-                                            //Employee
-                                            var emp_dis_inputif = {
-                                                employeeId: selectedservice.employee_id,
-                                                businessId: businessdetail["id"],
-                                                // ticket_id: selectedservice.ticket_id,
-                                                // ticket_serviceId: selectedservice.id,
-                                                cash_type_for: 'emp-discount',
-                                                cash_amt: emp_dis_amt,
-                                                created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
-                                                created_by: employeedetail.id,
-                                                updated_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
-                                                updated_by: employeedetail.id,
-                                                ticketref_id: selectedservice.ticketref_id,
-                                                ticketserviceref_id: selectedservice.sync_id,
-                                                sync_status: 0,
-                                                sync_id: csyncid + "emp-discount",
-                                                isActive:1
-                                            }
-
-
-                                            this.saveData({ table_name: 'employee_commission_detail', data: emp_dis_inputif }).then(res => {
-                                                ////////console.log"8.employee_commission/save/")
-                                            })
-
-                                        } else {
-                                            let owner_dis_amt = (owner_division / 100) * (dis[0].discount_value / 100) * selectedservice.qty * selectedservice.perunit_cost;
-                                            let emp_dis_amt = (emp_division / 100) * (dis[0].discount_value / 100) * selectedservice.qty * selectedservice.perunit_cost;
-
-
-                                            //Owner
-                                            var owner_per_inputelse = {
-                                                employeeId: ownerid,
-                                                businessId: businessdetail["id"],
-                                                // ticket_id: selectedservice.ticket_id,
-                                                // ticket_serviceId: selectedservice.id,
-                                                cash_type_for: 'owner-discount',
-                                                cash_amt: owner_dis_amt,
-                                                created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
-                                                created_by: employeedetail.id,
-                                                updated_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
-                                                updated_by: employeedetail.id,
-                                                ticketref_id: selectedservice.ticketref_id,
-                                                ticketserviceref_id: selectedservice.sync_id,
-                                                sync_status: 0,
-                                                sync_id: csyncid + "owner-discount",
-                                                isActive:1
-                                            }
-
-                                            this.saveData({ table_name: 'employee_commission_detail', data: owner_per_inputelse }).then(res => {
-                                                ////////console.log"9.employee_commission/save/")
-                                            })
-                                            //Employee
-                                            var emp_per_inputelse = {
-                                                employeeId: selectedservice.employee_id,
-                                                businessId: businessdetail["id"],
-                                                // ticket_id: selectedservice.ticket_id,
-                                                // ticket_serviceId: selectedservice.id,
-                                                cash_type_for: 'owneremp-discount',
-                                                cash_amt: emp_dis_amt,
-                                                created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
-                                                created_by: employeedetail.id,
-                                                updated_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
-                                                updated_by: employeedetail.id,
-                                                ticketref_id: selectedservice.ticketref_id,
-                                                ticketserviceref_id: selectedservice.sync_id,
-                                                sync_status: 0,
-                                                sync_id: csyncid + "owneremp-discountemp",
-                                                isActive:1
-                                            }
-
-                                            this.saveData({ table_name: 'employee_commission_detail', data: emp_per_inputelse }).then(res => {
-                                                ////////console.log"10.employee_commission/save/")
-                                            })
-
-                                        }
-                                    }
+                            //Tips Calculation -Start
+                            if (selectedservice.tips_amount !== 0) {
+                                var emp_input = {
+                                    employeeId: selectedservice.employee_id,
+                                    businessId: businessdetail["id"],
+                                    // ticket_id: selectedservice.ticket_id,
+                                    // ticket_serviceId: selectedservice.insertId,
+                                    cash_type_for: 'tips',
+                                    cash_amt: selectedservice.tips_amount,
+                                    created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
+                                    created_by: employeedetail.id,
+                                    updated_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
+                                    updated_by: employeedetail.id,
+                                    ticketref_id: selectedservice.ticketref_id,
+                                    ticketserviceref_id: selectedservice.sync_id,
+                                    sync_status: 0,
+                                    sync_id: csyncid + "tips",
+                                    isActive:1
                                 }
-                            });
 
-                        }
-                    }
-                    else {
-                        console.log("EMP RES CAKKKKKKK")
-                        //Employee Service Commission Calculation
-                        var input = {
-                            employeeId: selectedservice.employee_id,
-                            businessId: businessdetail["id"],
-                            // ticket_id: selectedservice.ticket_id,
-                            // ticket_serviceId: selectedservice.id,
-                            cash_type_for: 'service',
-                            cash_amt: selectedservice.qty * selectedservice.perunit_cost,
-                            created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
-                            created_by: employeedetail.id,
-                            updated_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
-                            updated_by: employeedetail.id,
-                            ticketref_id: selectedservice.ticketref_id,
-                            ticketserviceref_id: selectedservice.sync_id,
-                            sync_status: 0,
-                            sync_id: csyncid + "service",
-                            isActive:1,
-                            totalamount:selectedservice.qty * selectedservice.perunit_cost,
-                            owner_percent:0,
-                            emp_percent:100
-                        }
-                        //////console.log(input);
-                        this.saveData({ table_name: 'employee_commission_detail', data: input }).then(res => {
-                            //////console.log("3.saved to saveTicketEmployeeCommission")
-                        })
 
-                        //Service Commission Calculation for technician_id for ticket - end
-
-                        //Tips Calculation -Start
-                        if (selectedservice.tips_amount !== 0) {
-                            var emp_input = {
-                                employeeId: selectedservice.employee_id,
-                                businessId: businessdetail["id"],
-                                // ticket_id: selectedservice.ticket_id,
-                                // ticket_serviceId: selectedservice.insertId,
-                                cash_type_for: 'tips',
-                                cash_amt: selectedservice.tips_amount,
-                                created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
-                                created_by: employeedetail.id,
-                                updated_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
-                                updated_by: employeedetail.id,
-                                ticketref_id: selectedservice.ticketref_id,
-                                ticketserviceref_id: selectedservice.sync_id,
-                                sync_status: 0,
-                                sync_id: csyncid + "tips",
-                                isActive:1
+                                this.saveData({ table_name: 'employee_commission_detail', data: emp_input }).then(res => {
+                                    ////////console.log"4.tips_amount saved to saveTicketEmployeeCommission")
+                                })
                             }
+                            //Tips Calculation -End
 
+                            console.log(" CTRL DISCOUNT CALC asdasd",selectedservice, selectedservice.discount_id)
+                            //Discount Calculation
+                            if (selectedservice.discount.discount_id !== 0 && selectedservice.discount.discount_id !== undefined) {
 
-                            this.saveData({ table_name: 'employee_commission_detail', data: emp_input }).then(res => {
-                                ////////console.log"4.tips_amount saved to saveTicketEmployeeCommission")
-                            })
-                        }
-                        //Tips Calculation -End
-
-                        console.log(" CTRL DISCOUNT CALC asdasd",selectedservice, selectedservice.discount_id)
-                        //Discount Calculation
-                        if (selectedservice.discount.discount_id !== 0 && selectedservice.discount.discount_id !== undefined) {
-
-                            this.dataManager.getData("select * from discounts where id=" + selectedservice.discount.discount_id).then(disres => {
-                                var selectedDiscount = [];
-                                if (disres.length > 0) {
-                                    let dis = disres;
-                                    let dis_amt = 0
-                                    if (dis[0].division_type === 'owner') {
-                                        if (dis[0].discount_type === 'amount') {
-                                            dis_amt = dis[0].discount_value
-                                        } else {
-                                            dis_amt = (dis[0].discount_value / 100) * selectedservice.qty * selectedservice.perunit_cost;
-                                        }
-                                        var disemp_input = {
-                                            employeeId: ownerid,
-                                            // employeeId: service_input.employee_id,
-                                            businessId: businessdetail["id"],
-                                            // ticket_id: selectedservice.ticket_id,
-                                            // ticket_serviceId: selectedservice.id,
-                                            cash_type_for: 'owner-discount',
-                                            cash_amt: dis_amt,
-                                            created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
-                                            created_by: employeedetail.id,
-                                            updated_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
-                                            updated_by: employeedetail.id,
-                                            ticketref_id: selectedservice.ticketref_id,
-                                            ticketserviceref_id: selectedservice.sync_id,
-                                            sync_status: 0,
-                                            sync_id: csyncid + "owner-discount",
-                                            isActive:1
-                                        }
-
-                                        this.saveData({ table_name: 'employee_commission_detail', data: disemp_input }).then(res => {
-                                            ////////console.log"5.employee_commission/save/")
-                                            console.log("5 ctrl.employee_commission/save/")
-                                        })
-
-                                    }
-                                    else if (dis[0].division_type === 'employee') {
-                                        if (dis[0].discount_type === 'amount') {
-                                            dis_amt = dis[0].discount_value
-                                        } else {
-                                            dis_amt = (dis[0].discount_value / 100) * selectedservice.qty * selectedservice.perunit_cost;
-                                        }
-                                        var disemp_inputelseif = {
-                                            employeeId: selectedservice.employee_id,
-                                            businessId: businessdetail["id"],
-                                            // ticket_id: selectedservice.ticket_id,
-                                            // ticket_serviceId: selectedservice.id,
-                                            cash_type_for: 'emp-discount',
-                                            cash_amt: dis_amt,
-                                            created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
-                                            created_by: employeedetail.id,
-                                            updated_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
-                                            updated_by: employeedetail.id,
-                                            ticketref_id: selectedservice.ticketref_id,
-                                            ticketserviceref_id: selectedservice.sync_id,
-                                            sync_status: 0,
-                                            sync_id: csyncid + "owner-discount",
-                                            isActive:1
-                                        }
-
-                                        this.saveData({ table_name: 'employee_commission_detail', data: disemp_inputelseif }).then(res => {
-                                            ////////console.log"6.employee_commission/save/")
-                                        })
-                                    }
-                                    else {
-                                        let owner_division = dis[0].owner_division;
-                                        let emp_division = dis[0].emp_division;
-                                        if (dis[0].discount_type === 'amount') {
-                                            dis_amt = dis[0].discount_value * (owner_division / 100);
-                                            var emp_dis_amt = dis[0].discount_value * (emp_division / 100)
-                                            //Owner
-                                            var owner_dis_input = {
+                                this.dataManager.getData("select * from discounts where id=" + selectedservice.discount.discount_id).then(disres => {
+                                    var selectedDiscount = [];
+                                    if (disres.length > 0) {
+                                        let dis = disres;
+                                        let dis_amt = 0
+                                        if (dis[0].division_type === 'owner') {
+                                            if (dis[0].discount_type === 'amount') {
+                                                dis_amt = dis[0].discount_value
+                                            } else {
+                                                dis_amt = (dis[0].discount_value / 100) * selectedservice.qty * selectedservice.perunit_cost;
+                                            }
+                                            var disemp_input = {
                                                 employeeId: ownerid,
+                                                // employeeId: service_input.employee_id,
                                                 businessId: businessdetail["id"],
                                                 // ticket_id: selectedservice.ticket_id,
                                                 // ticket_serviceId: selectedservice.id,
@@ -820,18 +824,25 @@ export default class TicketController {
                                                 isActive:1
                                             }
 
-                                            this.saveData({ table_name: 'employee_commission_detail', data: owner_dis_input }).then(res => {
-                                                ////////console.log"7.employee_commission/save/")
+                                            this.saveData({ table_name: 'employee_commission_detail', data: disemp_input }).then(res => {
+                                                ////////console.log"5.employee_commission/save/")
+                                                console.log("5 ctrl.employee_commission/save/")
                                             })
 
-                                            //Employee
-                                            var emp_dis_input = {
+                                        }
+                                        else if (dis[0].division_type === 'employee') {
+                                            if (dis[0].discount_type === 'amount') {
+                                                dis_amt = dis[0].discount_value
+                                            } else {
+                                                dis_amt = (dis[0].discount_value / 100) * selectedservice.qty * selectedservice.perunit_cost;
+                                            }
+                                            var disemp_inputelseif = {
                                                 employeeId: selectedservice.employee_id,
                                                 businessId: businessdetail["id"],
                                                 // ticket_id: selectedservice.ticket_id,
                                                 // ticket_serviceId: selectedservice.id,
                                                 cash_type_for: 'emp-discount',
-                                                cash_amt: emp_dis_amt,
+                                                cash_amt: dis_amt,
                                                 created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
                                                 created_by: employeedetail.id,
                                                 updated_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
@@ -843,74 +854,130 @@ export default class TicketController {
                                                 isActive:1
                                             }
 
-
-                                            this.saveData({ table_name: 'employee_commission_detail', data: emp_dis_input }).then(res => {
-                                                ////////console.log"8.employee_commission/save/")
+                                            this.saveData({ table_name: 'employee_commission_detail', data: disemp_inputelseif }).then(res => {
+                                                ////////console.log"6.employee_commission/save/")
                                             })
-
-                                        } else {
-                                            let owner_dis_amt = (owner_division / 100) * (dis[0].discount_value / 100) * selectedservice.qty * selectedservice.perunit_cost;
-                                            let emp_dis_amt = (emp_division / 100) * (dis[0].discount_value / 100) * selectedservice.qty * selectedservice.perunit_cost;
-                                            //Owner
-                                            var owner_per_input = {
-                                                employeeId: ownerid,
-                                                businessId: businessdetail["id"],
-                                                // ticket_id: selectedservice.ticket_id,
-                                                // ticket_serviceId: selectedservice.id,
-                                                cash_type_for: 'owneremp-discount',
-                                                cash_amt: owner_dis_amt,
-                                                created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
-                                                created_by: employeedetail.id,
-                                                updated_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
-                                                updated_by: employeedetail.id,
-                                                ticketref_id: selectedservice.ticketref_id,
-                                                ticketserviceref_id: selectedservice.sync_id,
-                                                sync_status: 0,
-                                                sync_id: csyncid + "owneremp-discountowner",
-                                                isActive:1
-                                            }
-
-                                            this.saveData({ table_name: 'employee_commission_detail', data: owner_per_input }).then(res => {
-                                                ////////console.log"9.employee_commission/save/")
-                                            })
-                                            //Employee
-                                            var emp_per_input = {
-                                                employeeId: selectedservice.employee_id,
-                                                businessId: businessdetail["id"],
-                                                // ticket_id: selectedservice.ticket_id,
-                                                // ticket_serviceId: selectedservice.id,
-                                                cash_type_for: 'owneremp-discount',
-                                                cash_amt: emp_dis_amt,
-                                                created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
-                                                created_by: employeedetail.id,
-                                                updated_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
-                                                updated_by: employeedetail.id,
-                                                ticketref_id: selectedservice.ticketref_id,
-                                                ticketserviceref_id: selectedservice.sync_id,
-                                                sync_status: 0,
-                                                sync_id: csyncid + "owneremp-discountemp",
-                                                isActive:1
-                                            }
-
-                                            this.saveData({ table_name: 'employee_commission_detail', data: emp_per_input }).then(res => {
-                                                ////////console.log"10.employee_commission/save/")
-                                            })
-
                                         }
+                                        else {
+                                            let owner_division = dis[0].owner_division;
+                                            let emp_division = dis[0].emp_division;
+                                            if (dis[0].discount_type === 'amount') {
+                                                dis_amt = dis[0].discount_value * (owner_division / 100);
+                                                var emp_dis_amt = dis[0].discount_value * (emp_division / 100)
+                                                //Owner
+                                                var owner_dis_input = {
+                                                    employeeId: ownerid,
+                                                    businessId: businessdetail["id"],
+                                                    // ticket_id: selectedservice.ticket_id,
+                                                    // ticket_serviceId: selectedservice.id,
+                                                    cash_type_for: 'owner-discount',
+                                                    cash_amt: dis_amt,
+                                                    created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
+                                                    created_by: employeedetail.id,
+                                                    updated_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
+                                                    updated_by: employeedetail.id,
+                                                    ticketref_id: selectedservice.ticketref_id,
+                                                    ticketserviceref_id: selectedservice.sync_id,
+                                                    sync_status: 0,
+                                                    sync_id: csyncid + "owner-discount",
+                                                    isActive:1
+                                                }
+
+                                                this.saveData({ table_name: 'employee_commission_detail', data: owner_dis_input }).then(res => {
+                                                    ////////console.log"7.employee_commission/save/")
+                                                })
+
+                                                //Employee
+                                                var emp_dis_input = {
+                                                    employeeId: selectedservice.employee_id,
+                                                    businessId: businessdetail["id"],
+                                                    // ticket_id: selectedservice.ticket_id,
+                                                    // ticket_serviceId: selectedservice.id,
+                                                    cash_type_for: 'emp-discount',
+                                                    cash_amt: emp_dis_amt,
+                                                    created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
+                                                    created_by: employeedetail.id,
+                                                    updated_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
+                                                    updated_by: employeedetail.id,
+                                                    ticketref_id: selectedservice.ticketref_id,
+                                                    ticketserviceref_id: selectedservice.sync_id,
+                                                    sync_status: 0,
+                                                    sync_id: csyncid + "owner-discount",
+                                                    isActive:1
+                                                }
+
+
+                                                this.saveData({ table_name: 'employee_commission_detail', data: emp_dis_input }).then(res => {
+                                                    ////////console.log"8.employee_commission/save/")
+                                                })
+
+                                            } else {
+                                                let owner_dis_amt = (owner_division / 100) * (dis[0].discount_value / 100) * selectedservice.qty * selectedservice.perunit_cost;
+                                                let emp_dis_amt = (emp_division / 100) * (dis[0].discount_value / 100) * selectedservice.qty * selectedservice.perunit_cost;
+                                                //Owner
+                                                var owner_per_input = {
+                                                    employeeId: ownerid,
+                                                    businessId: businessdetail["id"],
+                                                    // ticket_id: selectedservice.ticket_id,
+                                                    // ticket_serviceId: selectedservice.id,
+                                                    cash_type_for: 'owneremp-discount',
+                                                    cash_amt: owner_dis_amt,
+                                                    created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
+                                                    created_by: employeedetail.id,
+                                                    updated_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
+                                                    updated_by: employeedetail.id,
+                                                    ticketref_id: selectedservice.ticketref_id,
+                                                    ticketserviceref_id: selectedservice.sync_id,
+                                                    sync_status: 0,
+                                                    sync_id: csyncid + "owneremp-discountowner",
+                                                    isActive:1
+                                                }
+
+                                                this.saveData({ table_name: 'employee_commission_detail', data: owner_per_input }).then(res => {
+                                                    ////////console.log"9.employee_commission/save/")
+                                                })
+                                                //Employee
+                                                var emp_per_input = {
+                                                    employeeId: selectedservice.employee_id,
+                                                    businessId: businessdetail["id"],
+                                                    // ticket_id: selectedservice.ticket_id,
+                                                    // ticket_serviceId: selectedservice.id,
+                                                    cash_type_for: 'owneremp-discount',
+                                                    cash_amt: emp_dis_amt,
+                                                    created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
+                                                    created_by: employeedetail.id,
+                                                    updated_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
+                                                    updated_by: employeedetail.id,
+                                                    ticketref_id: selectedservice.ticketref_id,
+                                                    ticketserviceref_id: selectedservice.sync_id,
+                                                    sync_status: 0,
+                                                    sync_id: csyncid + "owneremp-discountemp",
+                                                    isActive:1
+                                                }
+
+                                                this.saveData({ table_name: 'employee_commission_detail', data: emp_per_input }).then(res => {
+                                                    ////////console.log"10.employee_commission/save/")
+                                                })
+
+                                            }
+                                        }
+
                                     }
-
-                                }
-                            })
+                                })
+                            }
                         }
-                    }
-                    window.api.invoke('evantcall', 'saveTicketService before save called').then(r => {
+                        window.api.invoke('evantcall', 'saveTicketService before save called').then(r => {
 
+                        })
+                        this.saveTicketService(idx + 1, ticketid, ticketDetail, services_taken, userdetail,stateinput);
                     })
-                    this.saveTicketService(idx + 1, ticketid, ticketDetail, services_taken, userdetail,stateinput);
-                })
-            });
+                });
 
-        })
+            })
+        }
+        else{
+            this.saveTicketService(idx + 1, ticketid, ticketDetail, services_taken, userdetail,stateinput);
+        }
     }
 
 

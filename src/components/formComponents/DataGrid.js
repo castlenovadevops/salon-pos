@@ -131,9 +131,11 @@ export default class TableContent extends React.Component {
           // autoHeight
           autoHeight = {this.props.autoHeight !== null && this.props.autoHeight !== undefined ? true: false}
           height = "100%"
+          pageSize={10}
+          rowsPerPageOptions={[5]}
           rows={this.state.rows}
           columns={this.state.columns}
-          hideFooter
+          // hideFooter
           disableMultipleSelection={true}
           disableSelectionOnClick
           showColumnRightBorder={false}

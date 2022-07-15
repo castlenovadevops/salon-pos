@@ -8,17 +8,11 @@ import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import PropTypes from 'prop-types';
 import Box from '@material-ui/core/Box'; 
-import { Snackbar, Stack, IconButton,TextField, Dialog, DialogActions, DialogContent, DialogTitle, DialogContentText } from '@mui/material';
+import { Snackbar, Stack, IconButton } from '@mui/material';
 import Print from '@mui/icons-material/Print';
 import Slide from '@material-ui/core/Slide';
 import AlertModal from '../../../components/Modal/alertModal';
 import axios from 'axios';
-import {CalendarMonthOutlined} from '@mui/icons-material';
-import DesktopDatePicker from '@mui/lab/DesktopDatePicker';
-import LocalizationProvider from '@mui/lab/LocalizationProvider';
-import AdapterDateFns from '@mui/lab/AdapterDateFns'; 
-import ModalHeader from '../../../components/Modal/Titlebar';
-
 
 import TableContent from '../../../components/formComponents/DataGrid';
 import Datamanager from '../../../controller/datacontroller'; 
@@ -272,173 +266,6 @@ constructor(props){
                 )
             },
         ],
-        closedticket_columns: [
-
-            {
-                field: 'ticket_code',
-                headerName: 'Ticket Code',
-                flex: 1,
-                editable: false,
-                renderCell: (params) => (
-                    <div>
-                    <Typography variant="subtitle2" 
-                    style={{marginLeft:10,MozUserSelect: 'none', WebkitUserSelect: 'none', msUserSelect: 'none', userSelect: 'none'}} align="left">
-                        {params.row.ticket_code}</Typography>
-                        <Typography style={{marginLeft:10,MozUserSelect: 'none', WebkitUserSelect: 'none', msUserSelect: 'none', userSelect: 'none',color:'#ccc',fontSize:'14px'}} align="center">
-                         {Moment(params.row.created_at).format('MM-DD-YYYY hh:mm a')}                         
-                        </Typography>
-                    </div>
-
-                )
-            },
-            {
-                field: 'customer_id',
-                headerName: 'Customer Name',
-                flex: 1,
-              
-                editable: false,
-                renderCell: (params) => (
-                    <Typography variant="subtitle2" style={{marginLeft:10,MozUserSelect: 'none', WebkitUserSelect: 'none', msUserSelect: 'none', userSelect: 'none'}} align="center">
-                      {params.row.customer_name !== null && params.row.customer_name !== '' ? params.row.customer_name : 'NA'}
-                      </Typography>
-                )
-            },
-            {
-                field: 'price',
-                headerName: 'Price',
-                flex: 1,
-                editable: false,
-                renderCell: (params) => (
-                  
-                    <Typography variant="subtitle2" style={{marginLeft:10,MozUserSelect: 'none', WebkitUserSelect: 'none', msUserSelect: 'none', userSelect: 'none'}} align="center">
-                      {params.row.grand_total !== null ? "$"+ Number(params.row.grand_total.toString()).toFixed(2) : 'NA'}
-                      </Typography>
-                )
-            },
-            
-            {
-                field: 'paid_at',
-                headerName: 'Time',
-                flex: 1,
-                editable: false,
-                renderCell: (params) => (
-                        <Typography variant="subtitle2" style={{marginLeft:10,MozUserSelect: 'none', WebkitUserSelect: 'none', msUserSelect: 'none', userSelect: 'none'}} align="center">
-                      {/* {Moment(params.row.created_at).format('ddd DD MMM HH:MM a')}
-                       */} 
-                       {Moment(params.row.paid_at).format('MM-DD-YYYY hh:mm a')}
-
-                       {/* {params.row.created_at} */}
-                       
-                      </Typography>
-                )
-            },
-            {
-                field: 'payment',
-                headerName: 'Payment Mode',
-                flex: 1,
-                editable: false,
-                renderCell: (params) => (
-                
-                  <div style={{"float":"right", display:'flex', alignItems:'center', justifyContent:'center'}}>
-                      {(params.row.paid_status !== 'paid' && this.state.value===0)&&
-                     <Button
-                        variant="contained"
-                        color="secondary"
-                        size="small"
-                        className='bgbtn'
-                        style={{ marginLeft: 16 }}
-                        onClick={(event) => {
-                            // event.nativeEvent.stopPropagation()
-                            this.handleTicketPayment(params.row)
-                            //console.log("payment")
-                        }}
-                    >
-                        Pay
-                    </Button>}
-                    {(params.row.paid_status === 'paid') && <b style={{textTransform:'capitalize'}}>{params.row.pay_mode}</b>}
-                    <Print style={{marginLeft:'1rem'}} onClick={()=>this.handleTicketPrint(params.row)}/>
-                  </div>
-                )
-            },
-        ],
-        closedticket_reponsiveColumns: [
-
-            {
-                field: 'ticket_code',
-                headerName: 'Ticket Code',
-                flex: 1,
-                editable: false,
-                renderCell: (params) => (
-                    <div>
-                    <Typography variant="subtitle2" 
-                    style={{marginLeft:10,MozUserSelect: 'none', WebkitUserSelect: 'none', msUserSelect: 'none', userSelect: 'none'}} align="center">
-                        {params.row.ticket_code}</Typography>
-                        <Typography variant="subtitle2" style={{marginLeft:10,MozUserSelect: 'none', WebkitUserSelect: 'none', msUserSelect: 'none', userSelect: 'none'}} align="center">
-                         {Moment(params.row.created_at).format('MM-DD-YYYY hh:mm a')}                         
-                        </Typography>
-                    </div>
-
-                )
-            },
-           
-            {
-                field: 'price',
-                headerName: 'Price',
-                flex: 0,
-                editable: false,
-                renderCell: (params) => (
-                  
-                    <Typography variant="subtitle2" style={{marginLeft:10,MozUserSelect: 'none', WebkitUserSelect: 'none', msUserSelect: 'none', userSelect: 'none'}} align="center">
-                      {params.row.grand_total !== null ? "$"+ Number(params.row.grand_total.toString()).toFixed(2) : 'NA'}
-                      </Typography>
-                )
-            },
-            {
-                field: 'paid_at',
-                headerName: 'Time',
-                flex: 1,
-                editable: false,
-                renderCell: (params) => (
-                        <Typography variant="subtitle2" style={{marginLeft:10,MozUserSelect: 'none', WebkitUserSelect: 'none', msUserSelect: 'none', userSelect: 'none'}} align="center">
-                      {/* {Moment(params.row.created_at).format('ddd DD MMM HH:MM a')}
-                       */} 
-                       {Moment(params.row.paid_at).format('YYYY-MM-DD hh:mm a')}
-
-                       {/* {params.row.created_at} */}
-                       
-                      </Typography>
-                )
-            },
-           
-            {
-                field: 'payment',
-                headerName: 'Payment Mode',
-                flex: 1,
-                editable: false,
-                renderCell: (params) => (
-                
-                  <div style={{"float":"right", display:'flex', alignItems:'center', justifyContent:'center'}}>
-                      {(params.row.paid_status !== 'paid' && this.state.value===0)&&
-                     <Button
-                        variant="contained"
-                        color="secondary"
-                        size="small"
-                        className='bgbtn'
-                        style={{ marginLeft: 16 }}
-                        onClick={(event) => {
-                            // event.nativeEvent.stopPropagation()
-                            this.handleTicketPayment(params.row)
-                            //console.log("payment")
-                        }}
-                    >
-                        Pay
-                    </Button>}
-                    {(params.row.paid_status === 'paid') && <b style={{textTransform:'capitalize'}}>{params.row.pay_mode}</b>}
-                   <Print  style={{marginLeft:'1rem'}} onClick={()=>this.handleTicketPrint(params.row)}/>
-                  </div>
-                )
-            },
-        ],
         currentTime: "",
         mobileOpen: false, 
         openDialog: false,
@@ -447,10 +274,8 @@ constructor(props){
         isLoading: false,
         showPage:'',
         isSyncing:false,
-        services_taken:[],
-        from_date:new Date(),
-        to_date:new Date(),
-        showDatePopup: false, 
+        
+        services_taken:[]
     }
     this.handlePageEvent = this.handlePageEvent.bind(this);
     this.handleOpen = this.handleOpen.bind(this)
@@ -501,58 +326,6 @@ constructor(props){
     this.onRowClick = this.onRowClick.bind(this)
     this.handleOpenClockin = this.handleOpenClockin.bind(this)
     this.onChangePage = this.onChangePage.bind(this);
-    this.handlechangeFromDate = this.handlechangeFromDate.bind(this);
-    this.handlechangeToDate = this.handlechangeToDate.bind(this);
-    this.getClosedTicketsByDate = this.getClosedTicketsByDate.bind(this);
-}
-
-handlechangeFromDate(e){
-    this.setState({from_date: e});
-}
-handlechangeToDate(e){
-    this.setState({to_date: e});
-}
-
-getClosedTicketsByDate(){
-    this.setState({isLoading: true})
-    let from_date = Moment(this.state.from_date).format('YYYY-MM-DD');
-    let to_date = Moment(this.state.to_date).format('YYYY-MM-DD');
-    var detail = window.localStorage.getItem('businessdetail');
-    var businessdetail = JSON.parse(detail);
-    
-
-
-    var sql = `select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value,t.sync_id, t.discount_totalamt, t.sync_id, c.name as customer_name from ticket as t left join customers as c on t.customer_id=c.sync_id where t.businessId='`+businessdetail["id"]
-    +`' and t.isDelete!=1 and t.sync_status=0`
-    // console.log("1",sql)
- 
-  
-   this.state.dataManager.getData(sql).then(response =>{
-       if (response instanceof Array) {
-      
-           this.setState({unsyncedCount: response.length}, function() {
-
-            var sql = "select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value, t.discount_totalamt, t.sync_id,c.name as customer_name, tp.pay_mode,tp.paid_at from ticket as t left join customers as c on t.customer_id=c.sync_id left join ticket_payment as tp on tp.ticketref_id=t.sync_id where t.businessId='"+businessdetail["id"]+"' and t.isDelete!=1 and tp.paid_at between '"+from_date+"' and '"+to_date+"' order by ticket_code desc"
-            console.log("2",sql)
-            this.state.dataManager.getData(sql).then(response =>{
-                
-                if (response instanceof Array) { 
-                    
-                    let selected_ticket = response.filter(item => item.paid_status !== "paid")
-                    let selected_paid_ticket = response.filter(item => item.paid_status === "paid")
-                    this.setState({ticket_list: response,isLoading: false, unpaid_ticket_list:selected_ticket,paid_ticket_list: selected_paid_ticket, showDatePopup: false}, function() { 
-                        this.state.unpaid_ticket_list.map((data)=>{
-                            this.getTicketService(data.id)
-                        })
-                    })
-                }
-                
-            })
-
-           })
-       }
-      
-   })
 }
 
 handleTicketPrint(row){ 
@@ -1265,7 +1038,6 @@ getTicketList(loading){
     }
     var detail = window.localStorage.getItem('businessdetail');
     var businessdetail = JSON.parse(detail);
-    var todayDate = Moment(new Date()).format('YYYY-MM-DD');
 
 
     var sql = `select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value,t.sync_id, t.discount_totalamt, t.sync_id, c.name as customer_name from ticket as t left join customers as c on t.customer_id=c.sync_id where t.businessId='`+businessdetail["id"]
@@ -1277,13 +1049,13 @@ getTicketList(loading){
       
            this.setState({unsyncedCount: response.length}, function() {
 
-            var sql = "select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value, t.discount_totalamt, t.sync_id,c.name as customer_name, tp.pay_mode, tp.paid_at from ticket as t left join customers as c on t.customer_id=c.sync_id left join ticket_payment as tp on tp.ticketref_id=t.sync_id where t.businessId='"+businessdetail["id"]+"' and t.isDelete!=1 order by ticket_code desc"
+            var sql = "select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value, t.discount_totalamt, t.sync_id,c.name as customer_name, tp.pay_mode from ticket as t left join customers as c on t.customer_id=c.sync_id left join ticket_payment as tp on tp.ticketref_id=t.sync_id where t.businessId='"+businessdetail["id"]+"' and t.isDelete!=1 order by ticket_code desc"
            
             this.state.dataManager.getData(sql).then(response =>{
                 
                 if (response instanceof Array) { 
                     let selected_ticket = response.filter(item => item.paid_status !== "paid")
-                    let selected_paid_ticket = response.filter(item => item.paid_status === "paid" && item.paid_at.indexOf(todayDate)>-1)
+                    let selected_paid_ticket = response.filter(item => item.paid_status === "paid")
                     this.setState({ticket_list: response,isLoading: false, unpaid_ticket_list:selected_ticket,paid_ticket_list: selected_paid_ticket, isLoading: false}, function() { 
                         this.state.unpaid_ticket_list.map((data)=>{
                             this.getTicketService(data.id)
@@ -1505,14 +1277,6 @@ render()  {
                                 
                             </div>
 
-                            {(this.state.value ==1) && 
-                                <div style={{display:'flex', alignItems:'right', justifyContent:'flex-end', marginRight: 10}}> 
-                                    <IconButton onClick={()=>{
-                                        this.setState({showDatePopup: true})
-                                    }}><CalendarMonthOutlined/></IconButton>
-                                </div> 
-                            }
-
                             {(this.state.value ==0 && this.state.hide) && 
                             <TableContent style={{ height: '100%', width: '100%',marginBottom: 10}}
                             data={this.state.unpaid_ticket_list} 
@@ -1530,18 +1294,18 @@ render()  {
                            }
 
                             {(this.state.value ==1 &&  this.state.hide) && 
-                                <TableContent style={{ height: '100%', width: '100%',marginBottom: 10}}
+                                <TableContent style={{ height: '100%', width: '100%'}}
                                 data={this.state.paid_ticket_list} 
-                                columns={this.state.closedticket_reponsiveColumns}
+                                columns={this.state.reponsiveColumns}
                                 onRowClick={ this.onRowClick}
                             />
                             }
 
 
                             {(this.state.value ==1 &&  this.state.hide==false) && 
-                                <TableContent style={{ height: '100%', width: '100%',marginBottom: 10}}
+                                <TableContent style={{ height: '100%', width: '100%'}}
                                 data={this.state.paid_ticket_list} 
-                                columns={this.state.closedticket_columns}
+                                columns={this.state.columns}
                                 onRowClick={ this.onRowClick}
                             />
                             }
@@ -1645,70 +1409,7 @@ render()  {
 
             {/* validations for select service , technicians */}
             {this.state.printalert &&  <AlertModal title="Alert" msg="No printers added yet." handleCloseAlert={()=>this.setState({printalert:false})}/>}
-            <Dialog
-                    className="custommodal"
-                        open={this.state.showDatePopup}
-                        onClose={()=>{
-                            this.setState({showDatePopup: false, from_date: new Date(), to_date:new Date()})
-                        }}
-                        aria-labelledby="alert-dialog-title"
-                        aria-describedby="alert-dialog-description"
-                        style={{borderRadius:'10px'}}
-                    >
-                        <DialogTitle id="alert-dialog-title">
-                        <ModalHeader title="Select Date" onClose={()=>{
-                            this.setState({showDatePopup: false})
-                        }} />
-                        </DialogTitle>
-                        <DialogContent>
-                        <DialogContentText id="alert-dialog-description">
-                        
-                                <Grid container>
-                                    
-                                    <Grid item xs={12} style={{padding:'20px'}}>
-                                        <form autoComplete="off" noValidate> 
-                                            <Stack direction={'column'}> 
-                                                <div  style={{margin:'10px 0'}}>
-                                                <LocalizationProvider dateAdapter={AdapterDateFns} fullWidth >
-                                                    <DesktopDatePicker
-                                                        label="From"
-                                                        inputFormat="MM/dd/yyyy"
-                                                        maxDate={new Date()}
-                                                        style={{marginRight:'10px'}}
-                                                        value={this.state.from_date}
-                                                        onChange={this.handlechangeFromDate}
-                                                        renderInput={(params) => <TextField {...params} />}
-                                                    />
-                                                </LocalizationProvider>
-                                                </div>
-                                                <div  style={{margin:'10px 0'}}>
-                                                    <LocalizationProvider dateAdapter={AdapterDateFns} fullWidth 
-                                                            style={{marginLeft:'10px'}}>
-                                                        <DesktopDatePicker
-                                                            label="To"
-                                                            inputFormat="MM/dd/yyyy"
-                                                            minDate={this.state.from_date}
-                                                            maxDate={new Date()}
-                                                            value={this.state.to_date} 
-                                                            onChange={this.handlechangeToDate}
-                                                            style={{marginLeft:'10px'}}
-                                                            renderInput={(params) => <TextField {...params} />}
-                                                        />
-                                                    </LocalizationProvider>    
-                                                </div>
-                                            </Stack>
-                                        </form>  
-                                    </Grid> 
-                                </Grid>
-                        
-                        </DialogContentText>
-                            </DialogContent>
-                        <DialogActions style={{display:'flex', alignItems:'center', justifyContent:'center', marginBottom:'1rem'}}>
-                            <Button variant="contained" onClick={()=>{ this.getClosedTicketsByDate()}}> Get Tickets </Button> 
-                        </DialogActions>
-            </Dialog>
-        
-        </div> 
+           </div> 
   }
 
 }

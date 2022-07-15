@@ -189,7 +189,7 @@ body > div{
   color:#fff !important;
 }
 
-.btmbtn:disabled span{
+ .btmbtn:disabled span{
   color:#909090 !important;
 }
 
@@ -201,10 +201,10 @@ body > div{
   color: #134163 !important;
   border-color: #134163 !important ;
 }
-button.Mui-disabled{
+/*button.Mui-disabled{
   background: rgba(0, 0, 0, 0.12) !important;
   color:#fff !important;
-}
+} */
 .MuiCheckbox-colorSecondary.Mui-checked{
   color: #134163 !important;
 }

@@ -227,10 +227,11 @@ export default class EmployeeReport extends React.Component {
         (select SUM(cash_amt) from employee_commission_detail where cash_type_for='tips' and ticketref_id=tp.ticketref_id) as Tips,
         ( select SUM(cash_amt) from employee_commission_detail where cash_type_for like '%discount' and ticketref_id=tp.ticketref_id ) as Discount, tp.ticketref_id, 
         (select ticket_code from ticket where sync_id=tp.ticketref_id) as ticket_code,
+        (select count(ticketref_id) from ticket_services where ticketref_id=tp.ticketref_id and isActive=1) as ticket_servicescount,
         (select paid_status from ticket where sync_id=tp.ticketref_id) as paid_status,
         (select total_tax from ticket where sync_id=tp.ticketref_id) as total_tax,
         (select grand_total from ticket where sync_id=tp.ticketref_id) as grand_total,
-        u.id as employee_id, u.firstName, u.lastName, u.staff_role as role,  tp.pay_mode 
+        u.id as employee_id, u.firstName, u.lastName, u.staff_role as role,  tp.pay_mode , tp.card_type
         FROM    ticket_payment as tp
         left join employee_commission_detail as ec   on tp.ticket_id=ec.ticketref_id join users as u on u.id = ec.employeeId 
         WHERE ec.businessId=`+input.businessId+` and (ec.cash_type_for = 'ownercommission' or ec.cash_type_for='service'  or ec.cash_type_for='tips' 
@@ -255,10 +256,11 @@ export default class EmployeeReport extends React.Component {
             (select SUM(cash_amt) from employee_commission_detail where cash_type_for='tips' and ticketref_id=tp.ticketref_id) as Tips,
             ( select SUM(cash_amt) from employee_commission_detail where cash_type_for like '%discount' and ticketref_id=tp.ticketref_id ) as Discount, tp.ticketref_id, 
             (select ticket_code from ticket where sync_id=tp.ticketref_id) as ticket_code,
+            (select count(ticketref_id) from ticket_services where ticketref_id=tp.ticketref_id and isActive=1) as ticket_servicescount,
             (select paid_status from ticket where sync_id=tp.ticketref_id) as paid_status,
             (select total_tax from ticket where sync_id=tp.ticketref_id) as total_tax,
             (select grand_total from ticket where sync_id=tp.ticketref_id) as grand_total,
-            u.id as employee_id, u.firstName, u.lastName, u.staff_role as role,  tp.pay_mode 
+            u.id as employee_id, u.firstName, u.lastName, u.staff_role as role,  tp.pay_mode , tp.card_type
             FROM    ticket_payment as tp
             left join employee_commission_detail as ec   on tp.ticket_id=ec.ticketref_id join users as u on u.id = ec.employeeId 
         WHERE ec.businessId=`+input.businessId+` and (ec.cash_type_for = 'ownercommission' or ec.cash_type_for='service'  or ec.cash_type_for='tips' 
@@ -284,10 +286,11 @@ export default class EmployeeReport extends React.Component {
                (select SUM(cash_amt) from employee_commission_detail where cash_type_for='tips' and ticketref_id=tp.ticketref_id) as Tips,
                ( select SUM(cash_amt) from employee_commission_detail where cash_type_for like '%discount' and ticketref_id=tp.ticketref_id ) as Discount, tp.ticketref_id, 
                (select ticket_code from ticket where sync_id=tp.ticketref_id) as ticket_code,
+               (select count(ticketref_id) from ticket_services where ticketref_id=tp.ticketref_id and isActive=1) as ticket_servicescount,
                (select paid_status from ticket where sync_id=tp.ticketref_id) as paid_status,
                (select total_tax from ticket where sync_id=tp.ticketref_id) as total_tax,
                (select grand_total from ticket where sync_id=tp.ticketref_id) as grand_total,
-               u.id as employee_id, u.firstName, u.lastName, u.staff_role as role,  tp.pay_mode 
+               u.id as employee_id, u.firstName, u.lastName, u.staff_role as role,  tp.pay_mode , tp.card_type
                FROM    ticket_payment as tp
                left join employee_commission_detail as ec   on tp.ticket_id=ec.ticketref_id join users as u on u.id = ec.employeeId 
             WHERE ec.businessId=`+input.businessId+` and ec.cash_type_for != 'ownercommission' and  ec.isActive=1 and 
@@ -312,10 +315,11 @@ export default class EmployeeReport extends React.Component {
                         (select SUM(cash_amt) from employee_commission_detail where cash_type_for='tips' and ticketref_id=tp.ticketref_id) as Tips,
                         ( select SUM(cash_amt) from employee_commission_detail where cash_type_for like '%discount' and ticketref_id=tp.ticketref_id ) as Discount, tp.ticketref_id, 
                         (select ticket_code from ticket where sync_id=tp.ticketref_id) as ticket_code,
+                        (select count(ticketref_id) from ticket_services where ticketref_id=tp.ticketref_id and isActive=1) as ticket_servicescount,
                         (select paid_status from ticket where sync_id=tp.ticketref_id) as paid_status,
                         (select total_tax from ticket where sync_id=tp.ticketref_id) as total_tax,
                         (select grand_total from ticket where sync_id=tp.ticketref_id) as grand_total,
-                        u.id as employee_id, u.firstName, u.lastName, u.staff_role as role,  tp.pay_mode 
+                        u.id as employee_id, u.firstName, u.lastName, u.staff_role as role,  tp.pay_mode , tp.card_type
                         FROM    ticket_payment as tp
                         left join employee_commission_detail as ec   on tp.ticket_id=ec.ticketref_id join users as u on u.id = ec.employeeId 
                      WHERE ec.businessId=`+input.businessId+` and ec.cash_type_for != 'ownercommission' and  ec.isActive=1 and 
@@ -356,8 +360,11 @@ export default class EmployeeReport extends React.Component {
 
             profitsql= `select sum(cash_amt) as profit from employee_commission_detail as ec where ec.cash_type_for='ownercommission' and  ec.ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where   DATE(paid_at) = '`+input.from_date+`') and isDelete=0 and businessId=`+input.businessId+` and paid_status='paid')`;
         }  
-        console.log(profitsql);
+        console.log(sql);
         this.dataManager.getData(sql).then(results=>{ 
+            console.log("%%%%%%%%")
+            console.log(results);
+            console.log("-------------")
             this.dataManager.getData(discountquery).then(disres=>{ 
                 this.dataManager.getData(taxsql).then(taxres=>{  
                     this.dataManager.getData(cashsql).then(cashres=>{ 
@@ -645,33 +652,54 @@ export default class EmployeeReport extends React.Component {
             //         })
             //     }
             // }
-            console.log("$$$$$$$$$")
-            console.log(reportresults)
             this.setState({isLoading: false,  empReport: reportresults, showDatePopup: false})
         }
         else{ 
           var creportresults = results;
+          var finalreport = [];
           this.state.selectedemps.forEach((emp, j)=>{
                 var empreport = creportresults.filter(e=>e.employee_id === emp);
                 var discountdata= this.state.discountdata[0]; 
                 var discountdatatemp = this.state.empdiscount.filter(d=>d.employeeId === emp); 
-                discountdata = discountdatatemp.length> 0? discountdatatemp[0] : {OwnerDiscount:0, EmpDiscount:0, OwnerEmpDiscount:0}
-                console.log("discount")
-                console.log(discountdata)
-                
-                if(empreport.length === 0){
-                    var empdetail = this.state.employeelist.filter(r=>r.id === emp);
-                    creportresults.push({
-                        employee_id: emp,
-                        firstName: empdetail[0].firstName,
-                        lastName: empdetail[0].lastName,
-                        tickets:[],
-                        discountdata: discountdata
-                    })
-                } 
-                if(j === this.state.selectedemps.length-1 ){ 
-                    this.setState({isLoading: false,  empReport:creportresults, showDatePopup: false})
+                discountdata = discountdatatemp.length> 0? discountdatatemp[0] : {OwnerDiscount:0, EmpDiscount:0, OwnerEmpDiscount:0} 
+
+
+                let from_date = Moment(this.state.from_date).format('YYYY-MM-DD');
+                let to_date = Moment(this.state.to_date).format('YYYY-MM-DD');
+                var input = {
+                    businessId: this.state.businessdetail.id,
+                    from_date: from_date,
+                    to_date: to_date, 
+                    reportType:this.state.tabName
                 }
+                
+        var supplysql = `select SUM(service_cost) as PaidAmount from ticket_services as ts join ticket_payment as tp on tp.ticketref_id=ts.ticketref_id where tp.isActive=1 and  tp.ticketref_id in   (select sync_id from ticket where ts.employee_id=`+emp+` and sync_id in (select ticketref_id from ticket_payment where   DATE(paid_at) between '`+input.from_date+`' and '`+input.to_date+`') and isDelete=0 and businessId=`+input.businessId+` and paid_status='paid') and ts.service_id in (select sync_id from services where producttype='product')`
+
+        this.dataManager.getData(supplysql).then(da=>{
+            var supplyamt = da.length > 0 ? da[0].PaidAmount : 0;
+
+            if(empreport.length === 0){
+                var empdetail = this.state.employeelist.filter(r=>r.id === emp);
+                finalreport.push({
+                    employee_id: emp,
+                    firstName: empdetail[0].firstName,
+                    lastName: empdetail[0].lastName,
+                    tickets:[],
+                    discountdata: discountdata,
+                    supplies_amt : supplyamt
+                })
+            } 
+            else{
+                empreport[0].supplies_amt = supplyamt;
+                finalreport.push(empreport[0]);
+            }
+            if(j === this.state.selectedemps.length-1 ){ 
+                console.log("$$$$$$$$$")
+                console.log(finalreport)
+                this.setState({isLoading: false,  empReport:finalreport, showDatePopup: false})
+            }
+        })
+                
           });
         }
       }
@@ -688,6 +716,8 @@ export default class EmployeeReport extends React.Component {
             var ticketslist = c_obj.ticketslist;
             var ticketcodes = ticketslist.map(t=>t.ticket_code);
             var ticketcount = Number(c_obj.ticketcount);
+            var ticketservicecount = c_obj.ticketservicecount+obj.ticket_servicescount;
+
             if(ticketcodes.indexOf(obj.ticket_code) === -1){
                 ticketcount += 1;
                 ticketslist.push(obj);
@@ -703,7 +733,8 @@ export default class EmployeeReport extends React.Component {
                 lastName: c_obj.lastName,
                 ticket_date: valtocheck.split("----")[0],
                 ticketcount: ticketcount,
-                ticketslist:ticketslist
+                ticketslist:ticketslist,
+                ticketservicecount:ticketservicecount
             };
             results[idx] = resultobj;
             // console.log("if contidio",idx, resultobj) 
@@ -718,13 +749,14 @@ export default class EmployeeReport extends React.Component {
                 ticket_date: valtocheck.split("----")[0]
             };
             c_obj1.Amount = Number(obj.Amount);
-            console.log( obj.Amount)
+            console.log( obj)
             c_obj1.Tips = Number(obj.Tips);
             c_obj1.Discount = Number(obj.Discount);
             c_obj1.date = valtocheck;
             c_obj1.ticketcount = 1; 
             c_obj1.ticketslist = [];
             c_obj1.ticketslist.push(obj);
+            c_obj1.ticketservicecount = obj.ticket_servicescount;
             // console.log(Number(c_obj1.Amount), Number(obj.Amount)); 
             results.push(c_obj1);
             existids.push(valtocheck); 
@@ -951,13 +983,14 @@ export default class EmployeeReport extends React.Component {
         </div>) 
         
         if(this.state.empReport[0].tickets.length > 0){
-            reportdetail.push(<div style={{display:'flex',width:'100%', alignItems:'flex-start', justifyContent:'flex-start', flexDirection:'row', borderBottom:'1px solid #000'}}> 
+            reportdetail.push(<div style={{display:'flex',width:'100%', alignItems:'flex-start', fontSize:'12px', justifyContent:'flex-start', flexDirection:'row', borderBottom:'1px solid #000'}}> 
                 <Grid container>
                     <Grid item xs={2}><b>{this.state.reporttype === 'annually' ? 'Year' : (this.state.reporttype === 'monthly') ? 'Month' : 'Date'}</b></Grid>
                     <Grid item xs={2} style={{alignItems:'center', display:'flex', justifyContent:'center'}}><b>Tickets</b></Grid>
+                    <Grid item xs={2}><b>#Service</b></Grid>
                     <Grid item xs={2}><b>Amount</b></Grid>
-                    <Grid item xs={2}><b>Tip</b></Grid>
-                    <Grid item xs={2}><b>Discount</b></Grid>
+                    <Grid item xs={1}><b>Tip</b></Grid>
+                    <Grid item xs={1}><b>Discount</b></Grid>
                     <Grid item xs={2}><b>Total</b></Grid>
                 </Grid>
             </div>)
@@ -968,15 +1001,16 @@ export default class EmployeeReport extends React.Component {
                 discounttotal = discounttotal+ Number(t.Discount);
                 totalAmount = totalAmount+ Number(t.Amount);
                 totalTips = totalTips+ Number(t.Tips);
-                reportdetail.push(<div style={{display:'flex',width:'100%', alignItems:'flex-start', justifyContent:'flex-start', flexDirection:'row', borderBottom:'1px solid #000', padding:'2px 0'}}> 
+                reportdetail.push(<div style={{display:'flex',width:'100%', fontSize:'12px', alignItems:'flex-start', justifyContent:'flex-start', flexDirection:'row', borderBottom:'1px solid #000', padding:'2px 0'}}> 
                     <Grid container>
                         <Grid item xs={2}>{t.ticket_date}</Grid>
                         <Grid item xs={2} style={{alignItems:'center', display:'flex',flexDirection:'column', justifyContent:'center', textDecoration:'underline', cursor:'pointer'}} onClick={()=>{
                             this.showDetails(t)
                         }}>{t.ticketcount} </Grid>
+                        <Grid item xs={2}>{t.ticketservicecount}</Grid>
                         <Grid item xs={2}>{Number(t.Amount) > 0 ? "$"+Number(t.Amount).toFixed(2) : '-' }</Grid>
-                        <Grid item xs={2}>{Number(t.Tips) > 0 ? "$"+Number(t.Tips).toFixed(2) : '-' }</Grid>
-                        <Grid item xs={2}>{Number(t.Discount) > 0 ? "$"+Number(t.Discount).toFixed(2) : '-' }</Grid>
+                        <Grid item xs={1}>{Number(t.Tips) > 0 ? "$"+Number(t.Tips).toFixed(2) : '-' }</Grid>
+                        <Grid item xs={1}>{Number(t.Discount) > 0 ? "$"+Number(t.Discount).toFixed(2) : '-' }</Grid>
                         <Grid item xs={2}>{(Number(t.Amount)+Number(t.Tips)-Number(t.Discount)) > 0 ? "$"+(Number(t.Amount)+Number(t.Tips)-Number(t.Discount)).toFixed(2) : '-' }</Grid>
                     </Grid>
                 </div>)
@@ -985,13 +1019,14 @@ export default class EmployeeReport extends React.Component {
             var discountdata= this.state.discountdata[0]; 
 
             var tdiscounttotal = discountdata.OwnerDiscount+discountdata.EmpDiscount+discountdata.OwnerEmpDiscount;
-            reportdetail.push(<div style={{display:'flex',width:'100%', alignItems:'flex-start', justifyContent:'flex-start', flexDirection:'row'}}> 
+            reportdetail.push(<div style={{display:'flex',width:'100%',fontSize:'12px', alignItems:'flex-start', justifyContent:'flex-start', flexDirection:'row'}}> 
                 <Grid container>
                     <Grid item xs={2}><b>Total</b></Grid>
                     <Grid item xs={2}></Grid>
+                    <Grid item xs={2}></Grid>
                     <Grid item xs={2}><b>{"$"+Number(totalAmount).toFixed(2)}</b></Grid>
-                    <Grid item xs={2}><b>{"$"+Number(totalTips).toFixed(2)}</b></Grid>
-                    <Grid item xs={2}><b>{"$"+Number(discounttotal).toFixed(2)}</b></Grid>
+                    <Grid item xs={1}><b>{"$"+Number(totalTips).toFixed(2)}</b></Grid>
+                    <Grid item xs={1}><b>{"$"+Number(discounttotal).toFixed(2)}</b></Grid>
                     <Grid item xs={2}><b>{"$"+(Number(totalAmount) + Number(totalTips) - Number(discounttotal)).toFixed(2)}</b></Grid>
                 </Grid>
             </div>)
@@ -1072,129 +1107,206 @@ export default class EmployeeReport extends React.Component {
     }
 
     renderEmployeeReport(){
-        
-        var reportdetail = [];
-        this.state.empReport.forEach(emp=>{ 
-            reportdetail.push(<div style={{display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column'}}>
-                <Typography variant="h4">{this.state.businessdetail.name}</Typography>
-                <Typography variant="h5" style={{textTransform:'capitalize'}}>Employee {this.state.reporttype} Report</Typography>
-                <Typography variant="subtitle2" style={{textTransform:'capitalize', fontWeight:'400'}}>{Moment(this.state.from_date).format("MM/DD/YYYY")+" - "+Moment(this.state.to_date).format("MM/DD/YYYY")}</Typography>
-            </div>);
+         
+            var reportdetail = [];
+            this.state.empReport.forEach(emp=>{ 
+                reportdetail.push(<div style={{display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column'}}>
+                    <Typography variant="h4">{this.state.businessdetail.name}</Typography>
+                    <Typography variant="h5" style={{textTransform:'capitalize'}}>Employee {this.state.reporttype} Report</Typography>
+                    <Typography variant="subtitle2" style={{textTransform:'capitalize', fontWeight:'400'}}>{Moment(this.state.from_date).format("MM/DD/YYYY")+" - "+Moment(this.state.to_date).format("MM/DD/YYYY")}</Typography>
+                </div>);
 
-            reportdetail.push(<div style={{display:'flex',width:'100%', alignItems:'flex-start', justifyContent:'flex-start', flexDirection:'row'}}> 
-                    <Typography variant="body" style={{textTransform:'capitalize', fontWeight:'400'}}>Employee : <b>{emp.firstName+" "+emp.lastName}</b></Typography>
-            </div>) 
-            if(emp.tickets.length > 0){
-                reportdetail.push(<div style={{display:'flex',width:'100%', alignItems:'flex-start', justifyContent:'flex-start', flexDirection:'row', borderBottom:'1px solid #000'}}> 
-                    <Grid container>
-                        <Grid item xs={3}><b>{this.state.reporttype === 'annually' ? 'Year' : (this.state.reporttype === 'monthly') ? 'Month' : 'Date'}</b></Grid>
-                        <Grid item xs={3}><b>Tickets</b></Grid>
-                        <Grid item xs={2}><b>Amount</b></Grid>
-                        <Grid item xs={2}><b>Tip</b></Grid>
-                        <Grid item xs={2}><b>Total</b></Grid>
-                    </Grid>
-                </div>)
-                var discounttotal = 0
-                var totalAmount = 0;
-                var totalTips = 0;
-                emp.tickets.map(t=>{
-                    return  reportdetail.push(<div style={{display:'flex',width:'100%', alignItems:'flex-start', justifyContent:'flex-start', flexDirection:'row', borderBottom:'1px solid #000', padding:'2px 0'}}> 
-                        <Grid container style={{padding:'0.5rem 0'}}>
-                            <Grid item xs={3}>{t.ticket_date}</Grid>
-                            <Grid item xs={3} style={{alignItems:'center', display:'flex', textDecoration:'underline', cursor:'pointer'}} onClick={()=>{
-                                this.showDetails(t)
-                            }}>{t.ticketcount}</Grid>
-                            <Grid item xs={2}>{Number(t.Amount) > 0 ? "$"+Number(t.Amount).toFixed(2) : '-' }</Grid>
-                            <Grid item xs={2}>{Number(t.Tips) > 0 ? "$"+Number(t.Tips).toFixed(2) : '-' }</Grid>
-                            <Grid item xs={2}>{Number(t.Amount)+Number(t.Tips) > 0 ? "$"+(Number(t.Tips)+Number(t.Amount)).toFixed(2) : '-' }</Grid>
-                        </Grid>
-                    </div>)
-                })
-
-                emp.tickets.forEach(t=>{
-                    discounttotal = discounttotal+ Number(t.Discount);
-                    totalAmount = totalAmount+ Number(t.Amount);
-                    totalTips = totalTips+ Number(t.Tips);
-                    discounttotal = discounttotal+ Number(t.Discount);
-                })
-
-                discounttotal = emp.discountdata.OwnerDiscount+emp.discountdata.EmpDiscount+emp.discountdata.OwnerEmpDiscount;
-                console.log(discounttotal);
-
-                reportdetail.push(
-                    <div style={{display:'flex',width:'100%', alignItems:'flex-start', justifyContent:'flex-start', flexDirection:'row', borderBottom:'1px solid #000',fontWeight:'700', padding:'2px 0'}}> 
-                        <Grid container><Grid item xs={3}></Grid>
-                            <Grid item xs={3}>Total</Grid>
-                            <Grid item xs={2}>{Number(totalAmount) > 0 ? "$"+Number(totalAmount).toFixed(2) : '-' }</Grid>
-                            <Grid item xs={2}>{Number(totalTips) > 0 ? "$"+Number(totalTips).toFixed(2) : '-' }</Grid>
-                            <Grid item xs={2}>{Number(totalTips)+Number(totalAmount) > 0 ? "$"+(Number(totalTips)+Number(totalAmount)).toFixed(2) : '-' }</Grid>
-                        </Grid>
-                    </div>)
-                reportdetail.push(<div style={{display:'flex',width:'100%', alignItems:'flex-start', justifyContent:'flex-start', flexDirection:'column', marginTop:'2rem'}}>
-
-                        <Typography variant="h6" style={{textTransform:'capitalize', fontWeight:'700'}}>Discounts</Typography>
-
-                        <Grid container style={{textTransform:'capitalize', fontWeight:'400', display:'flex', alignItems:'center', justifyContent:'space-between', width:'100%'}}>
-                            <Grid item xs={8}>#</Grid>
-                            <Grid item xs={4}>{Number(discounttotal).toFixed(2)}</Grid>
-                        </Grid>
-                        <Grid container style={{textTransform:'capitalize', fontWeight:'400', display:'flex', alignItems:'center', justifyContent:'space-between', width:'100%'}}>
-                            <Grid item xs={8}>Owner</Grid>
-                            <Grid item xs={4}>{Number(emp.discountdata.OwnerDiscount).toFixed(2)}</Grid>
-                        </Grid>
-
-                        <Grid container style={{textTransform:'capitalize', fontWeight:'400', display:'flex', alignItems:'center', justifyContent:'space-between', width:'100%'}}>
-                            <Grid item xs={8}>Employee</Grid>
-                            <Grid item xs={4}>{Number(emp.discountdata.EmpDiscount).toFixed(2)}</Grid>
-                        </Grid>
-
-                        <Grid container style={{textTransform:'capitalize', fontWeight:'400', display:'flex', alignItems:'center', justifyContent:'space-between', width:'100%'}}>
-                            <Grid item xs={8}>Owner & Employee</Grid>
-                            <Grid item xs={4}>{Number(emp.discountdata.OwnerEmpDiscount).toFixed(2)}</Grid>
-                        </Grid>
-                        <Grid container style={{textTransform:'capitalize', fontWeight:'700', display:'flex', alignItems:'center', justifyContent:'space-between', width:'100%',}}>
-                            <Grid item xs={8}>Total</Grid>
-                            <Grid item xs={4}>${Number(discounttotal).toFixed(2)}</Grid>
-                        </Grid>
-
-                        <Grid container style={{textTransform:'capitalize', fontWeight:'700', display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:'2rem', width:'100%',}}>
-                        <Grid item xs={8}>Tax Amount</Grid>
-                        <Grid item xs={4}>${Number(this.state.tax_Amount).toFixed(2)}</Grid>
-                    </Grid>
-
-                    <Grid container style={{textTransform:'capitalize', fontWeight:'700', display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:'2rem', width:'100%',}}>
-                        <Grid item xs={8}>Supplies</Grid>
-                        <Grid item xs={4}>${this.state.supplydetail.length > 0 ? Number(this.state.supplydetail[0].PaidAmount).toFixed(2) : '0.00'}</Grid>
-                    </Grid>
-
-                    <Grid container style={{textTransform:'capitalize', fontWeight:'700', display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:'2rem', width:'100%',}}>
-                        <Grid item xs={8}>Payment Methods</Grid>
-                        <Grid item xs={4}></Grid>
-                    </Grid>
-
-
-
-                    <Grid container style={{textTransform:'capitalize', fontWeight:'700', display:'flex', alignItems:'center', justifyContent:'space-between',  width:'100%',}}>
-                        <Grid item xs={8}>Amount Collected</Grid>
-                        <Grid item xs={4}>${Number(totalAmount).toFixed(2)}</Grid>
-                    </Grid> 
-
-                    </div>)
-            }
-            else{ 
-                reportdetail.push(<div style={{display:'flex',marginTop:'1rem',width:'100%', alignItems:'center', justifyContent:'center', flexDirection:'row'}}> 
-                    <Typography variant="body" style={{textTransform:'capitalize', fontWeight:'400'}}>No tickets made during this time period by {emp.firstName+" "+emp.lastName}</Typography>
+                reportdetail.push(<div style={{display:'flex',width:'100%', alignItems:'flex-start', justifyContent:'flex-start', flexDirection:'row'}}> 
+                        <Typography variant="body" style={{textTransform:'capitalize', fontWeight:'400'}}>Employee : <b>{emp.firstName+" "+emp.lastName}</b></Typography>
                 </div>) 
-            }
+                if(emp.tickets.length > 0){
+                    reportdetail.push(<div style={{display:'flex',width:'100%',fontSize:'12px', alignItems:'flex-start', justifyContent:'flex-start', flexDirection:'row', borderBottom:'1px solid #000'}}> 
+                        <Grid container>
+                            <Grid item xs={2}><b>{this.state.reporttype === 'annually' ? 'Year' : (this.state.reporttype === 'monthly') ? 'Month' : 'Date'}</b></Grid>
+                            <Grid item xs={2}><b>Tickets</b></Grid>
+                            <Grid item xs={2}><b>#Service</b></Grid>
+                            <Grid item xs={2}><b>Amount</b></Grid>
+                            <Grid item xs={2}><b>Tip</b></Grid>
+                            <Grid item xs={2}><b>Total</b></Grid>
+                        </Grid>
+                    </div>)
+                    var discounttotal = 0
+                    var totalAmount = 0;
+                    var totalTips = 0;
+                    emp.tickets.map(t=>{
+                        return  reportdetail.push(<div style={{display:'flex',width:'100%',fontSize:'12px', alignItems:'flex-start', justifyContent:'flex-start', flexDirection:'row', borderBottom:'1px solid #000', padding:'2px 0'}}> 
+                            <Grid container style={{padding:'0.5rem 0'}}>
+                                <Grid item xs={2}>{t.ticket_date}</Grid>
+                                <Grid item xs={2} style={{alignItems:'center', display:'flex', textDecoration:'underline', cursor:'pointer'}} onClick={()=>{
+                                    this.showDetails(t)
+                                }}>{t.ticketcount}</Grid>
+                                <Grid item xs={2}>{t.ticketservicecount }</Grid>
+                                <Grid item xs={2}>{Number(t.Amount) > 0 ? "$"+Number(t.Amount).toFixed(2) : '-' }</Grid>
+                                <Grid item xs={2}>{Number(t.Tips) > 0 ? "$"+Number(t.Tips).toFixed(2) : '-' }</Grid>
+                                <Grid item xs={2}>{Number(t.Amount)+Number(t.Tips) > 0 ? "$"+(Number(t.Tips)+Number(t.Amount)).toFixed(2) : '-' }</Grid>
+                            </Grid>
+                        </div>)
+                    }) 
+                    var cashdata = [];
+                    var total = 0;
+                    emp.tickets.forEach(t=>{
+                        
+                        var isCash = t.ticketslist.filter(p=>p.pay_mode === 'cash');
+                        var isCredit = t.ticketslist.filter(p=>p.pay_mode === 'card' && p.card_type ==='credit');
+                        var isDebit = t.ticketslist.filter(p=>p.pay_mode === 'card' && p.card_type ==='debit');
+                        if(isCash.length === 0){
+                            cashdata.push({
+                                PaidAmount:0,
+                                pay_mode:'Cash',
+                                card_type:''
+                            })
+                        }
+                        else{
+                            var pamount = 0
+                            isCash.forEach((e,ti)=>{
+                                pamount += Number(e.Amount);
+                                total+=Number(e.Amount);
+                                if(ti == isCash.length-1){
 
-            reportdetail.push(<div style={{display:'flex',marginTop:'1.5rem',width:'100%', alignItems:'center', justifyContent:'center', flexDirection:'row',borderBottom:'1px dotted #000', marginBottom:'1rem'}}> 
-                <Typography variant="body" style={{ paddingBottom:'1rem',fontWeight:'400'}}>{this.state.businessdetail.name} - Reported: {Moment().format("MM/DD/YYYY hh:mm a")}</Typography>
-            </div>) 
-        })
+                                    cashdata.push({ 
+                                        PaidAmount:pamount,
+                                        pay_mode:'Cash',
+                                    })
+                                }
+                            }) 
+                        }
+                
+                        if(isCredit.length === 0){
+                            cashdata.push({
+                                PaidAmount:0,
+                                pay_mode:'Credit Card',
+                                card_type:''
+                            })
+                        }
+                        else{
+                            
+                            var pamount = 0
+                            isCredit.forEach((e,ti)=>{
+                                pamount += Number(e.Amount);
+                                if(ti == isCredit.length-1){
+                                    total+=Number(e.Amount);
+                                    cashdata.push({ 
+                                        PaidAmount:pamount,
+                                        pay_mode:'Credit Card',
+                                    })
+                                }
+                            }) 
+                        }
+                
+                        if(isDebit.length === 0){
+                            cashdata.push({
+                                PaidAmount:0,
+                                pay_mode:'Debit Card',
+                                card_type:''
+                            })
+                        }
+                        else{ 
+                            
+                            var pamount = 0
+                            isDebit.forEach((e,ti)=>{
+                                pamount += Number(e.Amount);
+                                total+=Number(e.Amount);
+                                if(ti == isDebit.length-1){
 
-        return  <div style={{ width:'100%'}}>
+                                    cashdata.push({ 
+                                        PaidAmount:pamount,
+                                        pay_mode:'Debit Card',
+                                    })
+                                }
+                            }) 
+                        }
+
+                        discounttotal = discounttotal+ Number(t.Discount);
+                        totalAmount = total;
+                        totalTips = totalTips+ Number(t.Tips);
+                        discounttotal = discounttotal+ Number(t.Discount);
+                    })
+
+                    discounttotal = emp.discountdata.OwnerDiscount+emp.discountdata.EmpDiscount+emp.discountdata.OwnerEmpDiscount;
+                    
+                    reportdetail.push(
+                        <div style={{display:'flex',width:'100%',fontSize:'12px', alignItems:'flex-start', justifyContent:'flex-start', flexDirection:'row', borderBottom:'1px solid #000',fontWeight:'700', padding:'2px 0'}}> 
+                            <Grid container>
+                                <Grid item xs={2}>Total</Grid>
+                                <Grid item xs={2}></Grid>
+                                <Grid item xs={2}></Grid>
+                                <Grid item xs={2}>{Number(totalAmount) > 0 ? "$"+Number(totalAmount).toFixed(2) : '-' }</Grid>
+                                <Grid item xs={2}>{Number(totalTips) > 0 ? "$"+Number(totalTips).toFixed(2) : '-' }</Grid>
+                                <Grid item xs={2}>{Number(totalTips)+Number(totalAmount) > 0 ? "$"+(Number(totalTips)+Number(totalAmount)).toFixed(2) : '-' }</Grid>
+                            </Grid>
+                        </div>)
+                    reportdetail.push(<div style={{display:'flex',width:'100%', alignItems:'flex-start', justifyContent:'flex-start', flexDirection:'column', marginTop:'2rem'}}>
+
+                            <Typography variant="h6" style={{textTransform:'capitalize', fontWeight:'700'}}>Discounts</Typography>
+
+                            <Grid container style={{textTransform:'capitalize', fontWeight:'400', display:'flex', alignItems:'center', justifyContent:'space-between', width:'100%'}}>
+                                <Grid item xs={8}>#</Grid>
+                                <Grid item xs={4}>{Number(discounttotal).toFixed(2)}</Grid>
+                            </Grid>
+                            <Grid container style={{textTransform:'capitalize', fontWeight:'400', display:'flex', alignItems:'center', justifyContent:'space-between', width:'100%'}}>
+                                <Grid item xs={8}>Owner</Grid>
+                                <Grid item xs={4}>{Number(emp.discountdata.OwnerDiscount).toFixed(2)}</Grid>
+                            </Grid>
+
+                            <Grid container style={{textTransform:'capitalize', fontWeight:'400', display:'flex', alignItems:'center', justifyContent:'space-between', width:'100%'}}>
+                                <Grid item xs={8}>Employee</Grid>
+                                <Grid item xs={4}>{Number(emp.discountdata.EmpDiscount).toFixed(2)}</Grid>
+                            </Grid>
+
+                            <Grid container style={{textTransform:'capitalize', fontWeight:'400', display:'flex', alignItems:'center', justifyContent:'space-between', width:'100%'}}>
+                                <Grid item xs={8}>Owner & Employee</Grid>
+                                <Grid item xs={4}>{Number(emp.discountdata.OwnerEmpDiscount).toFixed(2)}</Grid>
+                            </Grid>
+                            <Grid container style={{textTransform:'capitalize', fontWeight:'700', display:'flex', alignItems:'center', justifyContent:'space-between', width:'100%',}}>
+                                <Grid item xs={8}>Total</Grid>
+                                <Grid item xs={4}>${Number(discounttotal).toFixed(2)}</Grid>
+                            </Grid> 
+
+
+                            <Grid container style={{textTransform:'capitalize', fontWeight:'700', display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:'2rem', width:'100%',}}>
+                        <Grid item xs={8}>Supplies</Grid>
+                        <Grid item xs={4}>${emp.supplies_amt !== null ? Number(emp.supplies_amt).toFixed(2) : '0.00'}</Grid>
+                    </Grid>
+                        <Grid container style={{textTransform:'capitalize', fontWeight:'700', display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:'2rem', width:'100%',}}>
+                            <Grid item xs={8}>Payment Methods</Grid>
+                            <Grid item xs={4}></Grid>
+                        </Grid>
+
+
+                        {cashdata.map(csh=>{
+                        return <Grid container style={{textTransform:'capitalize', fontWeight:'400', display:'flex', alignItems:'center', justifyContent:'space-between',  width:'100%',}}>
+                            <Grid item xs={8}>{csh.pay_mode}</Grid>
+                            <Grid item xs={4}>${Number(csh.PaidAmount).toFixed(2)}</Grid>
+                        </Grid> })}
+
+
+                        <Grid container style={{textTransform:'capitalize', fontWeight:'700', display:'flex', alignItems:'center', justifyContent:'space-between',  width:'100%',}}>
+                            <Grid item xs={8}>Amount Collected</Grid>
+                            <Grid item xs={4}>${Number(totalAmount).toFixed(2)}</Grid>
+                        </Grid> 
+
+                        </div>)
+                }
+                else{ 
+                    reportdetail.push(<div style={{display:'flex',marginTop:'1rem',width:'100%', alignItems:'center', justifyContent:'center', flexDirection:'row'}}> 
+                        <Typography variant="body" style={{textTransform:'capitalize', fontWeight:'400'}}>No tickets made during this time period by {emp.firstName+" "+emp.lastName}</Typography>
+                    </div>) 
+                }
+
+                reportdetail.push(<div style={{display:'flex',marginTop:'1.5rem',width:'100%', alignItems:'center', justifyContent:'center', flexDirection:'row',borderBottom:'1px dotted #000', marginBottom:'1rem'}}> 
+                    <Typography variant="body" style={{ paddingBottom:'1rem',fontWeight:'400'}}>{this.state.businessdetail.name} - Reported: {Moment().format("MM/DD/YYYY hh:mm a")}</Typography>
+                </div>) 
+            })
+
+      
+            return  <div style={{ width:'100%'}}>
             {reportdetail}
-            </div>;
+            </div>;    
 
     }
 
@@ -1701,7 +1813,7 @@ export default class EmployeeReport extends React.Component {
 
                     <Grid container  style={{marginTop:'1rem'}}>
                             <Grid item xs={12} md={12}>
-                                <div style={{display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column', padding:'2rem 5rem'}}> 
+                                <div style={{display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column', padding:'2rem 1rem'}}> 
                                     {this.state.empReport.length > 0 && this.renderOwnerReport()}
                                     {this.state.empReport.length === 0 && !this.state.isLoading  && <div><Typography variant="subtitle2">No records found.</Typography></div>}
                                 </div>
@@ -1725,7 +1837,7 @@ export default class EmployeeReport extends React.Component {
                     </Grid>  
                     <Grid container  style={{marginTop:'1rem'}}>
                             <Grid item xs={12} md={12}>
-                                <div style={{display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column', padding:'2rem 5rem'}}> 
+                                <div style={{display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column', padding:'2rem 1rem'}}> 
                                     {this.state.selectedData.ticketslist.length > 0 && this.renderTicketDetails()}
                                     {this.state.selectedData.ticketslist.length === 0 && !this.state.isLoading  && <div><Typography variant="subtitle2">No records found.</Typography></div>}
                                 </div>
