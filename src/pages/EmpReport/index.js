@@ -223,18 +223,19 @@ export default class EmployeeReport extends React.Component {
     var sql = `SELECT strftime('%Y', (select paid_at from ticket where sync_id=tp.ticketref_id)) AS ticket_year, 
     strftime('%m/%Y',(select paid_at from ticket where sync_id=tp.ticketref_id)) AS ticket_month,
     strftime('%m/%d/%Y',(select paid_at from ticket where sync_id=tp.ticketref_id)) AS ticket_date,  
-    (select service_cost from ticket_services where sync_id=ec.ticketserviceref_id) as Amount,
-        (select SUM(cash_amt) from employee_commission_detail where cash_type_for='tips' and ticketref_id=tp.ticketref_id) as Tips,
-        ( select SUM(cash_amt) from employee_commission_detail where cash_type_for like '%discount' and ticketref_id=tp.ticketref_id ) as Discount, tp.ticketref_id, 
+    sum(ec.totalamount)  as Amount,
+        (select  SUM(cash_amt) from employee_commission_detail where cash_type_for='tips' and ticketref_id=tp.ticketref_id and employeeId=u.id and  and isActive=1) as Tips,
+        ( select SUM(cash_amt) from employee_commission_detail where cash_type_for like '%discount' and ticketref_id=tp.ticketref_id  and isActive=1 and ticketserviceref_id is not null) as Discount,
+        ( select SUM(cash_amt) from employee_commission_detail where cash_type_for like '%discount' and ticketref_id=tp.ticketref_id and employeeId=u.id  and isActive=1 and ticketserviceref_id is null) as TicketDiscount, tp.ticketref_id, 
         (select ticket_code from ticket where sync_id=tp.ticketref_id) as ticket_code,
-        (select count(ticketref_id) from ticket_services where ticketref_id=tp.ticketref_id and isActive=1) as ticket_servicescount,
+        (select count(ticketref_id) from ticket_services where ticketref_id=tp.ticketref_id and isActive=1 and employee_id=u.id) as ticket_servicescount,
         (select paid_status from ticket where sync_id=tp.ticketref_id) as paid_status,
         (select total_tax from ticket where sync_id=tp.ticketref_id) as total_tax,
         (select grand_total from ticket where sync_id=tp.ticketref_id) as grand_total,
         u.id as employee_id, u.firstName, u.lastName, u.staff_role as role,  tp.pay_mode , tp.card_type
         FROM    ticket_payment as tp
         left join employee_commission_detail as ec   on tp.ticket_id=ec.ticketref_id join users as u on u.id = ec.employeeId 
-        WHERE ec.businessId=`+input.businessId+` and (ec.cash_type_for = 'ownercommission' or ec.cash_type_for='service'  or ec.cash_type_for='tips' 
+        WHERE ec.businessId=`+input.businessId+` and ( ec.cash_type_for='service'  or ec.cash_type_for='tips' 
         or ec.cash_type_for like '%discount%') and  ec.isActive=1 and 
         ec.ticketref_id in (select sync_id from ticket where  sync_id in (select ticketref_id from ticket_payment where  DATE(paid_at) between '`+input.from_date+`' and '`+input.to_date+`') and isDelete=0 
         and businessId=`+input.businessId+` and paid_status='paid') and tp.isActive=1 GROUP BY ec.employeeId, ec.ticketref_id, ticket_date order by ec.employeeId ;`
@@ -243,7 +244,7 @@ export default class EmployeeReport extends React.Component {
         var discountquery = ` SELECT   SUM(CASE WHEN  cash_type_for = 'owner-discount' THEN cash_amt ELSE 0 END) as OwnerDiscount,
         SUM(CASE WHEN  cash_type_for = 'emp-discount' THEN cash_amt ELSE 0 END) as EmpDiscount,
         SUM(CASE WHEN  cash_type_for = 'owneremp-discount' THEN cash_amt ELSE 0 END) as OwnerEmpDiscount FROM   employee_commission_detail as ec join users as u on u.id = ec.employeeId
-                   WHERE ec.businessId=`+input.businessId+` and ec.cash_type_for != 'ownercommission' and  ec.isActive=1 and 
+                   WHERE ec.businessId=`+input.businessId+` and ec.ticketserviceref_id is null and ec.cash_type_for != 'ownercommission' and  ec.isActive=1 and 
                    ec.ticketref_id in (select sync_id from ticket where  sync_id in (select ticketref_id from ticket_payment where  DATE(paid_at) between '`+input.from_date+`' and '`+input.to_date+`') and
                    isDelete=0 and businessId=`+input.businessId+`  and paid_status='paid')`
              
@@ -252,18 +253,19 @@ export default class EmployeeReport extends React.Component {
         sql = `SELECT strftime('%Y', (select paid_at from ticket where sync_id=tp.ticketref_id)) AS ticket_year, 
         strftime('%m/%Y',(select paid_at from ticket where sync_id=tp.ticketref_id)) AS ticket_month,
         strftime('%m/%d/%Y',(select paid_at from ticket where sync_id=tp.ticketref_id)) AS ticket_date,  
-            (select service_cost from ticket_services where sync_id=ec.ticketserviceref_id) as Amount,
-            (select SUM(cash_amt) from employee_commission_detail where cash_type_for='tips' and ticketref_id=tp.ticketref_id) as Tips,
-            ( select SUM(cash_amt) from employee_commission_detail where cash_type_for like '%discount' and ticketref_id=tp.ticketref_id ) as Discount, tp.ticketref_id, 
+        sum(ec.totalamount)  as Amount,
+            (select SUM(cash_amt) from employee_commission_detail where cash_type_for='tips' and ticketref_id=tp.ticketref_id and employeeId=u.id  and isActive=1) as Tips,
+            ( select SUM(cash_amt) from employee_commission_detail where cash_type_for like '%discount' and ticketref_id=tp.ticketref_id and employeeId=u.id  and isActive=1 and ticketserviceref_id is not null) as Discount,
+            ( select SUM(cash_amt) from employee_commission_detail where cash_type_for like '%discount' and ticketref_id=tp.ticketref_id and employeeId=u.id  and isActive=1 and ticketserviceref_id is null) as TicketDiscount, tp.ticketref_id, 
             (select ticket_code from ticket where sync_id=tp.ticketref_id) as ticket_code,
-            (select count(ticketref_id) from ticket_services where ticketref_id=tp.ticketref_id and isActive=1) as ticket_servicescount,
+            (select count(ticketref_id) from ticket_services where ticketref_id=tp.ticketref_id and isActive=1 and employee_id=u.id) as ticket_servicescount,
             (select paid_status from ticket where sync_id=tp.ticketref_id) as paid_status,
             (select total_tax from ticket where sync_id=tp.ticketref_id) as total_tax,
             (select grand_total from ticket where sync_id=tp.ticketref_id) as grand_total,
             u.id as employee_id, u.firstName, u.lastName, u.staff_role as role,  tp.pay_mode , tp.card_type
             FROM    ticket_payment as tp
             left join employee_commission_detail as ec   on tp.ticket_id=ec.ticketref_id join users as u on u.id = ec.employeeId 
-        WHERE ec.businessId=`+input.businessId+` and (ec.cash_type_for = 'ownercommission' or ec.cash_type_for='service'  or ec.cash_type_for='tips' 
+        WHERE ec.businessId=`+input.businessId+` and (  ec.cash_type_for='service'  or ec.cash_type_for='tips' 
         or ec.cash_type_for like '%discount%') and  ec.isActive=1 and 
         ec.ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where   DATE(paid_at) = '`+input.from_date+`')  and isDelete=0 
         and businessId=`+input.businessId+` and paid_status='paid') and tp.isActive=1 GROUP BY ec.employeeId, ec.ticketref_id, ticket_date order by ec.employeeId ;
@@ -273,7 +275,7 @@ export default class EmployeeReport extends React.Component {
         discountquery = ` SELECT   SUM(CASE WHEN  cash_type_for = 'owner-discount' THEN cash_amt ELSE 0 END) as OwnerDiscount,
         SUM(CASE WHEN  cash_type_for = 'emp-discount' THEN cash_amt ELSE 0 END) as EmpDiscount,
         SUM(CASE WHEN  cash_type_for = 'owneremp-discount' THEN cash_amt ELSE 0 END) as OwnerEmpDiscount FROM   employee_commission_detail as ec join users as u on u.id = ec.employeeId
-                   WHERE ec.businessId=`+input.businessId+` and ec.cash_type_for != 'ownercommission' and  ec.isActive=1 and 
+                   WHERE ec.businessId=`+input.businessId+` and ec.ticketserviceref_id is null and ec.cash_type_for != 'ownercommission' and  ec.isActive=1 and 
                    ec.ticketref_id in (select sync_id from ticket where  sync_id in (select ticketref_id from ticket_payment where  DATE(paid_at) = '`+input.from_date+`') and
                    isDelete=0 and businessId=`+input.businessId+`  and paid_status='paid')`
     }
@@ -282,18 +284,19 @@ export default class EmployeeReport extends React.Component {
            sql = `SELECT strftime('%Y', (select paid_at from ticket where sync_id=tp.ticketref_id)) AS ticket_year, 
            strftime('%m/%Y',(select paid_at from ticket where sync_id=tp.ticketref_id)) AS ticket_month,
            strftime('%m/%d/%Y',(select paid_at from ticket where sync_id=tp.ticketref_id)) AS ticket_date,  
-           (select service_cost from ticket_services where sync_id=ec.ticketserviceref_id) as Amount,
-               (select SUM(cash_amt) from employee_commission_detail where cash_type_for='tips' and ticketref_id=tp.ticketref_id) as Tips,
-               ( select SUM(cash_amt) from employee_commission_detail where cash_type_for like '%discount' and ticketref_id=tp.ticketref_id ) as Discount, tp.ticketref_id, 
+           sum(ec.totalamount)  as Amount,
+               (select SUM(cash_amt) from employee_commission_detail where cash_type_for='tips' and ticketref_id=tp.ticketref_id  and employeeId=u.id and isActive=1) as Tips,
+               ( select SUM(cash_amt) from employee_commission_detail where cash_type_for like '%discount' and ticketref_id=tp.ticketref_id  and employeeId=u.id  and isActive=1 and  ticketserviceref_id is not null) as Discount,
+               ( select SUM(cash_amt) from employee_commission_detail where cash_type_for like '%discount' and ticketref_id=tp.ticketref_id and employeeId=u.id  and isActive=1 and ticketserviceref_id is null) as TicketDiscount, tp.ticketref_id, 
                (select ticket_code from ticket where sync_id=tp.ticketref_id) as ticket_code,
-               (select count(ticketref_id) from ticket_services where ticketref_id=tp.ticketref_id and isActive=1) as ticket_servicescount,
+               (select count(ticketref_id) from ticket_services where ticketref_id=tp.ticketref_id and isActive=1  and employee_id=u.id) as ticket_servicescount,
                (select paid_status from ticket where sync_id=tp.ticketref_id) as paid_status,
                (select total_tax from ticket where sync_id=tp.ticketref_id) as total_tax,
                (select grand_total from ticket where sync_id=tp.ticketref_id) as grand_total,
                u.id as employee_id, u.firstName, u.lastName, u.staff_role as role,  tp.pay_mode , tp.card_type
                FROM    ticket_payment as tp
                left join employee_commission_detail as ec   on tp.ticket_id=ec.ticketref_id join users as u on u.id = ec.employeeId 
-            WHERE ec.businessId=`+input.businessId+` and ec.cash_type_for != 'ownercommission' and  ec.isActive=1 and 
+            WHERE ec.businessId=`+input.businessId+` and ec.isActive=1 and 
             ec.ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where   DATE(paid_at) between '`+input.from_date+`' and '`+input.to_date+`') and
             isDelete=0 and businessId=`+input.businessId+` and paid_status='paid') 
             and ec.employeeId in (`+input.employees+`)  and tp.isActive=1
@@ -302,7 +305,7 @@ export default class EmployeeReport extends React.Component {
             discountquery = ` SELECT  employeeId, SUM(CASE WHEN  cash_type_for = 'owner-discount' THEN cash_amt ELSE 0 END) as OwnerDiscount,
         SUM(CASE WHEN  cash_type_for = 'emp-discount' THEN cash_amt ELSE 0 END) as EmpDiscount,
         SUM(CASE WHEN  cash_type_for = 'owneremp-discount' THEN cash_amt ELSE 0 END) as OwnerEmpDiscount FROM   employee_commission_detail as ec join users as u on u.id = ec.employeeId
-                   WHERE ec.businessId=`+input.businessId+` and ec.cash_type_for != 'ownercommission' and  ec.isActive=1 and 
+                   WHERE ec.businessId=`+input.businessId+` and ec.ticketserviceref_id is null and ec.cash_type_for != 'ownercommission' and  ec.isActive=1 and 
                    ec.ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where   DATE(paid_at) between '`+input.from_date+`' and '`+input.to_date+`') and
                    isDelete=0 and businessId=`+input.businessId+` and paid_status='paid') group by ec.employeeId order by ec.employeeId`
 
@@ -311,11 +314,12 @@ export default class EmployeeReport extends React.Component {
                     sql = `SELECT strftime('%Y', (select paid_at from ticket where sync_id=tp.ticketref_id)) AS ticket_year, 
                     strftime('%m/%Y',(select paid_at from ticket where sync_id=tp.ticketref_id)) AS ticket_month,
                     strftime('%m/%d/%Y',(select paid_at from ticket where sync_id=tp.ticketref_id)) AS ticket_date,  
-                    (select service_cost from ticket_services where sync_id=ec.ticketserviceref_id) as Amount,
-                        (select SUM(cash_amt) from employee_commission_detail where cash_type_for='tips' and ticketref_id=tp.ticketref_id) as Tips,
-                        ( select SUM(cash_amt) from employee_commission_detail where cash_type_for like '%discount' and ticketref_id=tp.ticketref_id ) as Discount, tp.ticketref_id, 
+                    sum(ec.totalamount) as Amount,
+                        (select SUM(cash_amt) from employee_commission_detail where cash_type_for='tips' and ticketref_id=tp.ticketref_id and employeeId=u.id  and isActive=1) as Tips,
+                        ( select SUM(cash_amt) from employee_commission_detail where cash_type_for like '%discount' and ticketref_id=tp.ticketref_id and employeeId=u.id  and isActive=1 and  ticketserviceref_id is not null) as Discount,
+                        ( select SUM(cash_amt) from employee_commission_detail where cash_type_for like '%discount' and ticketref_id=tp.ticketref_id and employeeId=u.id  and isActive=1 and ticketserviceref_id is null) as TicketDiscount, tp.ticketref_id, 
                         (select ticket_code from ticket where sync_id=tp.ticketref_id) as ticket_code,
-                        (select count(ticketref_id) from ticket_services where ticketref_id=tp.ticketref_id and isActive=1) as ticket_servicescount,
+                        (select count(ticketref_id) from ticket_services where ticketref_id=tp.ticketref_id and isActive=1  and employee_id=u.id) as ticket_servicescount,
                         (select paid_status from ticket where sync_id=tp.ticketref_id) as paid_status,
                         (select total_tax from ticket where sync_id=tp.ticketref_id) as total_tax,
                         (select grand_total from ticket where sync_id=tp.ticketref_id) as grand_total,
@@ -331,7 +335,7 @@ export default class EmployeeReport extends React.Component {
                      discountquery = ` SELECT  employeeId, SUM(CASE WHEN  cash_type_for = 'owner-discount' THEN cash_amt ELSE 0 END) as OwnerDiscount,
                  SUM(CASE WHEN  cash_type_for = 'emp-discount' THEN cash_amt ELSE 0 END) as EmpDiscount,
                  SUM(CASE WHEN  cash_type_for = 'owneremp-discount' THEN cash_amt ELSE 0 END) as OwnerEmpDiscount FROM   employee_commission_detail as ec join users as u on u.id = ec.employeeId
-                            WHERE ec.businessId=`+input.businessId+` and ec.cash_type_for != 'ownercommission' and  ec.isActive=1 and 
+                            WHERE ec.businessId=`+input.businessId+` and ec.ticketserviceref_id is null and ec.cash_type_for != 'ownercommission' and  ec.isActive=1 and 
                             ec.ticketref_id in (select sync_id from ticket where  DATE(created_at) = '`+input.from_date+`' and
                             isDelete=0 and businessId=`+input.businessId+` and paid_status='paid') group by ec.employeeId order by ec.employeeId`
                    }
@@ -346,7 +350,7 @@ export default class EmployeeReport extends React.Component {
 
         var supplysql = `select SUM(service_cost) as PaidAmount from ticket_services as ts join ticket_payment as tp on tp.ticketref_id=ts.ticketref_id where tp.isActive=1 and  tp.ticketref_id in   (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where   DATE(paid_at) between '`+input.from_date+`' and '`+input.to_date+`') and isDelete=0 and businessId=`+input.businessId+` and paid_status='paid') and ts.service_id in (select sync_id from services where producttype='product')`
 
-        var profitsql= `select sum(cash_amt) as profit from employee_commission_detail as ec where ec.cash_type_for='ownercommission' and  ec.ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where   DATE(paid_at) between '`+input.from_date+`' and '`+input.to_date+`') and isDelete=0 and businessId=`+input.businessId+` and paid_status='paid')`;
+        var profitsql= `select sum(cash_amt) as profit from employee_commission_detail as ec where ec.cash_type_for='ownercommission' and ec.isActive=1 and  ec.ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where   DATE(paid_at) between '`+input.from_date+`' and '`+input.to_date+`') and isDelete=0 and businessId=`+input.businessId+` and paid_status='paid')`;
 
 
         if(input.from_date == input.to_date){
@@ -361,6 +365,7 @@ export default class EmployeeReport extends React.Component {
             profitsql= `select sum(cash_amt) as profit from employee_commission_detail as ec where ec.cash_type_for='ownercommission' and  ec.ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where   DATE(paid_at) = '`+input.from_date+`') and isDelete=0 and businessId=`+input.businessId+` and paid_status='paid')`;
         }  
         console.log(sql);
+        console.log(discountquery);
         this.dataManager.getData(sql).then(results=>{ 
             console.log("%%%%%%%%")
             console.log(results);
@@ -678,37 +683,47 @@ export default class EmployeeReport extends React.Component {
         var nettsql= `select sum(cash_amt) as nett from employee_commission_detail as ec where ec.cash_type_for='service' and ec.employeeId=`+emp+` and  ec.ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where   DATE(paid_at) between '`+input.from_date+`' and '`+input.to_date+`') and isDelete=0 and businessId=`+input.businessId+` and paid_status='paid')`;
 
 
-        this.dataManager.getData(nettsql).then(nett=>{
-            this.dataManager.getData(supplysql).then(da=>{
-                var supplyamt = da.length > 0 ? da[0].PaidAmount : 0;
-                var nettamt = nett.length > 0 ? nett[0].nett : 0;
+        var discountquery = ` SELECT   SUM(CASE WHEN  cash_type_for = 'owner-discount' THEN cash_amt ELSE 0 END) as OwnerDiscount,
+        SUM(CASE WHEN  cash_type_for = 'emp-discount' THEN cash_amt ELSE 0 END) as EmpDiscount,
+        SUM(CASE WHEN  cash_type_for = 'owneremp-discount' THEN cash_amt ELSE 0 END) as OwnerEmpDiscount FROM   employee_commission_detail as ec join users as u on u.id = ec.employeeId
+                   WHERE ec.businessId=`+input.businessId+` and ec.cash_type_for != 'ownercommission' and  ec.isActive=1 and  ec.employeeId=`+emp+` and
+                   ec.ticketref_id in (select sync_id from ticket where  sync_id in (select ticketref_id from ticket_payment where  DATE(paid_at) between '`+input.from_date+`' and '`+input.to_date+`') and
+                   isDelete=0 and businessId=`+input.businessId+`  and paid_status='paid')`
+             
+                this.dataManager.getData(discountquery).then(disdata=>{
+                    discountdata = disdata.length> 0? disdata[0] : {OwnerDiscount:0, EmpDiscount:0, OwnerEmpDiscount:0}  
+                    this.dataManager.getData(nettsql).then(nett=>{
+                        this.dataManager.getData(supplysql).then(da=>{
+                            var supplyamt = da.length > 0 ? da[0].PaidAmount : 0;
+                            var nettamt = nett.length > 0 ? nett[0].nett : 0;
 
-                if(empreport.length === 0){
-                    var empdetail = this.state.employeelist.filter(r=>r.id === emp);
-                    finalreport.push({
-                        employee_id: emp,
-                        firstName: empdetail[0].firstName,
-                        lastName: empdetail[0].lastName,
-                        tickets:[],
-                        discountdata: discountdata,
-                        supplies_amt : supplyamt,
-                        nett:nettamt
-                    })
-                } 
-                else{
-                    empreport[0].supplies_amt = supplyamt;
-                    empreport[0].nett = nettamt
-                    finalreport.push(empreport[0]);
-                }
-                if(j === this.state.selectedemps.length-1 ){ 
-                    console.log("$$$$$$$$$")
-                    console.log(finalreport)
-                    this.setState({isLoading: false,  empReport:finalreport, showDatePopup: false})
-                }
+                            if(empreport.length === 0){
+                                var empdetail = this.state.employeelist.filter(r=>r.id === emp);
+                                finalreport.push({
+                                    employee_id: emp,
+                                    firstName: empdetail[0].firstName,
+                                    lastName: empdetail[0].lastName,
+                                    tickets:[],
+                                    discountdata: discountdata,
+                                    supplies_amt : supplyamt,
+                                    nett:nettamt
+                                })
+                            } 
+                            else{
+                                empreport[0].discountdata = discountdata;
+                                empreport[0].supplies_amt = supplyamt;
+                                empreport[0].nett = nettamt
+                                finalreport.push(empreport[0]);
+                            }
+                            if(j === this.state.selectedemps.length-1 ){ 
+                                console.log("$$$$$$$$$")
+                                console.log(finalreport)
+                                this.setState({isLoading: false,  empReport:finalreport, showDatePopup: false})
+                            }
+                        })
+                    });   
+                });
             })
-        });
-                
-          });
         }
       }
   }
@@ -718,8 +733,8 @@ export default class EmployeeReport extends React.Component {
             var idx = existids.indexOf(valtocheck);
             var c_obj = Object.assign({},results[idx]); 
             var Amount = Number(c_obj.Amount)+Number(obj.Amount);
-            console.log(c_obj.Amount, obj.Amount)
-            var Tips = Number(c_obj.Tips)+Number(obj.Tips);
+            console.log(c_obj.Tips, obj.Tips)
+            var Tips = Number(c_obj.Tips)+Number(obj.Tips) ;
             var Discount = Number(c_obj.Discount)+Number(obj.Discount); 
             var ticketslist = c_obj.ticketslist;
             var ticketcodes = ticketslist.map(t=>t.ticket_code);
@@ -727,7 +742,7 @@ export default class EmployeeReport extends React.Component {
             var ticketservicecount = c_obj.ticketservicecount+obj.ticket_servicescount;
 
             if(ticketcodes.indexOf(obj.ticket_code) === -1){
-                ticketcount += 1;
+                ticketcount += 1;  
                 ticketslist.push(obj);
             }
             var resultobj = {
@@ -995,7 +1010,7 @@ export default class EmployeeReport extends React.Component {
                 <Grid container>
                     <Grid item xs={2}><b>{this.state.reporttype === 'annually' ? 'Year' : (this.state.reporttype === 'monthly') ? 'Month' : 'Date'}</b></Grid>
                     <Grid item xs={2} style={{alignItems:'center', display:'flex', justifyContent:'center'}}><b>Tickets</b></Grid>
-                    <Grid item xs={2}><b>#Service</b></Grid>
+                    <Grid item xs={2}><b>Service</b></Grid>
                     <Grid item xs={2}><b>Amount</b></Grid>
                     <Grid item xs={1}><b>Tip</b></Grid>
                     <Grid item xs={1}><b>Discount</b></Grid>
@@ -1132,7 +1147,7 @@ export default class EmployeeReport extends React.Component {
                         <Grid container>
                             <Grid item xs={2}><b>{this.state.reporttype === 'annually' ? 'Year' : (this.state.reporttype === 'monthly') ? 'Month' : 'Date'}</b></Grid>
                             <Grid item xs={2}><b>Tickets</b></Grid>
-                            <Grid item xs={2}><b>#Service</b></Grid>
+                            <Grid item xs={2}><b>Service</b></Grid>
                             <Grid item xs={2}><b>Amount</b></Grid>
                             <Grid item xs={2}><b>Tip</b></Grid>
                             <Grid item xs={2}><b>Total</b></Grid>
@@ -1157,8 +1172,7 @@ export default class EmployeeReport extends React.Component {
                     }) 
                     var cashdata = [];
                     var total = 0;
-                    emp.tickets.forEach(t=>{
-                        
+                    emp.tickets.forEach(t=>{ 
                         var isCash = t.ticketslist.filter(p=>p.pay_mode === 'cash');
                         var isCredit = t.ticketslist.filter(p=>p.pay_mode === 'card' && p.card_type ==='credit');
                         var isDebit = t.ticketslist.filter(p=>p.pay_mode === 'card' && p.card_type ==='debit');
@@ -1170,14 +1184,15 @@ export default class EmployeeReport extends React.Component {
                             })
                         }
                         else{
-                            var pamount = 0
+                            var damount = 0;
+                            var pamount = 0; 
                             isCash.forEach((e,ti)=>{
-                                pamount += Number(e.Amount);
-                                total+=Number(e.Amount);
-                                if(ti == isCash.length-1){
-
+                                damount += Number(e.Discount)+Number(e.TicketDiscount);
+                                pamount += Number(e.Amount)+ Number(e.Tips); 
+                                if(ti == isCash.length-1){ 
+                                    total+=Number(pamount);
                                     cashdata.push({ 
-                                        PaidAmount:pamount,
+                                        PaidAmount:pamount-damount,
                                         pay_mode:'Cash',
                                     })
                                 }
@@ -1191,22 +1206,23 @@ export default class EmployeeReport extends React.Component {
                                 card_type:''
                             })
                         }
-                        else{
-                            
+                        else{ 
+                            var damount = 0
                             var pamount = 0
                             isCredit.forEach((e,ti)=>{
-                                pamount += Number(e.Amount);
-                                if(ti == isCredit.length-1){
-                                    total+=Number(e.Amount);
+                                pamount += Number(e.Amount)+ Number(e.Tips); 
+                                damount += Number(e.Discount)+Number(e.TicketDiscount); 
+                                if(ti == isCredit.length-1){ 
+                                    total+=Number(pamount);
                                     cashdata.push({ 
-                                        PaidAmount:pamount,
+                                        PaidAmount:pamount-damount,
                                         pay_mode:'Credit Card',
                                     })
                                 }
                             }) 
                         }
                 
-                        if(isDebit.length === 0){
+                        if(isDebit.length === 0){ 
                             cashdata.push({
                                 PaidAmount:0,
                                 pay_mode:'Debit Card',
@@ -1214,28 +1230,28 @@ export default class EmployeeReport extends React.Component {
                             })
                         }
                         else{ 
-                            
+                            var damount = 0;
                             var pamount = 0
                             isDebit.forEach((e,ti)=>{
-                                pamount += Number(e.Amount);
-                                total+=Number(e.Amount);
-                                if(ti == isDebit.length-1){
-
+                                pamount += Number(e.Amount)+ Number(e.Tips); 
+                                damount += Number(e.Discount)+Number(e.TicketDiscount);
+                                if(ti == isDebit.length-1){ 
+                                    total+=Number(pamount);
                                     cashdata.push({ 
-                                        PaidAmount:pamount,
+                                        PaidAmount:pamount-damount,
                                         pay_mode:'Debit Card',
                                     })
                                 }
                             }) 
                         }
-
-                        discounttotal = discounttotal+ Number(t.Discount);
+ 
                         totalAmount = total;
-                        totalTips = totalTips+ Number(t.Tips);
-                        discounttotal = discounttotal+ Number(t.Discount);
+                        totalTips = totalTips+ Number(t.Tips); 
                     })
 
-                    discounttotal = emp.discountdata.OwnerDiscount+emp.discountdata.EmpDiscount+emp.discountdata.OwnerEmpDiscount;
+                    
+
+                    discounttotal += emp.discountdata.OwnerDiscount+emp.discountdata.EmpDiscount+emp.discountdata.OwnerEmpDiscount;
                     
                     reportdetail.push(
                         <div style={{display:'flex',width:'100%',fontSize:'12px', alignItems:'flex-start', justifyContent:'flex-start', flexDirection:'row', borderBottom:'1px solid #000',fontWeight:'700', padding:'2px 0'}}> 
@@ -1243,9 +1259,9 @@ export default class EmployeeReport extends React.Component {
                                 <Grid item xs={2}>Total</Grid>
                                 <Grid item xs={2}></Grid>
                                 <Grid item xs={2}></Grid>
-                                <Grid item xs={2}>{Number(totalAmount) > 0 ? "$"+Number(totalAmount).toFixed(2) : '-' }</Grid>
+                                <Grid item xs={2}>{Number(totalAmount) > 0 ? "$"+Number(Number(totalAmount)-Number(totalTips)).toFixed(2) : '-' }</Grid>
                                 <Grid item xs={2}>{Number(totalTips) > 0 ? "$"+Number(totalTips).toFixed(2) : '-' }</Grid>
-                                <Grid item xs={2}>{Number(totalTips)+Number(totalAmount) > 0 ? "$"+(Number(totalTips)+Number(totalAmount)).toFixed(2) : '-' }</Grid>
+                                <Grid item xs={2}>{ Number(totalAmount) > 0 ? "$"+( Number(totalAmount)).toFixed(2) : '-' }</Grid>
                             </Grid>
                         </div>)
                     reportdetail.push(<div style={{display:'flex',width:'100%', alignItems:'flex-start', justifyContent:'flex-start', flexDirection:'column', marginTop:'2rem'}}>
@@ -1295,7 +1311,7 @@ export default class EmployeeReport extends React.Component {
 
                         <Grid container style={{textTransform:'capitalize', fontWeight:'700', display:'flex', alignItems:'center', justifyContent:'space-between',  width:'100%',}}>
                             <Grid item xs={8}>Amount Collected</Grid>
-                            <Grid item xs={4}>${Number(totalAmount).toFixed(2)}</Grid>
+                            <Grid item xs={4}>${Number(totalAmount-discounttotal).toFixed(2)}</Grid>
                         </Grid> 
 
 
@@ -1323,7 +1339,7 @@ export default class EmployeeReport extends React.Component {
             </div>;    
 
     }
-
+ 
     printData(){ 
         var businessdetail = window.localStorage.getItem('businessdetail');
         var printername = window.localStorage.getItem('defaultprinter');

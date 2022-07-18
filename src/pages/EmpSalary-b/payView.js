@@ -329,15 +329,13 @@ export default class ReportView extends React.Component  {
 
                     {this.state.selectedTab === 'payments' && <>
                             <Stack direction='row'>
-                            <div style={{width:'100%', display:'flex',fontSize:'13px', flexDirection:'column',marginTop:20}}>
-                                
-                                
-                                <div style={{display:'flex', flexDireciton:'row', justifyContent:'flex-start', padding:'0',marginTop:10}}>
-                                    <span><b>Total Payable:</b> ${Number(this.state.totalpayable).toFixed(2)}</span>
-                                    <span style={{marginLeft:20}}><b>By Cash: </b>${Number(this.state.topaycash).toFixed(2)}</span>
-                                    <span style={{marginLeft:20}}><b>By Check: </b>${Number(this.state.topaycheck).toFixed(2)}</span>
+                            <div style={{width:'100%', display:'flex',fontSize:'13px', flexDirection:'column'}}>
+                                <b>Total Payable:${Number(this.state.totalpayable).toFixed(2)}</b>
+                                <div style={{display:'flex', flexDireciton:'row', justifyContent:'space-between', padding:'0'}}>
+                                    <b>By Cash: ${Number(this.state.topaycash).toFixed(2)}</b> 
+                                    <b>By Check: ${Number(this.state.topaycheck).toFixed(2)}</b>
                                 </div>
-                                <div style={{display:'flex',fontSize:'13px', flexDireciton:'row', padding:0,marginTop:20}}> 
+                                <div style={{display:'flex',fontSize:'13px', flexDireciton:'row', padding:0}}> 
                                     <TextField
                                         variant="outlined"
                                         value={this.state.cashpay}
@@ -476,7 +474,7 @@ export default class ReportView extends React.Component  {
                     <div style={{border:'1px solid',right:0, bottom:0,top:'0',left:'0',position:'absolute', zIndex:'999999'}}>
                         <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
                         </div>
-                        <div style={{background:'#fff', height:'70%',  width:'100%', position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)'}}>
+                        <div style={{background:'#fff', height:'100%',  width:'100%', position:'relative'}}>
                         
                         <AppBar  color="primary" style={{ position: 'relative',background: 'transparent', boxShadow: 'none' }}>
   <Toolbar> 
@@ -498,24 +496,22 @@ export default class ReportView extends React.Component  {
                     </AppBar>
 
                             <div style={{overflow:'auto', textAlign:'center'}}>
-                                <p>Do you want to confirm the payment?</p>
+                                <p>Do you want to confirm the amount?</p>
 
-                                <div style={{display:'flex', fontSize:'13px', flexDirection:'row',padding:'1rem' }}>
-                                    <div style={{display:'flex', flexDirection:'row', marginRight:'1rem', marginBottom:'1rem'}}>
+                                <div style={{display:'flex', flexDirection:'column',padding:'1rem'}}>
+                                    <div style={{display:'flex', flexDirection:'row'}}>
                                         <b> Cash : </b>
-                                        <span style={{marginLeft:10}}>${this.state.cashpay}</span>
+                                        <b>${this.state.cashpay}</b>
                                     </div>
-                                    <div style={{display:'flex', flexDirection:'row', marginRight:'10', marginBottom:'1rem'}}>
+                                    <div style={{display:'flex', flexDirection:'row'}}>
                                         <b> Check : </b>
-                                        <span style={{marginLeft:10}}>${this.state.checkpay} </span>
+                                        <b>${this.state.checkpay} </b>
                                     </div>
-                                    
-                                </div>
-                                   {this.state.checkpay > 0 && <div style={{display:'flex',padding:'1rem' , fontSize:'13px',  flexDirection:'row', marginBottom:'2rem'}}>
+                                    <div style={{display:'flex', flexDirection:'row', marginBottom:'2rem'}}>
                                         <b> Check Number: </b>
-                                        <span style={{marginLeft:10}}>{this.state.checknumber} </span>
-                                    </div>}
-                                <div style={{dispaly:'flex', justifyContent:'center'}}>
+                                        <b>{this.state.checknumber} </b>
+                                    </div>
+                                    <div style={{dispaly:'flex', justifyContent:'center'}}>
                                         <ButtonContent permission_id = "pos_pay_salary" permission_label="Show Pay salary"
                                         color="success" 
                                         variant="contained" 
@@ -524,6 +520,7 @@ export default class ReportView extends React.Component  {
                                         onClick={()=>this.payAmount()} 
                                         label="Pay"/>
                                     </div>
+                                </div>
                             </div>
                         </div>
                     </div>

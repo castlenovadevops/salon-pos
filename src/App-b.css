@@ -201,10 +201,10 @@ body > div{
   color: #134163 !important;
   border-color: #134163 !important ;
 }
-button.Mui-disabled{
+/*button.Mui-disabled{
   background: rgba(0, 0, 0, 0.12) !important;
   color:#fff !important;
-}
+} */
 .MuiCheckbox-colorSecondary.Mui-checked{
   color: #134163 !important;
 }
@@ -284,11 +284,6 @@ button{
   align-items:flex-start;
   flex-direction:column;
   width:45%;
-}
-.MuiTablePagination-actions .MuiIconButton-root.Mui-disabled{
-  color:rgba(0, 0, 0, 0.26) !important;
-  background-color: transparent !important;
-
 }
 
 /* 1024x768 */

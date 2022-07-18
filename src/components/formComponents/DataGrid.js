@@ -133,7 +133,7 @@ export default class TableContent extends React.Component {
           height = "100%"
           pageSize={10}
           rowsPerPageOptions={[5]}
-          rows={this.state.rows}
+          rows={this.state.rows} 
           columns={this.state.columns}
           // hideFooter
           disableMultipleSelection={true}

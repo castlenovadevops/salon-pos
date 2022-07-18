@@ -292,6 +292,7 @@ export default class CreateTicket extends React.Component {
             this.setState({ticketSelected: ticket,isEdit : true}, function(){ 
                 console.log(this.state.ticketSelected);
                 if(this.state.ticketSelected.paid_status === 'paid'){
+                    console.log("isPaidOnOpen settings")
                     this.setState({isPaidOnOpen: true})
                 }
                 else{
@@ -1575,9 +1576,9 @@ export default class CreateTicket extends React.Component {
 
                 //Tips Calculation -Start
                 if(service_input.tips_amount !== 0 && service_input.tips_amount !== undefined){
-                    //console.log("TIPS SAVING CREATETICKET::::")
-                        //console.log(service_input);
-                    //console.log("TIPS SAVING CREATETICKET::::")
+                    console.log("TIPS SAVING CREATETICKET::::")
+                        console.log(service_input);
+                    console.log("TIPS SAVING CREATETICKET::::")
                     window.api.getSyncUniqueId().then(r=>{
                         var tsyncid = r.syncid+idx;
                         
@@ -2088,12 +2089,15 @@ handleOpenTicketAlert(){
     const updatedCust = this.state.customer
     const updateServices  = this.state.services_taken
     if(this.props.ticketSelected !== undefined) {
-        this.saveTicket('');
-        if(this.props.ticketSelected.paid_status === "paid") {
+        if(this.state.isPaidOnOpen){
+            this.props.handleCloseDialog('Saved')
+        }
+        else if(this.props.ticketSelected.paid_status === "paid") {
             ////console.log("4.afterFinished")
             this.props.afterFinished('dashboard')
         }
         else {
+            this.saveTicket('');
             ////console.log("5.afterFinished")
             this.props.afterFinished('dashboard')
         }
@@ -2676,7 +2680,7 @@ discountCalculation(businessdetail, service_input, service_data, isVoid){
 TicketdiscountCalculation(businessdetail, service_input, service_data, isVoid){
     //console.log("Ticket Discount calculation called");
 
-    this.state.dataManager.saveData("delete from employee_commission_detail where ticketref_id='"+service_input.ticketref_id+"'").then(r=>{
+    // this.state.dataManager.saveData("delete from employee_commission_detail where ticketref_id='"+service_input.ticketref_id+"'").then(r=>{
                         //Discount Calculation
             window.api.getSyncUniqueId().then(csyn=>{
                 var csyncid = csyn.syncid;
@@ -2793,7 +2797,7 @@ TicketdiscountCalculation(businessdetail, service_input, service_data, isVoid){
                             this.closeTransfer(isVoid)
                         }
                     })
-                });
+                // });
     }
 
 

@@ -136,9 +136,9 @@ export default class App extends React.Component {
         let detail = window.localStorage.getItem("businessdetail");
         this.setState({businessdetail: JSON.parse(detail)}, function(){ 
             var condition = navigator.onLine ?  true: false;
-            this.setState({isOnline: condition}, function() {
+            // this.setState({isOnline: condition}, function() {
                 this.getEmpDetails()
-            })
+            // })
             
         });
 

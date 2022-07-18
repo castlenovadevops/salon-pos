@@ -27,7 +27,6 @@ import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
 import TicketController from '../../controller/TicketController';
 import DataManager from '../../controller/datacontroller';
-import { Translate } from '@mui/icons-material';
 
 
 export default class EmployeeReport extends React.Component {
@@ -206,18 +205,8 @@ export default class EmployeeReport extends React.Component {
                         editable: false,
                         renderCell: (params) => (
                         <div style={{display:'flex', justifyContent:'flex-start', flexDirection:'column'}}>
-                            <div>$ { Number(params.row.CheckAmount).toFixed(2)} </div> 
-                        </div>
-                        )
-                    },  
-                    {
-                        field: 'checknumber',
-                        headerName: 'Check Number',
-                        minWidth: 150,
-                        editable: false,
-                        renderCell: (params) => (
-                        <div style={{display:'flex', justifyContent:'flex-start', flexDirection:'column'}}>
-                            <div>{ params.row.checknumber !== '' && params.row.checknumber !== null ? params.row.checknumber:"NA" } </div> 
+                            <div>$ { Number(params.row.CheckAmount).toFixed(2)} </div>
+                            <div style={{fontSize:'13px', color:'#999'}}>{params.row.checknumber}</div>
                         </div>
                         )
                     },    
@@ -581,9 +570,9 @@ export default class EmployeeReport extends React.Component {
         if(businessdetail !== undefined && businessdetail !== null){
             this.setState({isLoading: true}) 
             // this.dataManager.getData(`select u.id as id, u.*,(select sum(totalamount) from employee_commission_detail where isActive=1 and ticketserviceref_id in (select sync_id from ticket_services where employee_id=u.id and  isActive=1 and  ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where DATE(paid_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`') and isDelete=0 and paid_status='paid'))) as ServiceAmount,(select sum((totalamount*emp_percent)) from employee_commission_detail where cash_type_for='service' and  employeeId=u.id and ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where DATE(paid_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`') and isDelete=0 and paid_status='paid')) as totalsalary,(select sum(Amount) from emp_payment where employeeId=u.id) as totalsalarygiven, sum(ts.tips_amount) as Tips, sum(ts.total_discount_amount) as Discount from users AS u left join  ticket_services as ts on ts.employee_id= u.id where ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where DATE(paid_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`') and isDelete=0 and paid_status='paid') group by u.id`).then(res=>{  
-                var sql=`select u.id as id, u.firstName, u.lastName, (select sum(totalamount) from employee_commission_detail where cash_type_for='service' and isActive=1 and employeeId=u.id and ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where DATE(paid_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`') and isDelete=0 and paid_status='paid')) as ServiceAmount,(select sum((totalamount*emp_percent)) from employee_commission_detail where cash_type_for='service' and  employeeId=u.id and ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where DATE(paid_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`') and isDelete=0 and paid_status='paid')) as totalsalary, sum(ts.tips_amount) as Tips, sum(ts.total_discount_amount) as Discount from users AS u left join  ticket_services as ts on ts.employee_id= u.id where ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where DATE(paid_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`') and isDelete=0 and paid_status='paid') and ts.isActive=1 group by u.id`;
+                var sql=`select u.id as id, u.firstName, u.lastName, (select sum(totalamount) from employee_commission_detail where cash_type_for='service' and  employeeId=u.id and ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where DATE(paid_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`') and isDelete=0 and paid_status='paid')) as ServiceAmount,(select sum((totalamount*emp_percent)) from employee_commission_detail where cash_type_for='service' and  employeeId=u.id and ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where DATE(paid_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`') and isDelete=0 and paid_status='paid')) as totalsalary, sum(ts.tips_amount) as Tips, sum(ts.total_discount_amount) as Discount from users AS u left join  ticket_services as ts on ts.employee_id= u.id where ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where DATE(paid_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`') and isDelete=0 and paid_status='paid') and ts.isActive=1 group by u.id`;
                 if(this.state.staffid > 0){
-                    sql=`select u.id as id, u.firstName, u.lastName, (select sum(totalamount) from employee_commission_detail where cash_type_for='service'  and isActive=1 and  employeeId=u.id and ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where DATE(paid_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`') and isDelete=0 and paid_status='paid')) as ServiceAmount,(select sum((totalamount*emp_percent)) from employee_commission_detail where cash_type_for='service' and  employeeId=u.id and ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where DATE(paid_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`') and isDelete=0 and paid_status='paid')) as totalsalary, sum(ts.tips_amount) as Tips, sum(ts.total_discount_amount) as Discount from users AS u left join  ticket_services as ts on ts.employee_id= u.id  and ts.isActive=1  where ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where DATE(paid_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`') and isDelete=0 and paid_status='paid') and u.id=`+this.state.staffid+` group by u.id`;
+                    sql=`select u.id as id, u.firstName, u.lastName, (select sum(totalamount) from employee_commission_detail where cash_type_for='service' and  employeeId=u.id and ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where DATE(paid_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`') and isDelete=0 and paid_status='paid')) as ServiceAmount,(select sum((totalamount*emp_percent)) from employee_commission_detail where cash_type_for='service' and  employeeId=u.id and ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where DATE(paid_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`') and isDelete=0 and paid_status='paid')) as totalsalary, sum(ts.tips_amount) as Tips, sum(ts.total_discount_amount) as Discount from users AS u left join  ticket_services as ts on ts.employee_id= u.id  and ts.isActive=1  where ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where DATE(paid_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`') and isDelete=0 and paid_status='paid') and u.id=`+this.state.staffid+` group by u.id`;
                 }
                 console.log(sql);
               this.dataManager.getData(sql).then(res=>{  
@@ -873,7 +862,7 @@ export default class EmployeeReport extends React.Component {
                     <div style={{border:'1px solid',right:0, bottom:0,top:'0',left:'0',position:'absolute', zIndex:'999999'}}>
                         <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
                         </div>
-                        <div style={{background:'#fff', height:'60%',  width:'60%', margin:'10% auto 0', position:'relative'}}> 
+                        <div style={{background:'#fff', height:'80%',  width:'80%', margin:'10% auto 0', position:'relative'}}> 
                         <Stack direction="column" alignItems="center" justifyContent="space-between" mb={5} style={{ marginTop: 0, marginBottom:0}}>
                         
                     <Typography variant="title" gutterBottom> <b>{this.state.selected_emp.businessName}</b></Typography>
@@ -882,8 +871,7 @@ export default class EmployeeReport extends React.Component {
                          <Typography variant="subtitle2" gutterBottom>Employee: <b> {this.state.selected_emp.firstName+" "+this.state.selected_emp.lastName} </b></Typography>
                        {/* <Typography variant="subtitle2" gutterBottom>Total Tips: $ {this.state.selected_emp.total_tips}</Typography> */}
 
-                    </Stack>  
-                            <div style={{height:'80%',marginTop:20}}>
+                    </Stack>  <div style={{height:'600px', overflow:'auto'}}>
                                 <ReportView empSelected={this.state.selectedEmp}/>
                             </div>
                         </div>
@@ -894,16 +882,18 @@ export default class EmployeeReport extends React.Component {
                     <div style={{border:'1px solid',right:0, bottom:0,top:'0',left:'0',position:'absolute', zIndex:'999999'}}>
                         <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
                         </div>
-                        <div style={{background:'#fff',  width:'50%',height:'60%', position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)'}}>
+                        <div style={{background:'#fff', height:'90%',  width:'90%', margin:'0 auto', position:'relative'}}>
                         
                         <AppBar  color="primary" style={{ position: 'relative',background: 'transparent', boxShadow: 'none' }}>
-                        <Toolbar>
-
-                        <Stack direction="column" alignItems="center" justifyContent="space-between"  mb={5} style={{ marginTop: 0, marginBottom:0, marginLeft:'0'}}> 
-                            <Typography variant="h6" style={{color:"#000", fontFamily:'"Roboto", "Helvetica", "Arial", sans-serif'}} gutterBottom>Employee Payout Report</Typography>
-                        </Stack>
+  <Toolbar>
       
+  <Stack direction="row" alignItems="center" justifyContent="space-between"  mb={5} style={{ marginTop: 0, marginBottom:0,width:'80%'}}>
                         
+                        {/* <Typography variant="title"  gutterBottom> <b>{this.state.selectedEmp.businessName}</b></Typography> */}
+                            <Typography variant="subtitle2" style={{color:"#000", fontFamily:'"Roboto", "Helvetica", "Arial", sans-serif'}} gutterBottom><b>{this.state.selectedEmp.firstName+" "+this.state.selectedEmp.lastName} Salary Report</b></Typography>
+                            <Typography variant="subtitle2" style={{color:"#000", fontFamily:'"Roboto", "Helvetica", "Arial", sans-serif'}} gutterBottom> {this.state.from_date.toISOString().substring(0,10).replace(/-/g,"/")} - {this.state.to_date.toISOString().substring(0,10).replace(/-/g,"/")}</Typography> 
+    
+                        </Stack>
 
                         <div style={{marginLeft: "auto",marginRight: -12}}>
                         
@@ -919,51 +909,43 @@ export default class EmployeeReport extends React.Component {
                     </Toolbar>
                     </AppBar>
 
-                            <div>
-                                <Stack direction="row" alignItems="left"  mb={5} style={{ marginTop: 0, marginBottom:0,width:'80%',marginLeft:24}}>                            
-                                    <Typography variant="subtitle2" style={{color:"#000", fontFamily:'"Roboto", "Helvetica", "Arial", sans-serif'}} gutterBottom><b>Employee Name:</b> {this.state.selectedEmp.firstName+" "+this.state.selectedEmp.lastName}</Typography>
-                                    <Typography variant="subtitle2" style={{color:"#000", fontFamily:'"Roboto", "Helvetica", "Arial", sans-serif',marginLeft: 20}} gutterBottom><b>Date Range:</b> {Moment(this.state.from_date).format('MM-DD-YYYY')} - {Moment(this.state.to_date).format('MM-DD-YYYY')}</Typography> 
-                                </Stack>
-                               
-
-                                <ReportView allcommission={this.state.allcommission} commission={this.state.commission} empSelected={this.state.selectedEmp} ticketslist={this.state.ticketslist} from_date={this.state.from_date} to_date={this.state.to_date}/>
+                            <div style={{height:'600px', overflow:'auto'}}>
+                            <ReportView allcommission={this.state.allcommission} commission={this.state.commission} empSelected={this.state.selectedEmp} ticketslist={this.state.ticketslist} from_date={this.state.from_date} to_date={this.state.to_date}/>
                             </div>
                         </div>
                     </div>
                 </div>}
 
                 {this.state.showPaypopup && <div>
-                    <div style={{border:'1px solid',right:0, bottom:0,top:'0',left:'0',position:'absolute', zIndex:'999999',margin:'0 auto'}}>
+                    <div style={{border:'1px solid',right:0, bottom:0,top:'0',left:'0',position:'absolute', zIndex:'999999'}}>
                         <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
                         </div>
-                        <div style={{background:'#fff', height:'55%',  width:'35%', position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)'}}>
+                        <div style={{background:'#fff', height:'50%',  width:'50%', margin:'15% auto', position:'relative'}}>
                         
                         <AppBar  color="primary" style={{ position: 'relative',background: 'transparent', boxShadow: 'none' }}>
-                        <Toolbar>
-                        <Stack direction="column" alignItems="center" justifyContent="space-between"  mb={5} style={{ marginTop: 0, marginBottom:0, marginLeft:'0'}}> 
-                            <Typography variant="h6" style={{color:"#000", fontFamily:'"Roboto", "Helvetica", "Arial", sans-serif'}} gutterBottom>Payment</Typography>
+  <Toolbar>
+      
+  <Stack direction="column" alignItems="center" justifyContent="space-between"  style={{ marginTop: 0, marginBottom:0, marginLeft:'0'}}> 
+                            <Typography variant="subtitle2" style={{color:"#000", fontFamily:'"Roboto", "Helvetica", "Arial", sans-serif'}} gutterBottom><b>{this.state.selectedEmp.firstName+" "+this.state.selectedEmp.lastName} Salary Report</b></Typography>
+                            <Typography variant="subtitle2" style={{color:"#000", fontFamily:'"Roboto", "Helvetica", "Arial", sans-serif'}} gutterBottom> {Moment(this.state.from_date).format("MM/DD/YYYY")} - {Moment(this.state.to_date).format("MM/DD/YYYY")}</Typography> 
+    
                         </Stack>
-                        
+
                         <div style={{marginLeft: "auto",marginRight: -12}}>
                         
-                            <IconButton
-                            edge="start"
-                            onClick={()=>this.handleCloseReport()}
-                            aria-label="close"
-                            style={{"color":'#134163'}}
-                            >
-                            <CloseIcon />
-                            </IconButton>
+                        <IconButton
+                        edge="start"
+                        onClick={()=>this.handleCloseReport()}
+                        aria-label="close"
+                        style={{"color":'#134163'}}
+                        >
+                        <CloseIcon />
+                        </IconButton>
                         </div>
                     </Toolbar>
                     </AppBar>
 
                             <div style={{overflow:'auto'}}>
-                            <Stack direction="row" alignItems="left"  mb={5} style={{ marginTop: 0, marginBottom:0, marginLeft:24}}> 
-                                <Typography variant="subtitle2" style={{color:"#000", fontFamily:'"Roboto", "Helvetica", "Arial", sans-serif'}} gutterBottom><b>Employee Name : </b>{this.state.selectedEmp.firstName+" "+this.state.selectedEmp.lastName}</Typography>
-                                <Typography variant="subtitle2" style={{color:"#000", fontFamily:'"Roboto", "Helvetica", "Arial", sans-serif',marginLeft:20}} gutterBottom><b>Date Range: </b> {Moment(this.state.from_date).format("MM/DD/YYYY")} - {Moment(this.state.to_date).format("MM/DD/YYYY")}</Typography> 
-                            </Stack>
-
                             <PayView allcommission={this.state.allcommission} commission={this.state.commission} empSelected={this.state.selectedEmp} ticketslist={this.state.ticketslist} from_date={this.state.from_date} to_date={this.state.to_date} 
                             onClose={()=>this.handleCloseReport()}/>
                             </div>

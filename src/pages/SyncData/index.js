@@ -3,8 +3,7 @@ import axios from 'axios';
 import { Typography, Grid } from '@mui/material';
 import config from '../../config/config';
 // components
-import DataManager from '../../controller/datacontroller';
-import SyncDataManager from '../../controller/syncManager';
+import DataManager from '../../controller/datacontroller'; 
 import TicketManager from '../../controller/TicketManager';
 import Box from '@mui/material/Box';
 import LinearProgress from '@mui/material/LinearProgress';
@@ -26,8 +25,7 @@ export default class SettingsSync extends React.Component {
 
         super(props)
         this.state = {
-            dataManager: new DataManager(),
-            syncDataManager: new SyncDataManager(),
+            dataManager: new DataManager(), 
             progress: 0,
             isLoading: false,
             isFinished: false,
@@ -78,8 +76,7 @@ export default class SettingsSync extends React.Component {
         window.location.reload();
     }
 
-    componentDidMount() {
-        // this.state.syncDataManager.clearSyncedData() 
+    componentDidMount() { 
         let detail = window.localStorage.getItem("businessdetail");
         this.setState({ businessdetail: JSON.parse(detail) })
         console.log("did mount")
@@ -359,14 +356,16 @@ export default class SettingsSync extends React.Component {
 
     syncIndividualDataToServer(idx, res, syncindex, synctabledata){
         if(idx< res.length){ 
-            var synctable = synctabledata[syncindex];
+            var synctable = synctabledata[syncindex];   
             var input = res[idx];
+            console.log(`syncinput`,input);
             input["sync_status"] = 1;
             delete input["id"];
             delete input["syncedid"];
             axios.post(config.root+synctable.syncurl, input).then(res=>{ 
                 this.state.dataManager.saveData(`update `+synctable.table_name+` set sync_status=1 where sync_id='`+input["sync_id"]+`'`).then(r=>{
-                    this.syncIndividualDataToServer(idx+1, res, syncindex, synctabledata);
+                    // this.syncIndividualDataToServer(idx+1, res, syncindex, synctabledata);
+                    this.syncDatatoServer(syncindex, synctabledata)
                 })
             }).catch(err=>{      
             })

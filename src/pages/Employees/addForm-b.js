@@ -2,7 +2,7 @@ import React from 'react';
 import axios from 'axios';
 // import { Link as RouterLink } from 'react-router-dom';
 // material
-import { Stack,  InputLabel , FormControl, Select, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, DialogContentText} from '@mui/material';
+import { Stack,  InputLabel , FormControl, Select, MenuItem} from '@mui/material';
 // components
 import ButtonContent from '../../components/formComponents/Button';
 import TextFieldContent from '../../components/formComponents/TextField';
@@ -43,9 +43,7 @@ export default class EmployeeForm extends React.Component {
         address2:'',
         city:'',
         state:null,
-        zipcode:'',
-        isOnline: false,
-        offlineCheckAlert: false,
+        zipcode:''
     };
     this.handlechange = this.handlechange.bind(this);
     this.handleChangeRole = this.handleChangeRole.bind(this)
@@ -53,9 +51,6 @@ export default class EmployeeForm extends React.Component {
     this.handleChangeStatus = this.handleChangeStatus.bind(this)
   }
   componentDidMount(){
-    var condition = navigator.onLine ? 'online' : 'offline';
-    this.setState({isOnline: (condition==="online") ? true: false})
-
     var userdetail = window.localStorage.getItem('employeedetail');
     var businessdetail = window.localStorage.getItem('businessdetail');
     if(userdetail !== undefined && userdetail !== null){
@@ -238,16 +233,6 @@ export default class EmployeeForm extends React.Component {
     handleChangeStatus(e) {
         this.setState({status:e.target.value})
     }
-    checkOnline(){
-      var condition = navigator.onLine ? 'online' : 'offline';
-      this.setState({isOnline: (condition==="online") ? true: false},function(){
-          if(this.state.isOnline){
-              this.saveEmployee();
-          }else{
-              this.setState({offlineCheckAlert: true });
-          }
-      })
-  }
     saveEmployee(){
       if(this.handleValidation()){
         this.setState({isLoading: true, existemail:false, errormsg:''});
@@ -278,8 +263,6 @@ export default class EmployeeForm extends React.Component {
         delete input["onEdit_role"]
         delete input["error"]
         delete input["helperText"]
-        delete input["isOnline"];
-        delete input["offlineCheckAlert"];
         input["userName"] = input["email"];
         var userdetail = window.localStorage.getItem('employeedetail');
         console.log("userdetail",userdetail)
@@ -523,35 +506,11 @@ export default class EmployeeForm extends React.Component {
           </Stack>
           
           <Stack direction="row" spacing={2} alignItems="center" justifyContent="center">
-            <ButtonContent size="large" variant="contained" disabled={this.state.isDisable} label={this.state.isEdit ? 'Update' : 'Save' }   onClick={()=>this.checkOnline()}/>
+            <ButtonContent size="large" variant="contained" disabled={this.state.isDisable} label={this.state.isEdit ? 'Update' : 'Save' }   onClick={()=>this.saveEmployee()}/>
             <ButtonContent size="large" variant="outlined" label="Cancel" onClick={()=>this.props.afterSubmit('')}/>
           </Stack>
         </Stack>
       </form>
-
-          <Dialog
-                open={this.state.offlineCheckAlert}
-                onClose={()=>{
-                    this.setState({offlineCheckAlert: false})
-                }}
-                aria-labelledby="alert-dialog-title"
-                aria-describedby="alert-dialog-description"
-            >
-                <DialogTitle id="alert-dialog-title">
-                {"Alert"}
-                </DialogTitle>
-                <DialogContent>
-                <DialogContentText id="alert-dialog-description">
-                    {"No Internet available! Please check your connection."}
-                </DialogContentText>
-                </DialogContent>
-                <DialogActions>
-                    <ButtonContent  size="large" variant="outlined" label="OK" onClick={()=>{
-                        this.setState({offlineCheckAlert: false})
-                    }}/>
-                </DialogActions>
-            </Dialog>
-
       </div>
     );
   }

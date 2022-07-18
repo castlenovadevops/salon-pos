@@ -244,8 +244,8 @@ constructor(props){
             },
            
             {
-                field: 'payment',
-                headerName: 'Payment Mode',
+                field: '',
+                headerName: 'Payment',
                 flex: 1,
                 editable: false,
                 renderCell: (params) => (
@@ -277,16 +277,17 @@ constructor(props){
             {
                 field: 'ticket_code',
                 headerName: 'Ticket Code',
-                flex: 1,
+                flex: 0,
+                minWidth:100,
                 editable: false,
                 renderCell: (params) => (
                     <div>
                     <Typography variant="subtitle2" 
                     style={{marginLeft:10,MozUserSelect: 'none', WebkitUserSelect: 'none', msUserSelect: 'none', userSelect: 'none', textAlign:'left !important'}} align="left">
                         {params.row.ticket_code}</Typography>
-                        <Typography style={{marginLeft:10,MozUserSelect: 'none', WebkitUserSelect: 'none', msUserSelect: 'none', userSelect: 'none',color:'#ccc',fontSize:'12px'}} align="left">
+                        {/* <Typography style={{marginLeft:10,MozUserSelect: 'none', WebkitUserSelect: 'none', msUserSelect: 'none', userSelect: 'none',color:'#ccc',fontSize:'12px'}} align="left">
                          {Moment(params.row.created_at).format('MM-DD-YYYY hh:mm a')}                         
-                        </Typography>
+                        </Typography> */}
                     </div>
 
                 )
@@ -306,7 +307,8 @@ constructor(props){
             {
                 field: 'price',
                 headerName: 'Price',
-                flex: 1,
+                flex: 0,
+                minWidth:100,
                 editable: false,
                 renderCell: (params) => (
                   
@@ -315,10 +317,25 @@ constructor(props){
                       </Typography>
                 )
             },
-            
+            {
+                field: 'created_at',
+                headerName: 'Time',
+                flex: 1,
+                editable: false,
+                renderCell: (params) => (
+                        <Typography variant="subtitle2" style={{marginLeft:10,MozUserSelect: 'none', WebkitUserSelect: 'none', msUserSelect: 'none', userSelect: 'none'}} align="center">
+                      {/* {Moment(params.row.created_at).format('ddd DD MMM HH:MM a')}
+                       */} 
+                       {Moment(params.row.created_at).format('MM-DD-YYYY hh:mm a')}
+
+                       {/* {params.row.created_at} */}
+                       
+                      </Typography>
+                )
+            },
             {
                 field: 'paid_at',
-                headerName: 'Time',
+                headerName: 'Paid Time',
                 flex: 1,
                 editable: false,
                 renderCell: (params) => (
@@ -334,7 +351,7 @@ constructor(props){
             },
             {
                 field: 'payment',
-                headerName: 'Payment Mode',
+                headerName: 'Payment',
                 flex: 1,
                 editable: false,
                 renderCell: (params) => (
@@ -366,16 +383,17 @@ constructor(props){
             {
                 field: 'ticket_code',
                 headerName: 'Ticket Code',
-                flex: 1,
+                flex: 0,
+                minWidth:100,
                 editable: false,
                 renderCell: (params) => (
                     <div>
                     <Typography variant="subtitle2" 
                     style={{marginLeft:10,MozUserSelect: 'none', WebkitUserSelect: 'none', msUserSelect: 'none', userSelect: 'none'}} align="center">
                         {params.row.ticket_code}</Typography>
-                        <Typography variant="subtitle2" style={{marginLeft:10,MozUserSelect: 'none', WebkitUserSelect: 'none', msUserSelect: 'none', userSelect: 'none'}} align="center">
+                        {/* <Typography variant="subtitle2" style={{marginLeft:10,MozUserSelect: 'none', WebkitUserSelect: 'none', msUserSelect: 'none', userSelect: 'none'}} align="center">
                          {Moment(params.row.created_at).format('MM-DD-YYYY hh:mm a')}                         
-                        </Typography>
+                        </Typography> */}
                     </div>
 
                 )
@@ -385,6 +403,7 @@ constructor(props){
                 field: 'price',
                 headerName: 'Price',
                 flex: 0,
+                minWidth:100,
                 editable: false,
                 renderCell: (params) => (
                   
@@ -393,9 +412,25 @@ constructor(props){
                       </Typography>
                 )
             },
+            // {
+            //     field: 'created_at',
+            //     headerName: 'Time',
+            //     flex: 1,
+            //     editable: false,
+            //     renderCell: (params) => (
+            //             <Typography variant="subtitle2" style={{marginLeft:10,MozUserSelect: 'none', WebkitUserSelect: 'none', msUserSelect: 'none', userSelect: 'none'}} align="center">
+            //           {/* {Moment(params.row.created_at).format('ddd DD MMM HH:MM a')}
+            //            */} 
+            //            {Moment(params.row.created_at).format('YYYY-MM-DD hh:mm a')}
+
+            //            {/* {params.row.created_at} */}
+                       
+            //           </Typography>
+            //     )
+            // },
             {
                 field: 'paid_at',
-                headerName: 'Time',
+                headerName: 'Paid Time',
                 flex: 1,
                 editable: false,
                 renderCell: (params) => (
@@ -412,7 +447,7 @@ constructor(props){
            
             {
                 field: 'payment',
-                headerName: 'Payment Mode',
+                headerName: 'Payment',
                 flex: 1,
                 editable: false,
                 renderCell: (params) => (

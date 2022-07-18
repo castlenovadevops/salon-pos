@@ -18,7 +18,7 @@ export default function EditTicketModal(
 {
   return ( 
     <Dialog fullScreen open={open}  onClose={onClose} > 
-        <CreateTicket owner={ticketowner} saveTicket={(data, ticketid)=>{saveTicket(data, ticketid)}} afterFinished={(msg)=>{ handleCloseDialog(msg);afterFinished(msg)}} ticketSelected={selectedTicket}/> 
+        <CreateTicket handleCloseDialog={(msg)=>{handleCloseDialog(msg)}} owner={ticketowner} saveTicket={(data, ticketid)=>{saveTicket(data, ticketid)}} afterFinished={(msg)=>{ handleCloseDialog(msg);afterFinished(msg)}} ticketSelected={selectedTicket}/> 
     </Dialog> 
   );
 }

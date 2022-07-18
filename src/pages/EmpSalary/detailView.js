@@ -228,7 +228,7 @@ export default class ReportView extends React.Component  {
                         height:' calc(100% - 48px)',
                         marginTop: '1rem',
                         overflow: 'auto'}}>
-                   <div style={{width:'50%', fontSize:'13px'}}> <Grid container>
+                   <div style={{width:'50%', fontSize:'13px',height:'100%',overflowY:'scroll'}}> <Grid container>
                         <Grid item xs={3}><b>Date</b></Grid> 
                         <Grid item xs={3}><b>Amount</b></Grid>
                         <Grid item xs={3}><b>Tip</b></Grid>
