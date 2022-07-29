@@ -1,7 +1,7 @@
 import React from 'react';
 import axios from 'axios'; 
 import Moment from 'moment';
-import { Select, MenuItem, Stack, Container, Typography,TextField, Grid, Card, CardContent, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button } from '@mui/material';
+import { Select, MenuItem, Stack, Container, Typography,TextField, Grid } from '@mui/material';
 
 import '../EmpReport/tabs.css';
 
@@ -19,7 +19,6 @@ import TableContent from '../../components/formComponents/DataGrid';
 import ModalTitleBar from '../../components/Modal/Titlebar';
 import ReportView from './detailView';
 import PayView from './payView';
-import NumberPad from '../../components/numberpad';
 
 import LoaderContent from '../../components/formComponents/LoaderDialog';
 import AppBarContent from '../TopBar';
@@ -29,15 +28,6 @@ import MuiAlert from '@mui/material/Alert';
 import TicketController from '../../controller/TicketController';
 import DataManager from '../../controller/datacontroller';
 import { Translate } from '@mui/icons-material';
-
-const section = {
-    height: '100%',
-    marginTop: 10, 
-    display:'flex', 
-    justifyContent:'center', 
-    alignItems:'center',  
-    width:'25%'
-  };
 
 
 export default class EmployeeReport extends React.Component {
@@ -256,13 +246,7 @@ export default class EmployeeReport extends React.Component {
             allcommission:[],
             showViewpopup: false,
             staffid:0,
-            txnstaffid:0,
-            isAuthorized: false,
-            passcode : '',
-            restrictionmode:'Owner',
-            unSynced: false,
-            wrongPasscode: false,
-            codeLength:4
+            txnstaffid:0
          };
          this.handlechangeFromDate = this.handlechangeFromDate.bind(this);
          this.handlechangeToDate = this.handlechangeToDate.bind(this);
@@ -275,56 +259,10 @@ export default class EmployeeReport extends React.Component {
     this.handleCloseMenu = this.handleCloseMenu.bind(this) 
     this.handleClick = this.handleClick.bind(this);
     this.handlePageEvent = this.handlePageEvent.bind(this);
-    this.handleChangeCode = this.handleChangeCode.bind(this);
-    this.authorize = this.authorize.bind(this)
-         this.handleCloseDialog = this.handleCloseDialog.bind(this);
-     }
 
-     handleCloseDialog(){
-        this.setState({openDialog: false}, ()=>{
-            this.clearPasscode();
-        })
      }
-
-    onClose() {
-        this.props.onChangePage("dashboard");
-    }
-    handleChangeCode(code){
-        console.log("CODE ENTERING:::::::", code)
-        // this.setState({passcode:code});
-        if(code === "remove") {
-            this.setState({passcode: code, disabled: true});
-        }
-        else if(code.length === this.state.codeLength) {
-            const stringData = code.reduce((result, item) => {
-                return `${result}${item}`
-            }, "") 
-            this.setState({passcode: stringData, disabled: false}); 
-        }
-    } 
-    authorize(){ 
-        this.setState({isLoading: true})
-        console.log(`select * from users where passcode = '`+this.state.passcode+`'`)
-        this.dataManager.getData(`select * from users where passcode = '`+this.state.passcode+`'`).then(res => {
-            if(res.length > 0 ){  
-                var msg = "Authorized successfully";
-                if(res[0].staff_role === 'Owner'){
-                    this.setState({isAuthorized: true})
-                    this.getEmpDetails()
-                    this.getEmpReportList()
-                }
-                else{
-                    this.setState({openDialog:true, msg: msg,isLoading: false, isAuthorized: false, passcode:'', wrongPasscode: true}, function() { })
-                } 
-            }
-            else{
-                this.setState({openDialog:true, msg: msg,isLoading: false, isAuthorized: false, passcode:'', wrongPasscode: true}, function() { })
-            }
-        });
-        
-    } 
-    
-     handleClick(){ 
+     handleClick(){
+        // //console.log(event.target)
         this.setState({anchorEl:null, openMenu:true, editForm:false, addForm:false});
     }
     
@@ -612,16 +550,16 @@ export default class EmployeeReport extends React.Component {
         })
     });
 
-        // var condition = navigator.onLine ? 'online' : 'offline';
-        // this.setState({isOnline: (condition=="online") ? true: false}, function() {
-        //     if(!this.state.isOnline) {
+        var condition = navigator.onLine ? 'online' : 'offline';
+        this.setState({isOnline: (condition=="online") ? true: false}, function() {
+            if(!this.state.isOnline) {
 
-        //     }
-        //     else {
-        //         this.getEmpDetails()
-        //         this.getEmpReportList()
-        //     }
-        // })
+            }
+            else {
+                this.getEmpDetails()
+                this.getEmpReportList()
+            }
+        })
     }
 
 
@@ -723,10 +661,30 @@ export default class EmployeeReport extends React.Component {
                 }) 
     }
 
-    renderAuthorizedContent(){
-        return(
-            <>
-                  <div className="tab">
+    render() {
+        return (
+            <div style={{height:'100%'}}> 
+        {this.state.isLoading &&  <LoaderContent show={this.state.isLoading}></LoaderContent>}
+        <AppBarContent  businessdetail={this.state.businessdetail} currentTime={this.state.currentTime}  
+        handleClick={()=>this.handleClick()}   /> 
+        
+        <div style={{height:'100%'}}>  
+            <DrawerContent 
+              anchor={this.state.anchor} 
+              open={this.state.openMenu} 
+              expand_menu_show={this.state.expand_menu_show}
+              setting_menu_show={this.state.setting_menu_show}
+              onClose={()=>this.handleCloseMenu()}  
+              onhandleClickInvent={(opt)=>this.handleClickInvent(opt)} 
+              onlogout={()=>this.logout()} 
+              onhandlePageevent= {(pagename)=>this.handlePageEvent(pagename)}
+            />
+
+        
+        {/* Drawer menu ends */}
+
+
+        <div className="tab">
              <button className={this.state.tabName === 'EmpSalary' ? "active tablinks": "tablinks"} onClick={()=>{
                 this.setState({tabName:'EmpSalary'}, function(){
                     this.getEmpReportList();
@@ -1012,118 +970,14 @@ export default class EmployeeReport extends React.Component {
                         </div>
                     </div>
                 </div>}
-            
-            </>
-        )
+      <Snackbar open={!this.state.isOnline} style={{width:'100%', marginBottom: -25}} anchorOrigin={{ vertical: "bottom", horizontal:  "center" }}>
 
-    }
-    requestAuthorizeContent(){
-        return <div>
-                <div className='container synccontainer'>
-                    <div style={section} > 
-                    </div>
-                    <div  style={{display:'flex', justifyContent:'center', alignItems:'flex-start', flexDirection:'column', width:'50%'}}> 
-                        <Card style={{borderRadius: 16, boxShadow:'rgba(99, 99, 99, 0.2) 0px 2px 8px 0px'}}>
-                            <CardContent style={{marginTop: 10, marginBottom: 10}}>
-                                <div style={{display:'flex', width: '100%',margin: "0 auto"}}> 
-                                
-
-                                <Typography variant="h6" align="center" textAlign="center" color="textSecondary" style={{background:'white', width: '100%', color: '#134163'}}> Enter the passcode to access reports 
-                                
-                                </Typography>
-
-                                <IconButton
-                                edge="start"
-                                onClick={()=>this.onClose()}
-                                aria-label="close"
-                                style={{"color":'#134163', marginLeft: 'auto',marginRight: 0}}
-                                >
-                                <CloseIcon />
-                                </IconButton>
-                                </div>
-                                <form>
-                                    <Grid container spacing={3} style={{marginTop: 20}}>
-                                        <Grid item xs={12}>
-                                            <NumberPad numbercode={this.state.passcode} codeLength='4' textLabel='Enter code' handleChangeCode={this.handleChangeCode} 
-                                            onSubmit={()=>this.authorize()} clearPasscode={clearPasscode => this.clearPasscode  = clearPasscode}/>
-                                        </Grid> 
-                                    </Grid>
-                                </form>
-                            </CardContent>
-                        </Card>
-                        
-                        <Dialog
-                                    open={this.state.openDialog}
-                                    onClose={this.handleCloseDialog}
-                                    aria-labelledby="alert-dialog-title"
-                                    aria-describedby="alert-dialog-description"
-                                    style={{borderRadius:'10px'}}
-                                >
-                                    <DialogTitle id="alert-dialog-title">
-                                        You are not authorized to access payout.
-                                    </DialogTitle>
-                                    <DialogContent>
-                                    <DialogContentText id="alert-dialog-description">
-                                        <Typography variant="subtitle2" >Please Try Again Later</Typography>
-                                    </DialogContentText>
-                                        </DialogContent>
-                                    <DialogActions>
-                                        <Button variant="contained" onClick={()=>this.handleCloseDialog()}> OK </Button>
-                                    </DialogActions>
-                        </Dialog>  
-                    </div>  
-                    <div style={section} > 
-                    </div>
-                </div> 
-            </div>
-    }
-
-    render() {
-        return (
-            <div style={{height:'100%'}}> 
-        {this.state.isLoading &&  <LoaderContent show={this.state.isLoading}></LoaderContent>}
-        <AppBarContent  businessdetail={this.state.businessdetail} currentTime={this.state.currentTime}  
-        handleClick={()=>this.handleClick()}   /> 
-        
-        <div style={{height:'100%'}}>  
-            <DrawerContent 
-              anchor={this.state.anchor} 
-              open={this.state.openMenu} 
-              expand_menu_show={this.state.expand_menu_show}
-              setting_menu_show={this.state.setting_menu_show}
-              onClose={()=>this.handleCloseMenu()}  
-              onhandleClickInvent={(opt)=>this.handleClickInvent(opt)} 
-              onlogout={()=>this.logout()} 
-              onhandlePageevent= {(pagename)=>this.handlePageEvent(pagename)}
-            />
-
-        
-        {/* Drawer menu ends */}
-                 <Grid container spacing={3}  style={{height:'calc(100% - 36px)', width:'100%', margin:0, padding: 0}}>
-                            <Grid item xs={12} style={{height:'100%',width:'100%', margin:0, padding:0}}> 
-                                <div  style={{height: '100%', padding:0}}>
-                                    <Container maxWidth="xl" style={{margin: '0', padding:0,  height: '100%'}}>  
-                                        {!this.state.isAuthorized &&  this.requestAuthorizeContent() }
-                                        {this.state.isAuthorized && this.renderAuthorizedContent() }
-                                        {/* {!this.state.isOnline && <div style={{width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column'}}>
-                                                <img style={{height:'100px'}} alt="offline" src="./assets/images/offline.png"/>
-                                                <Typography variant="h4" style={{color:"#ccc"}}>You are offline.</Typography>
-                                                <Typography variant="subtitle2" style={{color:"#ccc", marginBottom:'1rem'}}>Please try again later.</Typography>
-                                                <Button variant="contained" onClick={this.reloadPage}>Reload</Button>
-                                            </div>
-                                        } */}
-                                    </Container>
-                                </div>
-                            </Grid>
-                    </Grid> 
+<MuiAlert elevation={6}  variant="filled" severity="error" sx={{ width: '100%' }} style={{background: 'red', color: 'white'}}>
+No internet available !
+</MuiAlert>
 
 
-  
-                {/* <Snackbar open={!this.state.isOnline} style={{width:'100%', marginBottom: -25}} anchorOrigin={{ vertical: "bottom", horizontal:  "center" }}>
-                        <MuiAlert elevation={6}  variant="filled" severity="error" sx={{ width: '100%' }} style={{background: 'red', color: 'white'}}>
-                        No internet available !
-                        </MuiAlert>
-                </Snackbar> */}
+</Snackbar>
 
 
             </div>

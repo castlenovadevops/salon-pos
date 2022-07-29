@@ -84,7 +84,8 @@ export default class EmployeeReport extends React.Component {
         selectedData:{},
         ownerdetail : {},
         supplydetail:{},
-        profitdetail:{profit:0}
+        profitdetail:{profit:0},
+        selectedEmp:0
     }
     this.handleCloseDialog = this.handleCloseDialog.bind(this);
     this.handleChangeCode = this.handleChangeCode.bind(this);
@@ -110,7 +111,9 @@ export default class EmployeeReport extends React.Component {
   }
 
   handlechangeSelect(event){
-    this.setState({selectedemps:event.target.value}, ()=>{
+    var emps = [];
+    emps.push(event.target.value);
+    this.setState({selectedemps:emps, selectedEmp: event.target.value}, ()=>{
         this.getReport()
     });
   }
@@ -249,7 +252,7 @@ export default class EmployeeReport extends React.Component {
                    isDelete=0 and businessId=`+input.businessId+`  and paid_status='paid')`
              
                    
-    if(input.from_date == input.to_date){
+    if(input.from_date === input.to_date){
         sql = `SELECT strftime('%Y', (select paid_at from ticket where sync_id=tp.ticketref_id)) AS ticket_year, 
         strftime('%m/%Y',(select paid_at from ticket where sync_id=tp.ticketref_id)) AS ticket_month,
         strftime('%m/%d/%Y',(select paid_at from ticket where sync_id=tp.ticketref_id)) AS ticket_date,  
@@ -280,7 +283,7 @@ export default class EmployeeReport extends React.Component {
                    isDelete=0 and businessId=`+input.businessId+`  and paid_status='paid')`
     }
 
-        if(input["employees"] != undefined && input.employees.length > 0 && input.reportType !== 'Owner'){
+        if(input["employees"] !== undefined && input.employees.length > 0 && input.reportType !== 'Owner'){
            sql = `SELECT strftime('%Y', (select paid_at from ticket where sync_id=tp.ticketref_id)) AS ticket_year, 
            strftime('%m/%Y',(select paid_at from ticket where sync_id=tp.ticketref_id)) AS ticket_month,
            strftime('%m/%d/%Y',(select paid_at from ticket where sync_id=tp.ticketref_id)) AS ticket_date,  
@@ -353,7 +356,7 @@ export default class EmployeeReport extends React.Component {
         var profitsql= `select sum(cash_amt) as profit from employee_commission_detail as ec where ec.cash_type_for='ownercommission' and ec.isActive=1 and  ec.ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where   DATE(paid_at) between '`+input.from_date+`' and '`+input.to_date+`') and isDelete=0 and businessId=`+input.businessId+` and paid_status='paid')`;
 
 
-        if(input.from_date == input.to_date){
+        if(input.from_date === input.to_date){
             cashsql = `select SUM(ticket_amt) as PaidAmount, pay_mode, card_type from ticket_payment where isActive=1 and  ticketref_id in   (select sync_id from ticket where  sync_id in (select ticketref_id from ticket_payment where   DATE(paid_at) = '`+input.from_date+`')  and
             isDelete=0 and businessId=`+input.businessId+` and paid_status='paid')  group by pay_mode, card_type` 
     
@@ -547,7 +550,7 @@ export default class EmployeeReport extends React.Component {
   }
 
   dataformat(i, data, results, existids){
-      console.log(i, data.length ); 
+      console.log("DATA FORMAT",i, data.length ); 
         if(i < data.length ){
             var obj = data[i];
             var valtocheck = obj.ticket_month+"----"+obj.employee_id;
@@ -626,6 +629,8 @@ export default class EmployeeReport extends React.Component {
             var totalTips = 0;
             var totaldiscount = 0;
             var cdiscountdata= this.state.discountdata[0]; 
+            console.log("DISCOUNT DATA")
+            console.log(this.state.discountdata)
             if(reportresults.length === 0){
                 var owner = this.state.employeelist.filter(r=>r.staff_role === 'Owner');
                 if(owner.length > 0){  
@@ -1177,11 +1182,14 @@ export default class EmployeeReport extends React.Component {
                         var isCredit = t.ticketslist.filter(p=>p.pay_mode === 'card' && p.card_type ==='credit');
                         var isDebit = t.ticketslist.filter(p=>p.pay_mode === 'card' && p.card_type ==='debit');
                         if(isCash.length === 0){
-                            cashdata.push({
-                                PaidAmount:0,
-                                pay_mode:'Cash',
-                                card_type:''
-                            })
+                            var isCashdata = cashdata.filter(t=>t.pay_mode === 'Cash');
+                            if(isCashdata.length === 0 ){
+                                cashdata.push({
+                                    PaidAmount:0,
+                                    pay_mode:'Cash',
+                                    card_type:''
+                                })
+                            }
                         }
                         else{
                             var damount = 0;
@@ -1189,58 +1197,114 @@ export default class EmployeeReport extends React.Component {
                             isCash.forEach((e,ti)=>{
                                 damount += Number(e.Discount)+Number(e.TicketDiscount);
                                 pamount += Number(e.Amount)+ Number(e.Tips); 
-                                if(ti == isCash.length-1){ 
+                                if(ti === isCash.length-1){ 
                                     total+=Number(pamount);
-                                    cashdata.push({ 
-                                        PaidAmount:pamount-damount,
-                                        pay_mode:'Cash',
-                                    })
+                                    
+                                    var isCashdata = cashdata.filter(t=>t.pay_mode === 'Cash');
+                                    if(isCashdata.length === 0 ){
+                                        cashdata.push({ 
+                                            PaidAmount:pamount-damount,
+                                            pay_mode:'Cash',
+                                        })
+                                    }
+                                    else{
+                                        var finaldata = [];
+                                        cashdata.forEach((element, cidx) => {
+                                            if(element.pay_mode === 'Cash'){
+                                                element["PaidAmount"] = Number(element["PaidAmount"]) + pamount-damount
+                                            }
+                                            finaldata.push(element);
+                                            if(cidx === cashdata.length -1){
+                                                cashdata = finaldata;
+                                            }
+                                        });
+                                    }
                                 }
                             }) 
                         }
                 
-                        if(isCredit.length === 0){
-                            cashdata.push({
-                                PaidAmount:0,
-                                pay_mode:'Credit Card',
-                                card_type:''
-                            })
+                        if(isCredit.length === 0){ 
+                            var isCreditdata = cashdata.filter(t=>t.pay_mode === 'Credit Card');
+                            if(isCreditdata.length === 0 ){
+                                cashdata.push({
+                                    PaidAmount:0,
+                                    pay_mode:'Credit Card',
+                                    card_type:''
+                                })
+                            }
                         }
                         else{ 
-                            var damount = 0
-                            var pamount = 0
+                            var dccamount = 0
+                            var pccamount = 0
                             isCredit.forEach((e,ti)=>{
-                                pamount += Number(e.Amount)+ Number(e.Tips); 
-                                damount += Number(e.Discount)+Number(e.TicketDiscount); 
-                                if(ti == isCredit.length-1){ 
-                                    total+=Number(pamount);
-                                    cashdata.push({ 
-                                        PaidAmount:pamount-damount,
-                                        pay_mode:'Credit Card',
-                                    })
+                                pccamount += Number(e.Amount)+ Number(e.Tips); 
+                                dccamount += Number(e.Discount)+Number(e.TicketDiscount); 
+                                if(ti === isCredit.length-1){ 
+                                    total+=Number(pccamount);
+
+                                    var isCashdata = cashdata.filter(t=>t.pay_mode === 'Credit Card');
+                                    if(isCashdata.length === 0 ){
+                                            
+                                        cashdata.push({ 
+                                            PaidAmount:pccamount-dccamount,
+                                            pay_mode:'Credit Card',
+                                        })
+                                    }
+                                    else{
+                                        var finaldata = [];
+                                        cashdata.forEach((element, cidx) => {
+                                            if(element.pay_mode === 'Credit Card'){
+                                                element["PaidAmount"] = Number(element["PaidAmount"]) + pccamount-dccamount
+                                            }
+                                            finaldata.push(element);
+                                            if(cidx === cashdata.length -1){
+                                                cashdata = finaldata;
+                                            }
+                                        });
+                                    }
                                 }
                             }) 
                         }
                 
                         if(isDebit.length === 0){ 
-                            cashdata.push({
-                                PaidAmount:0,
-                                pay_mode:'Debit Card',
-                                card_type:''
-                            })
+
+                            var isDebitdata = cashdata.filter(t=>t.pay_mode === 'Debit Card');
+                            if(isDebitdata.length === 0 ){
+                                cashdata.push({
+                                    PaidAmount:0,
+                                    pay_mode:'Debit Card',
+                                    card_type:''
+                                })
+                            } 
                         }
                         else{ 
-                            var damount = 0;
-                            var pamount = 0
+                            var ddamount = 0;
+                            var pdamount = 0
                             isDebit.forEach((e,ti)=>{
-                                pamount += Number(e.Amount)+ Number(e.Tips); 
-                                damount += Number(e.Discount)+Number(e.TicketDiscount);
-                                if(ti == isDebit.length-1){ 
-                                    total+=Number(pamount);
-                                    cashdata.push({ 
-                                        PaidAmount:pamount-damount,
-                                        pay_mode:'Debit Card',
-                                    })
+                                pdamount += Number(e.Amount)+ Number(e.Tips); 
+                                ddamount += Number(e.Discount)+Number(e.TicketDiscount);
+                                if(ti === isDebit.length-1){ 
+                                    total+=Number(pdamount);
+                                    var isCashdata = cashdata.filter(t=>t.pay_mode === 'Cash');
+                                    if(isCashdata.length === 0 ){
+                                        cashdata.push({ 
+                                            PaidAmount:pdamount-ddamount,
+                                            pay_mode:'Debit Card',
+                                        })
+                                    }
+                                    else{
+                                        var finaldata = [];
+                                        cashdata.forEach((element, cidx) => {
+                                            if(element.pay_mode === 'Cash'){
+                                                element["PaidAmount"] = Number(element["PaidAmount"]) + pdamount-ddamount
+                                            }
+                                            finaldata.push(element);
+                                            if(cidx === cashdata.length -1){
+                                                cashdata = finaldata;
+                                            }
+                                        });
+                                    }
+                                    
                                 }
                             }) 
                         }
@@ -1317,7 +1381,7 @@ export default class EmployeeReport extends React.Component {
 
 
                         <Grid container style={{textTransform:'capitalize', fontWeight:'700', display:'flex', alignItems:'center', justifyContent:'space-between',  width:'100%',}}>
-                            <Grid item xs={8}>Nett</Grid>
+                            <Grid item xs={8}>Net</Grid>
                             <Grid item xs={4}>${emp.nett !== null ? Number(emp.nett).toFixed(2) : '0.00'}</Grid>
                         </Grid> 
                         </div>)
@@ -1790,7 +1854,7 @@ export default class EmployeeReport extends React.Component {
         return (<>
             <div className="tab">
             {this.state.restrictionmode === 'Owner' && <button className={this.state.tabName === 'Owner' ? "active tablinks": "tablinks"} onClick={()=>{
-                this.setState({tabName:'Owner'}, function(){
+                this.setState({tabName:'Owner', isLoading:true}, function(){
                     this.getReport()
                 })
             }} >Owner Report</button>}
@@ -1844,8 +1908,8 @@ export default class EmployeeReport extends React.Component {
                     <Grid container  style={{marginTop:'1rem'}}>
                             <Grid item xs={12} md={12}>
                                 <div style={{display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column', padding:'2rem 1rem'}}> 
-                                    {this.state.empReport.length > 0 && this.renderOwnerReport()}
-                                    {this.state.empReport.length === 0 && !this.state.isLoading  && <div><Typography variant="subtitle2">No records found.</Typography></div>}
+                                    {this.state.empReport.length > 0 && !this.state.isLoading && this.renderOwnerReport()}
+                                    {this.state.empReport.length === 0 &&  !this.state.isLoading  && <div><Typography variant="subtitle2">No records found.</Typography></div>}
                                 </div>
                             </Grid>
                     </Grid>
@@ -1892,24 +1956,24 @@ export default class EmployeeReport extends React.Component {
                                     <Select
                                     labelId=""
                                     id="selectedemps"
-                                    multiple
-                                    value={this.state.selectedemps}
+                                    multiple={false}
+                                    // value={this.state.selectedemps}
                                     onChange={(e)=>{
                                         this.handlechangeSelect(e);
                                     }}
                                     input={<Input id="select-multiple-chip" />}
-                                    renderValue={(selected) => (
-                                        <div>
-                                        {selected.map((value) => (
-                                            <Chip key={value} label={this.getEmpName(value)} />
-                                        ))}
-                                        </div>
-                                    )}
+                                    // renderValue={(selected) => (
+                                    //     <div>
+                                    //     {selected.map((value) => (
+                                    //         <Chip key={value} label={this.getEmpName(value)} />
+                                    //     ))}
+                                    //     </div>
+                                    // )}
                                     MenuProps={MenuProps}
                                     >
                                     {this.state.employeelist.map(emp => (
                                         <MenuItem value={emp.id}>
-                                            <Checkbox checked={this.checkEmp(emp.id)} />  
+                                            {/* <Checkbox checked={this.checkEmp(emp.id)} />   */}
                                             {emp.firstName+" "+emp.lastName} 
                                         </MenuItem>
                                     ))}

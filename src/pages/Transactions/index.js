@@ -457,7 +457,7 @@ export default class App extends React.Component {
                         }}
                         aria-labelledby="alert-dialog-title"
                         aria-describedby="alert-dialog-description"
-                        style={{borderRadius:'10px'}}
+                        style={{borderRadius:'10px', width:'40%', margin:'auto'}}
                     >
                         <DialogTitle id="alert-dialog-title">
                         <ModalHeader title="" onClose={()=>{
@@ -469,7 +469,7 @@ export default class App extends React.Component {
                         
                                 <Grid container style={{display:'flex', flexDirection:'row'}}>
                                 <Grid item xs={12}>
-                                   {this.state.transactiondetail.id != undefined && <Grid item xs={12} style={{padding:'20px',display:'flex', flexDirection:'row'}}> 
+                                   {this.state.transactiondetail.id !== undefined && <Grid item xs={12} style={{padding:'20px',display:'flex', flexDirection:'row'}}> 
                                         <Grid item xs={3} md={3}><b>Payment</b></Grid>
                                         <Grid item xs={6} md={6}> 
                                             <Grid item xs={12} style={{height:'100%',width:'100%', margin:0, padding:'10px', fontSize:'14px'}}> 
