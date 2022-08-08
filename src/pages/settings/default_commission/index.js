@@ -130,7 +130,10 @@ export default class Commission extends React.Component {
           dataManager.getData("select * from default_commission").then(response =>{
               if (response instanceof Array) {
                   this.setState({commissionlist: response}, function(){
-                   
+                      if(this.state.commissionlist.length> 0){
+                        this.setState({selectedcommission:this.state.commissionlist[0]},()=>{
+                        });
+                      }
                   })
               }
              
@@ -318,16 +321,7 @@ syncIndividualEntry(mindex, idx, data, tbldata) {
         </Container> 
        
       </Grid>
-      </Grid>
-
-      <Snackbar open={!this.state.isOnline} style={{width:'100%', marginBottom: -25}} anchorOrigin={{ vertical: "bottom", horizontal:  "center" }}>
-
-      <MuiAlert elevation={6}  variant="filled" severity="error" sx={{ width: '100%' }} style={{background: 'red', color: 'white'}}>
-      No internet available !
-      </MuiAlert>
-
-
-      </Snackbar>
+      </Grid> 
 
       <Snackbar autoHideDuration={4000} open ={this.state.isSuccess} style={{width:'50%', marginTop: 50}} anchorOrigin={{ vertical: "top", horizontal:  "center" }}  
       onClose={() => this.setState({isSuccess: false})}>

@@ -1511,7 +1511,7 @@ export default class CreateTicket extends React.Component {
        
         this.state.dataManager.getData(defsql).then(defres =>{ 
             if(defres.length > 0){ 
-                const sql = "select * from employee_salary where employeeId =  '"+service_input.employee_id+"'"
+                const sql = "select * from employee_salary where isActive =1 and  employeeId =  '"+service_input.employee_id+"'"
             
                 this.state.dataManager.getData(sql).then(response =>{
 
@@ -2330,7 +2330,7 @@ transferTicketService(isVoid){
                                 //console.log("6");
                                 //console.log("defres", defres);
                                 if(defres.length > 0){ 
-                                    const sql = "select * from employee_salary where employeeId = '"+service_input.employee_id+"'"
+                                    const sql = "select * from employee_salary where isActive =1 and  employeeId = '"+service_input.employee_id+"'"
                                 
                                     thisobj.state.dataManager.getData(sql).then(response =>{
                                         //console.log("7");

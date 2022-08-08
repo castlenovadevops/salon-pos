@@ -270,7 +270,7 @@ export default class EmployeeReport extends React.Component {
                 var commission = defres.length > 0 ? defres[0] : {owner_percentage:0, employee_percentage:100, cash_percentage: 50, check_percentage: 50};
                 if(defres.length > 0)
                 commission["employee_percentage"] = commission["emp_percentage"]
-                this.dataManager.getData("select * from employee_salary where employeeId="+row.id).then(com=>{
+                this.dataManager.getData("select * from employee_salary where isActive =1 and employeeId="+row.id).then(com=>{
                     if(com.length > 0){
                         commission = com[0]
                     } 
@@ -464,7 +464,7 @@ export default class EmployeeReport extends React.Component {
                     commissiondetail = defcom[0];
                     commissiondetail["employee_percentage"] = commissiondetail["emp_percentage"];
                 }
-                this.dataManager.getData(`select * from employee_salary where employeeId=`+row.id).then(empsal=>{
+                this.dataManager.getData(`select * from employee_salary where isActive =1 and employeeId=`+row.id).then(empsal=>{
                     if(empsal.length > 0){
                         commissiondetail = empsal[0];
                     }
@@ -497,7 +497,7 @@ export default class EmployeeReport extends React.Component {
                     commissiondetail = defcom[0];
                     commissiondetail["employee_percentage"] = commissiondetail["emp_percentage"];
                 }
-                this.dataManager.getData(`select * from employee_salary where employeeId=`+row.id).then(empsal=>{
+                this.dataManager.getData(`select * from employee_salary where isActive =1 and employeeId=`+row.id).then(empsal=>{
                     if(empsal.length > 0){
                         commissiondetail = empsal[0];
                     }

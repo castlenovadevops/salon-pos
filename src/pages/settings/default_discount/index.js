@@ -85,13 +85,15 @@ export default class DefaultDiscount extends React.Component {
   componentDidMount(){
    
     var condition = navigator.onLine ? 'online' : 'offline';
-    this.setState({isOnline: (condition=="online") ? true: false}, function(){
+    this.setState({isOnline: (condition==="online") ? true: false}, function(){
       if(!this.state.isOnline) {
-        const dataManager = new DataManager()
+        const dataManager = new DataManager() 
         dataManager.getData("select * from default_discount_division").then(response =>{
             if (response instanceof Array) {
                 this.setState({default_discountlist: response}, function(){
-                    console.log(this.state.employeelist)
+                  this.setState({selectedDiscount:this.state.default_discountlist[0]}, ()=>{
+                    console.log(this.state.selectedDiscount); 
+                  })
                 })
             }
            
@@ -281,17 +283,7 @@ handlePageEvent(pagename){
         // { this.state.editForm ?  <CreateDiscount afterSubmitForm={(msg)=>{this.handleCloseform(msg); this.getDef_DiscountList();}} discountSelected = {this.state.selectedDiscount} /> :  '' }
         // { this.state.addForm ? <CreateDiscount afterSubmitForm={(msg)=>{this.handleCloseform(msg); this.getDef_DiscountList();}} /> : '' } */}
       </Grid>
-      </Grid>
-
-
-      <Snackbar open={!this.state.isOnline} style={{width:'100%', marginBottom: -25}} anchorOrigin={{ vertical: "bottom", horizontal:  "center" }}>
-
-      <MuiAlert elevation={6}  variant="filled" severity="error" sx={{ width: '100%' }} style={{background: 'red', color: 'white'}}>
-      No internet available !
-      </MuiAlert>
-
-
-      </Snackbar>
+      </Grid> 
 
       <Snackbar autoHideDuration={4000} open ={this.state.isSuccess} style={{width:'50%', marginTop: 50}} anchorOrigin={{ vertical: "top", horizontal:  "center" }}  
       onClose={() => this.setState({isSuccess: false})}>

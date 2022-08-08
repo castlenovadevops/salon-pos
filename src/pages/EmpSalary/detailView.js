@@ -200,7 +200,7 @@ export default class ReportView extends React.Component  {
     }
     render(){  
         return (
-            <div style={{height: '100%'}}>
+            <div style={{height: 'calc(100% - 130px)'}}>
                 <Container maxWidth="xl" style={{width: "100%", height: '100%'}}>
                 {/* <div  style={{width: '100%', height: '48px', display: 'flex',flexDirection:'row', marginLeft:0}}>
                                 <div  cursor="pointer" style={{cursor:"pointer",width: '50%',background: (this.state.selectedTab==='payout')? '#134163': '#f0f0f0', height: '48px', textAlign: 'center', alignContent:'center', color: (this.state.selectedTab==='payout')? '#F2F2F2': '#B6B6B6',justifyContent: 'center', borderTopLeftRadius: 20, borderTopRightRadius: 20}}
@@ -225,7 +225,7 @@ export default class ReportView extends React.Component  {
                   {this.state.selectedTab === 'payout' && <>
 
                     <Stack direction={'row'}  style={{
-                        height:' calc(100% - 48px)',
+                        height:' 100%',
                         marginTop: '1rem',
                         overflow: 'auto'}}>
                    <div style={{width:'50%', fontSize:'13px',height:'100%',overflowY:'scroll'}}> <Grid container>
@@ -250,7 +250,8 @@ export default class ReportView extends React.Component  {
                     })}
                     </div> 
 
-                   <div style={{width:'50%', borderLeft:'1px solid #f0f0f0', paddingLeft:'1rem'}}>
+                   <div style={{width:'50%', borderLeft:'1px solid #f0f0f0', 
+                        overflow: 'auto', paddingLeft:'1rem'}}>
                             <Grid container style={{margin:'1rem 0'}}>
                                 <Grid item xs={6}><b>Payroll</b></Grid>
                                 <Grid item xs={6}><b></b></Grid>

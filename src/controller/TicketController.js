@@ -413,7 +413,7 @@ export default class TicketController {
                             ownerid = own[0].id;
 
                         if (defres.length > 0) {
-                            const sql = "select * from employee_salary where employeeId =  '" + selectedservice.employee_id + "'"
+                            const sql = "select * from employee_salary where isActive =1 and  employeeId =  '" + selectedservice.employee_id + "'"
 
                             this.dataManager.getData(sql).then(response => {
 

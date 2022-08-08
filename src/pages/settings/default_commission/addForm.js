@@ -11,6 +11,8 @@ import LoaderContent from '../../../components/formComponents/LoaderDialog';
 import config from '../../../config/config' 
 import TicketController from '../../../controller/TicketController';
 import DataManager from '../../../controller/datacontroller';
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
 export default class CommissionForm extends React.Component {
     ticketController = new TicketController();
     dataManager = new DataManager();
@@ -38,6 +40,9 @@ export default class CommissionForm extends React.Component {
         this.handleCloseAlert = this.handleCloseAlert.bind(this);
     }
     componentDidMount(){
+        this.loadData();
+    }
+    loadData(){
         var condition = navigator.onLine ? 'online' : 'offline';
         this.setState({isOnline: (condition==="online") ? true: false})
 
@@ -348,7 +353,7 @@ export default class CommissionForm extends React.Component {
                 </Stack>
                 <Stack direction="row" spacing={2} alignItems="center" justifyContent="center" style={{marginTop: 10}} >
                     {/* <div style={{ display : this.state.isOnline ? 'block':'none'}}> */}
-                    <ButtonContent  size="large" variant="contained" disabled={this.state.isDisable} label={this.state.isEdit ? 'Update' : 'Save' } onClick={()=>this.checkOnline()}/>
+                    <ButtonContent  size="large" variant="contained" disabled={this.state.isDisable || !this.state.isOnline} label={this.state.isEdit ? 'Update' : 'Save' } onClick={()=>this.checkOnline()}/>
                     {/* </div> */}
                     
                     {/* <ButtonContent  size="large" variant="outlined" label="Cancel" onClick={()=>this.handleclose()}/> */}
@@ -396,6 +401,17 @@ export default class CommissionForm extends React.Component {
                     }}/>
                 </DialogActions>
             </Dialog>
+
+        
+            <Snackbar open={!this.state.isOnline} style={{width:'100%', marginBottom: -25}} anchorOrigin={{ vertical: "bottom", horizontal:  "center" }}>
+
+<MuiAlert elevation={6}  variant="filled" severity="error" sx={{ width: '100%' }} style={{background: 'red',display:'flex', alignItems:'center', color: 'white'}}>
+No internet available !
+<ButtonContent size="large" variant="contained" style={{'height':'36px', position:'absolute', top:'8px', right:'1rem' }} onClick={()=>this.loadData()}  label={'Reload'} />
+</MuiAlert>
+
+
+</Snackbar>
             </div>
 
         )

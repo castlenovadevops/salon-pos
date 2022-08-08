@@ -118,6 +118,15 @@ handlePageEvent(pagename){
 
     componentDidMount(){
     
+        this.setState({mastertables:[{
+            name: "employee_salary",
+            tablename: 'employee_salary',
+            progressText: "Synchronizing Salary Division...",
+            progresscompletion: 10,
+            url: config.root + `/settings/employee_salary/list/` + JSON.parse(window.localStorage.getItem('businessdetail')).id,
+            syncurl:''
+        }]},()=>{
+        });
       var condition = navigator.onLine ? 'online' : 'offline';
       this.setState({isOnline: (condition=="online") ? true: false}, function() {
 
@@ -160,52 +169,48 @@ handlePageEvent(pagename){
     }
 
 
-
-  syncMasterData(mindex) {
-    if (mindex < this.state.mastertables.length) {
-        var tbldata = this.state.mastertables[mindex];
-        this.setState({downloadinMessage: tbldata.progressText}, ()=>{
-            console.log(mindex, "master index")
-            axios.get(tbldata.url).then((res) => {
-                var data = res.data["data"];
-                if (data instanceof Array) {
-                    console.log(tbldata.tablename, data.length)
-                    this.syncIndividualEntry(mindex, 0, data, tbldata)
-                }
-            })
-        })
-    } 
-}
-
-syncIndividualEntry(mindex, idx, data, tbldata) {
-    if (idx < data.length) {
-        var input = data[idx]; 
-        this.dataManager.saveData(`delete from ` + tbldata.tablename+ ` where (sync_status=1 and sync_id='`+input.sync_id+`') or id =`+input.id).then(res => {
-            input["sync_id"] = input["sync_id"] !== null && input["sync_id"] !== undefined ? input["sync_id"] : input["id"];
-            input["sync_status"] = 1;
-            if(tbldata.tablename === 'employee_salary'){
-              delete input["firstName"];
-              delete input["lastName"];
-            }
-            if(tbldata.tablename === 'ticket'){
-                delete input["name"];
-                delete input["email"];
-                delete input["pay_mode"];
-            }
-            this.ticketController.saveData({ table_name: tbldata.name, data: input }).then(r => {
-                this.syncIndividualEntry(mindex, idx + 1, data, tbldata);
-            })
-        })     
-    }
-    else {
-        this.setState({progress: tbldata.progress}, ()=>{
-            console.log(mindex, "master sync index")
-            this.syncMasterData(mindex + 1)
-        });
-    }
-}
-
-
+    syncMasterData(mindex) {
+      if (mindex < this.state.mastertables.length) {
+          var tbldata = this.state.mastertables[mindex];
+          this.setState({downloadinMessage: tbldata.progressText}, ()=>{
+              console.log(mindex, "master index")
+              axios.get(tbldata.url).then((res) => {
+                  var data = res.data["data"];
+                  if (data instanceof Array) {
+                      console.log(tbldata.tablename, data.length)
+                      this.syncIndividualEntry(mindex, 0, data, tbldata)
+                  }
+              })
+          })
+      } 
+  }
+  
+  syncIndividualEntry(mindex, idx, data, tbldata) {
+      if (idx < data.length) {
+          var input = data[idx];  
+          input["sync_id"] = input["sync_id"] !== null && input["sync_id"] !== undefined ? input["sync_id"] : input["id"];
+          input["sync_status"] = 1;
+          if(tbldata.tablename === 'employee_salary'){
+            delete input["firstName"];
+            delete input["lastName"];
+          }
+          if(tbldata.tablename === 'ticket'){
+              delete input["name"];
+              delete input["email"];
+              delete input["pay_mode"];
+          }
+          this.ticketController.saveData({ table_name: tbldata.name, data: input }).then(r => {
+              this.syncIndividualEntry(mindex, idx + 1, data, tbldata);
+          })  
+      }
+      else {
+          this.setState({progress: tbldata.progress}, ()=>{
+              console.log(mindex, "master sync index")
+              this.syncMasterData(mindex + 1)
+          });
+      }
+  }
+  
     getEmpSalaryList(){
         
       var businessdetail = window.localStorage.getItem('businessdetail');
@@ -219,6 +224,7 @@ syncIndividualEntry(mindex, idx, data, tbldata) {
             axios.get(config.root+`/settings/employee_salary/list/`+JSON.parse(businessdetail).id).then(res=>{ 
                 this.setState({isLoading: false,employee_salarylist:res.data.data});
                 // console.log("getEmpSalaryList",this.state.employee_salarylist)
+                this.syncMasterData(0)
             })
         }
     }
@@ -296,15 +302,6 @@ syncIndividualEntry(mindex, idx, data, tbldata) {
           {/* } */}
         </Container> : ''
         }  </Grid></Grid> 
-        
-        <Snackbar open={!this.state.isOnline} style={{width:'100%', marginBottom: -25}} anchorOrigin={{ vertical: "bottom", horizontal:  "center" }}>
-
-      <MuiAlert elevation={6}  variant="filled" severity="error" sx={{ width: '100%' }} style={{background: 'red', color: 'white'}}>
-      No internet available !
-      </MuiAlert>
-
-
-      </Snackbar>
 
 
       <Snackbar autoHideDuration={4000} open ={this.state.isSuccess} style={{width:'50%', marginTop: 50}} anchorOrigin={{ vertical: "top", horizontal:  "center" }}  

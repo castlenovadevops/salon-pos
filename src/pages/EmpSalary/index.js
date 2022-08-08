@@ -343,11 +343,12 @@ export default class EmployeeReport extends React.Component {
                 var commission = defres.length > 0 ? defres[0] : {owner_percentage:0, employee_percentage:100, cash_percentage: 50, check_percentage: 50};
                 if(defres.length > 0)
                 commission["employee_percentage"] = commission["emp_percentage"]
-                this.dataManager.getData("select * from employee_salary where employeeId="+row.id).then(com=>{
+                console.log("commisison 1", commission)
+                this.dataManager.getData("select * from employee_salary where isActive =1 and  employeeId="+row.id).then(com=>{
                     if(com.length > 0){
                         commission = com[0]
+                        console.log("commisison", commission)
                     } 
-
                     this.dataManager.getData(`select strftime('%m/%d',(select created_at from ticket where sync_id=ts.ticketref_id)) AS ticket_date, ts.service_cost as Amount, ts.tips_amount as Tips, ts.total_discount_amount as Discount from ticket_services as ts where ts.ticketref_id in (select sync_id from ticket where DATE(created_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`' and isDelete=0)  and ts.employee_id = `+row.id).then(res=>{
                         console.log(commission);
                         var businessdetail = window.localStorage.getItem('businessdetail');
@@ -536,10 +537,12 @@ export default class EmployeeReport extends React.Component {
                 if(defcom.length > 0){
                     commissiondetail = defcom[0];
                     commissiondetail["employee_percentage"] = commissiondetail["emp_percentage"];
+                    console.log("commisison 1", commissiondetail)
                 }
-                this.dataManager.getData(`select * from employee_salary where employeeId=`+row.id).then(empsal=>{
+                this.dataManager.getData(`select * from employee_salary where isActive =1 and employeeId=`+row.id).then(empsal=>{
                     if(empsal.length > 0){
                         commissiondetail = empsal[0];
+                        console.log("commisison", commissiondetail)
                     }
                     this.dataManager.getData(sql ).then(res=>{
                         this.dataManager.getData(commsql).then(comm=>{
@@ -570,7 +573,7 @@ export default class EmployeeReport extends React.Component {
                     commissiondetail = defcom[0];
                     commissiondetail["employee_percentage"] = commissiondetail["emp_percentage"];
                 }
-                this.dataManager.getData(`select * from employee_salary where employeeId=`+row.id).then(empsal=>{
+                this.dataManager.getData(`select * from employee_salary where isActive =1 and  employeeId=`+row.id).then(empsal=>{
                     if(empsal.length > 0){
                         commissiondetail = empsal[0];
                     }
@@ -961,7 +964,7 @@ export default class EmployeeReport extends React.Component {
                     </Toolbar>
                     </AppBar>
 
-                            <div>
+                            <div style={{height:'100%'}}>
                                 <Stack direction="row" alignItems="left"  mb={5} style={{ marginTop: 0, marginBottom:0,width:'80%',marginLeft:24}}>                            
                                     <Typography variant="subtitle2" style={{color:"#000", fontFamily:'"Roboto", "Helvetica", "Arial", sans-serif'}} gutterBottom><b>Employee Name:</b> {this.state.selectedEmp.firstName+" "+this.state.selectedEmp.lastName}</Typography>
                                     <Typography variant="subtitle2" style={{color:"#000", fontFamily:'"Roboto", "Helvetica", "Arial", sans-serif',marginLeft: 20}} gutterBottom><b>Date Range:</b> {Moment(this.state.from_date).format('MM-DD-YYYY')} - {Moment(this.state.to_date).format('MM-DD-YYYY')}</Typography> 
