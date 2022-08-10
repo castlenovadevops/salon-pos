@@ -3,7 +3,8 @@ const isDev = require('electron-is-dev');
 const path = require('path');
 const sqlite3 = require('sqlite3');  
 require('v8-compile-cache');
-
+const moment = require('moment');
+const axios = require('axios');
 const  {machineId} = require('node-machine-id');
 let mainWindow;  
 
@@ -220,7 +221,8 @@ ipcMain.handle('printData', async(event, input)=>{
 
 
 ipcMain.handle('getTicketCode', async(event)=>{
- 
+var date = (await axios('/', {'method': 'HEAD'})).headers.get('date');
+ console.log("Date now :::: ", new Date().toISOString(), moment().toISOString(), date);
   return new Promise((resolve, reject) => {     
       db.all("SELECT *  from ticket order by ticket_code desc", (err, rows) => {
           if(rows.length > 0){

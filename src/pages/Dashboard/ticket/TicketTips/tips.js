@@ -257,9 +257,9 @@ class Tips extends React.Component {
                 this.setState({total_tips:total },function(){
                     console.log("total_tips",this.state.total_tips);
                     console.log("tips_amount",this.state.tips_amount);
-                    if(this.state.total_tips !== Number(this.state.tips_amount)){
+                    if(this.state.total_tips !== Number(this.state.tips_amount) && this.state.tips_type === 'manual'){
                         this.setState({isDisable: true});
-                        if(this.state.service_selected.length === isfilled  && this.state.tipe_type=='manual'){
+                        if(this.state.service_selected.length === isfilled  && this.state.tipe_type==='manual'){
                             this.setState({showError: true})
                         }
                     }
@@ -504,7 +504,7 @@ class Tips extends React.Component {
                             </Grid>
                             <Grid item xs={3} style={{padding:'0px'}}> 
                             <Typography variant="subtitle1" align="left"> 
-                                ${this.state.total_tips}
+                                ${Number(this.state.total_tips).toFixed(2)}
                             </Typography>
                             </Grid>
                            

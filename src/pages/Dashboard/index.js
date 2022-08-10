@@ -14,6 +14,7 @@ import Discount from "../Discount";
 import Employees from "../Employees";
 import Customers from "../Customers";
 import Transactions from "../Transactions";
+import ShopSettings from '../settings/shopsettings';
 
 export default class Dashboard extends React.Component {
     constructor(props) {
@@ -49,6 +50,7 @@ export default class Dashboard extends React.Component {
           {this.state.currentPage === 'employees'  && <Employees onChangePage={this.changeCurrentPage}/>}
           {this.state.currentPage === 'customers'  && <Customers onChangePage={this.changeCurrentPage}/>}
           {this.state.currentPage === 'transactions'  && <Transactions onChangePage={this.changeCurrentPage}/>}
+          {this.state.currentPage === 'shopsettings'  && <ShopSettings onChangePage={this.changeCurrentPage}/>}
           
       </>)
     }

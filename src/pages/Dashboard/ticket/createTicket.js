@@ -1049,6 +1049,7 @@ export default class CreateTicket extends React.Component {
        if(this.state.isEdit){
            var detail = Object.assign({}, this.state.ticketSelected);
            detail["ticketref_id"] = detail.sync_id;
+           this.saveTicket('savepay')
             this.setState({openPayment:true,ticketDetail:detail,isLoading: false})
        }
        else{
@@ -3508,14 +3509,14 @@ renderButtons(isDisabled) {
                     <Grid item xs={7} style={{border:'2px solid #f0f0f0'}}>
                         <Grid item xs={12} style={{display:'flex',height:'100%'}}>
                             <Grid xs={4}>
-                                <Button style={{height:'100%', borderRadius:0}} disabled={this.state.isDisable? false: (this.state.tipsdiscountEnabled) ? true: false || this.state.services_taken.length == 0} onClick={()=>this.addTips()} fullWidth variant="outlined">Tips</Button> 
+                                <Button style={{height:'100%', borderRadius:0}} disabled={this.state.isDisable? false: (this.state.tipsdiscountEnabled) ? true: false || this.state.services_taken.length === 0} onClick={()=>this.addTips()} fullWidth variant="outlined">Tips</Button> 
                             </Grid>
                            
                             <Grid xs={4}>
-                                <Button style={{height:'100%', borderRadius:0}} onClick={()=>this.saveTicket('yes')} disabled={this.state.isDisable || this.state.services_taken.length == 0} color="secondary" fullWidth variant="contained"> Save </Button>
+                                <Button style={{height:'100%', borderRadius:0}} onClick={()=>this.saveTicket('yes')} disabled={this.state.isDisable || this.state.services_taken.length === 0} color="secondary" fullWidth variant="contained"> Save </Button>
                             </Grid>
                             <Grid xs={4}>
-                                <Button style={{height:'100%', borderRadius:0}} onClick={()=>this.handleTicketPayment()} disabled={this.state.isDisablePay || this.state.services_taken.length == 0} fullWidth variant="outlined">Pay</Button> 
+                                <Button style={{height:'100%', borderRadius:0}} onClick={()=>this.handleTicketPayment()} disabled={this.state.isDisablePay || this.state.services_taken.length === 0} fullWidth variant="outlined">Pay</Button> 
                             </Grid>
                         </Grid>
                     </Grid>

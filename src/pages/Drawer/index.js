@@ -59,13 +59,13 @@ export default function DrawerContent(
             </List>
         </Collapse>
         {/* <ListItem button> <ListItemText primary="Tips" /></ListItem> */}
-        <ListItem button> <ListItemIcon><MoneyOff /></ListItemIcon><ListItemText primary="Discount" onClick={()=>onhandlePageevent('discount')}/></ListItem>
         <ListItem button  onClick={()=>onhandleClickInvent('settings')}>  
         <ListItemIcon><Settings /></ListItemIcon><ListItemText primary="Settings" />
             {setting_menu_show ? <ExpandLess /> : <ExpandMore />}
         </ListItem>
         <Collapse in={setting_menu_show} timeout="auto" unmountOnExit>
             <List >
+                <ListItem button sx={{ pl: 4 }}  style= {{marginLeft: 10}} > <ListItemIcon><MoneyOff /></ListItemIcon><ListItemText primary="Discount" onClick={()=>onhandlePageevent('discount')}/></ListItem>
                 <ListItem button sx={{ pl: 4 }}  style= {{marginLeft: 10}}  onClick={()=>onhandlePageevent('tax')}>
                     <ListItemIcon><AttachMoney /></ListItemIcon>
                     <ListItemText primary="Taxes & Fees" />
@@ -79,6 +79,11 @@ export default function DrawerContent(
                 <ListItem button sx={{ pl: 4 }}  style= {{marginLeft: 10}}  onClick={()=>onhandlePageevent('empsettings')}> 
                     <ListItemIcon><Tune /></ListItemIcon><ListItemText primary="Employee Setting" />
                 </ListItem>
+                <ListItem button sx={{ pl: 4 }}  style= {{marginLeft: 10}}  onClick={()=>onhandlePageevent('printer')}> 
+                    <ListItemIcon><Print /></ListItemIcon> <ListItemText primary="Printers" /></ListItem>
+                    
+                <ListItem button sx={{ pl: 4 }}  style= {{marginLeft: 10}}  onClick={()=>onhandlePageevent('shopsettings')}> 
+                    <ListItemIcon><Settings /></ListItemIcon> <ListItemText primary="Shop Settings" /></ListItem>
 
             </List>
         </Collapse>
@@ -88,9 +93,7 @@ export default function DrawerContent(
                     <ListItemIcon><Loyalty /></ListItemIcon> <ListItemText primary="Payout" /></ListItem>
         <ListItem button  onClick={()=>onhandlePageevent('empreport')}>
                     <ListItemIcon><Assessment /></ListItemIcon> <ListItemText primary="Report" /></ListItem>
-        <ListItem button onClick={()=>onhandlePageevent('printer')}> 
-                    <ListItemIcon><Print /></ListItemIcon> <ListItemText primary="Printers" /></ListItem>
-
+        
         <ListItem button sx={{ pl: 4 }} onClick={()=>onhandlePageevent('syncdata')}> 
             <ListItemIcon><Sync /></ListItemIcon> <ListItemText primary="Sync" />
         </ListItem>
