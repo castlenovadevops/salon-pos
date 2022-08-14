@@ -312,7 +312,7 @@ export default class SettingsSync extends React.Component {
             input["sync_id"] = input["sync_id"] !== null && input["sync_id"] !== undefined ? input["sync_id"] : input["id"];
             input["id"] = input["id"] !== null && input["id"] !== undefined ? input["id"] : input["sync_id"];
             var sql = `delete from ` + tbldata.tablename+ ` where (sync_status=1 and sync_id='`+input.sync_id+`') or id ='`+input.id+`'`;
-            if(tbldata.syncurl === '' && idx === 0){
+            if(tbldata.syncurl === ''){
                 var sql = `delete from ` + tbldata.tablename;
             }
             console.log(sql);

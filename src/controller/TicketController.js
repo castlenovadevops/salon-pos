@@ -23,7 +23,7 @@ export default class TicketController {
 
             // const sqlQuery = `INSERT INTO `+obj.table_name+`(`+Object.keys(obj.data).join(',')+`) VALUES (` + Object.keys(obj.data).map(val => ((typeof obj.data[val] == 'string') ? `'${obj.data[val].replace("'","''").trim()}'` :  `${obj.data[val] !== undefined ? obj.data[val] : ''}`)).join(',')+`)`;
             const sqlQuery = `INSERT INTO ` + obj.table_name + `(` + keys + `) values(` + values + `)`;
-            ////console.log("INSERT::::", sqlQuery);
+            console.log("INSERT::::", sqlQuery);
             this.dataManager.saveData(sqlQuery).then(res => {
                 //////console.log(res); 
                 this.dataManager.getData("select * from tosync_tables where table_name='" + obj.table_name + "'").then(res1 => {
@@ -100,6 +100,7 @@ export default class TicketController {
 
 
     async saveTicket(stateinput, ticketid) {
+        console.log("asdasds this.ticketcontoller", stateinput)
         var udetail = window.localStorage.getItem('employeedetail');
         var userdetail = { id: 0 };
         if (udetail !== undefined && udetail !== null) {
@@ -143,7 +144,7 @@ export default class TicketController {
 
 
     TicketdiscountCalculation(ticketid, ticketDetail, stateinput, userdetail) {
-        //////console.log("Ticket Discount calculation called");
+        console.log("Ticket Discount calculation called");
         var detail = window.localStorage.getItem("businessdetail");
         if (detail !== undefined && detail !== '') {
             var businessdetail = JSON.parse(detail);
@@ -233,7 +234,7 @@ export default class TicketController {
 
 
     saveEmployeeTicketDiscount(discounttype, ei, dis_amt, businessdetail, csyncid, ticketid, ticketDetail, stateinput, userdetail) {
-        //////console.log(stateinput.services_taken)
+        console.log("EMP ticket called", stateinput.services_taken)
         if (ei < stateinput.services_taken.length) {
             var service_input = Object.assign({}, stateinput.services_taken[ei]);
             //console.log("TICKETDISCOUNT CALC", service_input)
@@ -352,7 +353,9 @@ export default class TicketController {
                     sync_id: syncid,
                     sync_status: 0
                 }
-                ////////console.log(taxinput);
+                console.log("TAX INOUT:::::::::")
+                console.log(taxinput);
+                console.log("##############");
                 var thisobj = this;
                 this.saveData({ table_name: 'ticketservice_taxes', data: taxinput }).then(r => {
                     thisobj.saveTaxes(ticketid, tsid, selectedservice, tidx + 1, idx, ticketDetail, services_taken, userdetail,stateinput)
@@ -449,8 +452,9 @@ export default class TicketController {
                                     emp_percent:employee_percentage
                                 }
                                 window.api.invoke('evantcall', emp_input)
-                                //////////console.log("emp inpout");
-                                //////////console.log(emp_input);
+                                console.log("emp inpout ::: $$$$$$$$");
+                                console.log(emp_input);
+                                console.log("emp inpout ::: $$$$$$$$");
 
                                 if( !stateinput.isPaidOnOpen){
                                     this.saveData({ table_name: 'employee_commission_detail', data: emp_input }).then(res => {
@@ -982,6 +986,47 @@ export default class TicketController {
                 });
 
             })
+        }
+        else if(selectedservice.servicedetail.producttype !== 'service'){
+            this.dataManager.getData("select * from users where staff_role='Owner'").then(own => {
+                ////console.log("OPWNER DETAIL")
+                ////console.log(defres)
+                var ownerid = 0;
+                if (own.length > 0)
+                    ownerid = own[0].id;
+                
+                // Service Commission Calculation for Employee & owner for ticket services - Start
+                window.api.getSyncUniqueId().then(syndata => {
+                    var csyncid = syndata.syncid; 
+                    var per_amt =  selectedservice.qty * selectedservice.perunit_cost;
+                                    
+                    var emp_input = {
+                        employeeId: ownerid,
+                        businessId: businessdetail["id"], 
+                        cash_type_for: 'product',
+                        cash_amt: per_amt,
+                        created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
+                        created_by: employeedetail.id,
+                        updated_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
+                        updated_by: employeedetail.id,
+                        ticketref_id: selectedservice.ticketref_id,
+                        ticketserviceref_id: selectedservice.sync_id,
+                        sync_status: 0,
+                        sync_id: csyncid + "product",
+                        isActive:1,
+                        totalamount:selectedservice.qty * selectedservice.perunit_cost,
+                        owner_percent:100,
+                        emp_percent:0
+                    }  
+                    if(!stateinput.isPaidOnOpen){
+                        this.saveData({ table_name: 'employee_commission_detail', data: emp_input }).then(res => { 
+                        })
+                    }
+
+                    this.saveTicketService(idx + 1, ticketid, ticketDetail, services_taken, userdetail,stateinput);
+                    
+                })
+            });
         }
         else{
             this.saveTicketService(idx + 1, ticketid, ticketDetail, services_taken, userdetail,stateinput);

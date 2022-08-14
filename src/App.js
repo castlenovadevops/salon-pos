@@ -25,7 +25,7 @@ import TicketController from './controller/TicketController';
 export default class App extends React.Component {
 
   idleTimer;
-  ticketController;
+  ticketController = new TicketController();
 
   constructor(props) {
     super(props);
@@ -110,6 +110,11 @@ export default class App extends React.Component {
   }
   
 
+  saveTicket(data, ticketid){
+
+    this.ticketController.saveTicket(data, ticketid);
+  }
+
   onAfterSubmit(){ 
     this.setState({isLoaded:true, isAutoSyncing: false})
   } 
@@ -133,7 +138,8 @@ export default class App extends React.Component {
 
       {this.state.isAutoSyncing && <div style={{display:'none'}}><SyncData onAfterSync={()=>this.setState({isSyncing:false},()=>{this.onAfterSubmit()})}/></div>}
 
-      {isUserLogged()  && !this.state.isSyncing && <DashboardApp/>} 
+      {isUserLogged()  && !this.state.isSyncing && <DashboardApp saveTicket ={(data, ticketid)=>{console.log("app initial dashboard app component", data);
+        this.saveTicket(data, ticketid)}} />} 
       
 
     <Dialog

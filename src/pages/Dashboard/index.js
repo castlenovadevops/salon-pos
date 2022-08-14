@@ -14,7 +14,6 @@ import Discount from "../Discount";
 import Employees from "../Employees";
 import Customers from "../Customers";
 import Transactions from "../Transactions";
-import ShopSettings from '../settings/shopsettings';
 
 export default class Dashboard extends React.Component {
     constructor(props) {
@@ -35,7 +34,7 @@ export default class Dashboard extends React.Component {
 
     render() {
       return (<>
-          {this.state.currentPage === 'dashboard' && <TicketDashboard onChangePage={this.changeCurrentPage} /> } 
+          {this.state.currentPage === 'dashboard' && <TicketDashboard saveTicket={(data,ticketid)=>{console.log("dashboard app component", data);this.props.saveTicket(data,ticketid)}} onChangePage={this.changeCurrentPage} /> } 
           {this.state.currentPage === 'category' && <Category onChangePage={this.changeCurrentPage} /> } 
           {this.state.currentPage === 'product' && <Product onChangePage={this.changeCurrentPage} /> } 
           {this.state.currentPage === 'tax' && <Tax onChangePage={this.changeCurrentPage} /> } 
@@ -50,7 +49,6 @@ export default class Dashboard extends React.Component {
           {this.state.currentPage === 'employees'  && <Employees onChangePage={this.changeCurrentPage}/>}
           {this.state.currentPage === 'customers'  && <Customers onChangePage={this.changeCurrentPage}/>}
           {this.state.currentPage === 'transactions'  && <Transactions onChangePage={this.changeCurrentPage}/>}
-          {this.state.currentPage === 'shopsettings'  && <ShopSettings onChangePage={this.changeCurrentPage}/>}
           
       </>)
     }

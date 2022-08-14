@@ -90,7 +90,7 @@ export default class EmployeeReport extends React.Component {
                 {
                     field: 'total_tips',
                     headerName: 'Tips',
-                    minWidth: 150,
+                    minWidth: 100,
                     editable: false,
                     renderCell: (params) => (
                     <div>
@@ -101,11 +101,23 @@ export default class EmployeeReport extends React.Component {
                 {
                     field: 'total_discount',
                     headerName: 'Discount',
-                    minWidth: 150,
+                    minWidth: 100,
                     editable: false,
                     renderCell: (params) => (
                     <div>
                         $  { Number(params.row.Discount).toFixed(2)}  
+                    </div>
+                    )
+                },
+
+                {
+                    field: '',
+                    headerName: 'Percentage',
+                    minWidth: 150,
+                    editable: false,
+                    renderCell: (params) => (
+                    <div>
+                        { params.row.emp_percent !== null ? Number(params.row.emp_percent).toFixed(2)+"%" : Number(params.row.defemp_percent).toFixed(2)+"%"}  
                     </div>
                     )
                 },
@@ -116,7 +128,7 @@ export default class EmployeeReport extends React.Component {
                     editable: false,
                     renderCell: (params) => (
                     <div>
-                        $  { Number(params.row.totalsalary/100).toFixed(2)}  
+                        $  { Number((params.row.totalsalary/100) - params.row.Discount).toFixed(2)}  
                     </div>
                     )
                 },
@@ -646,9 +658,9 @@ export default class EmployeeReport extends React.Component {
         if(businessdetail !== undefined && businessdetail !== null){
             this.setState({isLoading: true}) 
             // this.dataManager.getData(`select u.id as id, u.*,(select sum(totalamount) from employee_commission_detail where isActive=1 and ticketserviceref_id in (select sync_id from ticket_services where employee_id=u.id and  isActive=1 and  ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where DATE(paid_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`') and isDelete=0 and paid_status='paid'))) as ServiceAmount,(select sum((totalamount*emp_percent)) from employee_commission_detail where cash_type_for='service' and  employeeId=u.id and ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where DATE(paid_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`') and isDelete=0 and paid_status='paid')) as totalsalary,(select sum(Amount) from emp_payment where employeeId=u.id) as totalsalarygiven, sum(ts.tips_amount) as Tips, sum(ts.total_discount_amount) as Discount from users AS u left join  ticket_services as ts on ts.employee_id= u.id where ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where DATE(paid_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`') and isDelete=0 and paid_status='paid') group by u.id`).then(res=>{  
-                var sql=`select u.id as id, u.firstName, u.lastName, (select sum(totalamount) from employee_commission_detail where cash_type_for='service' and isActive=1 and employeeId=u.id and ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where DATE(paid_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`') and isDelete=0 and paid_status='paid')) as ServiceAmount,(select sum((totalamount*emp_percent)) from employee_commission_detail where cash_type_for='service' and  employeeId=u.id and ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where DATE(paid_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`') and isDelete=0 and paid_status='paid')) as totalsalary, sum(ts.tips_amount) as Tips, sum(ts.total_discount_amount) as Discount from users AS u left join  ticket_services as ts on ts.employee_id= u.id where ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where DATE(paid_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`') and isDelete=0 and paid_status='paid') and ts.isActive=1 group by u.id`;
+                var sql=`select u.id as id, u.firstName, u.lastName,(select employee_percentage from employee_salary where employeeId=u.id and isActive=1) as emp_percent, (select emp_percentage from default_commission where   isActive=1) as defemp_percent, (select sum(totalamount) from employee_commission_detail where cash_type_for='service' and isActive=1 and employeeId=u.id and ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where DATE(paid_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`') and isDelete=0 and paid_status='paid')) as ServiceAmount,(select sum((totalamount*emp_percent)) from employee_commission_detail where cash_type_for='service' and isActive=1 and employeeId=u.id and ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where DATE(paid_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`') and isDelete=0 and paid_status='paid')) as totalsalary, sum(ts.tips_amount) as Tips, sum(ts.total_discount_amount) as Discount from users AS u left join  ticket_services as ts on ts.employee_id= u.id where ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where DATE(paid_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`') and isDelete=0 and paid_status='paid') and ts.isActive=1 group by u.id`;
                 if(this.state.staffid > 0){
-                    sql=`select u.id as id, u.firstName, u.lastName, (select sum(totalamount) from employee_commission_detail where cash_type_for='service'  and isActive=1 and  employeeId=u.id and ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where DATE(paid_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`') and isDelete=0 and paid_status='paid')) as ServiceAmount,(select sum((totalamount*emp_percent)) from employee_commission_detail where cash_type_for='service' and  employeeId=u.id and ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where DATE(paid_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`') and isDelete=0 and paid_status='paid')) as totalsalary, sum(ts.tips_amount) as Tips, sum(ts.total_discount_amount) as Discount from users AS u left join  ticket_services as ts on ts.employee_id= u.id  and ts.isActive=1  where ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where DATE(paid_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`') and isDelete=0 and paid_status='paid') and u.id=`+this.state.staffid+` group by u.id`;
+                    sql=`select u.id as id, u.firstName, u.lastName,(select employee_percentage from employee_salary where employeeId=u.id and isActive=1) as emp_percent, (select emp_percentage from default_commission where   isActive=1) as defemp_percent, (select sum(totalamount) from employee_commission_detail where cash_type_for='service'  and isActive=1 and  employeeId=u.id and ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where DATE(paid_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`') and isDelete=0 and paid_status='paid')) as ServiceAmount,(select sum((totalamount*emp_percent)) from employee_commission_detail where cash_type_for='service' and  employeeId=u.id and ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where DATE(paid_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`') and isDelete=0 and paid_status='paid')) as totalsalary, sum(ts.tips_amount) as Tips, sum(ts.total_discount_amount) as Discount from users AS u left join  ticket_services as ts on ts.employee_id= u.id  and ts.isActive=1  where ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where DATE(paid_at) between '`+this.state.from_date.toISOString().substring(0,10)+`' and '`+this.state.to_date.toISOString().substring(0,10)+`') and isDelete=0 and paid_status='paid') and u.id=`+this.state.staffid+` group by u.id`;
                 }
                 console.log(sql);
               this.dataManager.getData(sql).then(res=>{  

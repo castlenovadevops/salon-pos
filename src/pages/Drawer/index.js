@@ -31,7 +31,7 @@ export default function DrawerContent(
     anchor={anchor}
     open={open}
     onClose={onClose}
-    style={{width: '240px !important'}}
+    style={{width: '300px !important'}}
 >
     <List>
         <ListItem button onClick={()=>onhandlePageevent('dashboard')}> 
@@ -82,8 +82,8 @@ export default function DrawerContent(
                 <ListItem button sx={{ pl: 4 }}  style= {{marginLeft: 10}}  onClick={()=>onhandlePageevent('printer')}> 
                     <ListItemIcon><Print /></ListItemIcon> <ListItemText primary="Printers" /></ListItem>
                     
-                <ListItem button sx={{ pl: 4 }}  style= {{marginLeft: 10}}  onClick={()=>onhandlePageevent('shopsettings')}> 
-                    <ListItemIcon><Settings /></ListItemIcon> <ListItemText primary="Shop Settings" /></ListItem>
+                {/* <ListItem button sx={{ pl: 4 }}  style= {{marginLeft: 10}}  onClick={()=>onhandlePageevent('printer')}> 
+                    <ListItemIcon><Settings /></ListItemIcon> <ListItemText primary="Shop Settings" /></ListItem> */}
 
             </List>
         </Collapse>

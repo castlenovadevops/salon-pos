@@ -286,7 +286,7 @@ syncIndividualEntry(mindex, idx, data, tbldata) {
         <Container maxWidth="xl" style={{height: '100%'}}>
           <Stack direction="row" alignItems="center" justifyContent="space-between" mb={3} mt={3}>
             <Typography variant="h4" gutterBottom>
-            Default Commission Payment
+            Default Commission
             </Typography>
             {/* <ButtonContent
               onClick={()=>this.openAdd()}
@@ -307,7 +307,7 @@ syncIndividualEntry(mindex, idx, data, tbldata) {
           
           {this.state.commissionlist.length > 0 ? 
 
-<div style={{boxShadow: " 0 4px 8px 0 rgba(0,0,0,0.2)", transition: "0.3s", height: '50%',background: 'white', marginTop: 20, width:'60%'}}>
+<div style={{boxShadow: " 0 4px 8px 0 rgba(0,0,0,0.2)", transition: "0.3s", height: '70%',background: 'white', marginTop: 20, width:'60%'}}>
 <div className="tabcontent" style={{ height: '100%', width: '100%', background: 'white',  }}>
               <CommissionForm afterSubmit={(msg)=>{this.handleCloseform(msg);}} commissionToEdit={this.state.selectedcommission}/> 
               </div></div>

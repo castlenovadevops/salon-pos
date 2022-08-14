@@ -77,7 +77,8 @@ export default class ReportView extends React.Component  {
             topaycheck:0,
             checknumber:'',
             errorText:'',
-            showError: false
+            showError: false,
+            totalwithouttips:0
         }
     }
     componentDidMount(){ 
@@ -91,19 +92,21 @@ export default class ReportView extends React.Component  {
                 // console.log(this.state.ticketslist, this.state.allcommission) 
 
                 var totalpayable  = 0;
+                var totalwithouttips  = 0;
                 this.state.allcommission.forEach(elmt=>{
                     console.log(elmt)
                     if(elmt.ServiceAmount !== null ){
                         totalpayable += (Number(elmt.ServiceAmount)*(Number(elmt.emp_percent)/100)) ;
                     }
                 }) 
+                totalwithouttips = totalpayable - this.state.selected_emp.Discount
                 totalpayable = totalpayable+ this.state.selected_emp.Tips - this.state.selected_emp.Discount;
                 this.setState({totalpayable: totalpayable}, ()=>{
                     this.setState({
                     //     cashpay: totalpayable*(Number(this.state.commission.cash_percentage)/100),
                     // checkpay: totalpayable*(Number(this.state.commission.check_percentage)/100), 
-                    topaycash: totalpayable*(Number(this.state.commission.cash_percentage)/100),
-                    topaycheck: totalpayable*(Number(this.state.commission.check_percentage)/100)}, ()=>{
+                    topaycash: (totalwithouttips*(Number(this.state.commission.cash_percentage)/100))+(this.state.selected_emp.Tips*(Number(this.state.commission.tips_cash_percentage)/100)),
+                    topaycheck: (totalwithouttips*(Number(this.state.commission.check_percentage)/100))+(this.state.selected_emp.Tips*(Number(this.state.commission.tips_check_percentage)/100))}, ()=>{
                         this.checkvalidation();
                     })
                 })       

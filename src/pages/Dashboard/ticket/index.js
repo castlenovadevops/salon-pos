@@ -1302,7 +1302,7 @@ getTicketList(loading){
 
 
     var sql = `select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value,t.sync_id, t.discount_totalamt, t.sync_id, c.name as customer_name from ticket as t left join customers as c on t.customer_id=c.sync_id where t.businessId='`+businessdetail["id"]
-    +`' and t.isDelete!=1 and t.sync_status=0`
+    +`' and t.isDelete!=1 and t.sync_status=0 order by t.created_at desc`
  
   
    this.state.dataManager.getData(sql).then(response =>{
@@ -1310,10 +1310,10 @@ getTicketList(loading){
       
            this.setState({unsyncedCount: response.length}, function() {
 
-            var sql = "select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value, t.discount_totalamt, t.sync_id,c.name as customer_name, tp.pay_mode, tp.paid_at from ticket as t left join customers as c on t.customer_id=c.sync_id left join ticket_payment as tp on tp.ticketref_id=t.sync_id where t.businessId='"+businessdetail["id"]+"' and t.isDelete!=1 order by ticket_code desc"
-           
+            var sql = "select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value, t.discount_totalamt, t.sync_id,c.name as customer_name, tp.pay_mode, tp.paid_at from ticket as t left join customers as c on t.customer_id=c.sync_id left join ticket_payment as tp on tp.ticketref_id=t.sync_id where t.businessId='"+businessdetail["id"]+"' and t.isDelete!=1 order by t.created_at desc"
+           console.log(sql);
             this.state.dataManager.getData(sql).then(response =>{
-                
+                console.log("response", response)
                 if (response instanceof Array) { 
                     let selected_ticket = response.filter(item => item.paid_status !== "paid")
                     let selected_paid_ticket = response.filter(item => item.paid_status === "paid" && item.paid_at !== null && item.paid_at !== undefined && item.paid_at.indexOf(todayDate)>-1)
@@ -1478,7 +1478,7 @@ render()  {
                                             <div style={{display: 'flex', marginTop: 10, flexWrap:'wrap',padding:'0 0.75rem' }}>
                                                 {this.state.staff_list.map((staff,i)=>{
                                                     let value;
-                                                    if(staff.clocked_status === null ||  staff.clocked_status. toLowerCase() !== 'Clock-in'. toLowerCase() && staff.staff_role !== 'SA' ){ 
+                                                    if(staff.clocked_status === null ||  staff.clocked_status.toLowerCase() !== 'Clock-in'.toLowerCase() && staff.staff_role !== 'SA' ){ 
                                                         value = 
                                                         <Grid className='techbtn'  item xs={4} style={{background:"",paddingRight: 2,paddingLeft: 2, paddingTop:2,paddingBottom:2,minWidth:(this.state.hide)?'90%':'33.33%', cursor:'pointer'}}> 
                                                         <div style={{background: '#F2F2F2',height:65,borderBottom: '0px solid #bee1f7', display: 'table',borderRadius: 10,display:'flex',alignItems:'center', justifyContent:'center',marginTop:10,marginBottom:5 }} 
@@ -1632,7 +1632,7 @@ render()  {
                     {/* CreateTicketModal modal starts */}
                       <CreateTicketModal open={this.state.showPage === 'createTicket'} saveTicket={(data, ticketid)=>{
                           console.log("data from dashboard", data, ticketid);
-                          this.ticketController.saveTicket(data, ticketid);
+                          this.props.saveTicket(data,ticketid);
                       }} afterFinished={(pagename)=>{
                           console.log("pagename", pagename)
                           this.setState({showPage:'dashboard'},function(){ 
@@ -1649,7 +1649,7 @@ render()  {
                     {/* EditTicketModal modal starts */}
                     <EditTicketModal open={this.state.showPage === 'editTicket'}  saveTicket={(data, ticketid)=>{
                           console.log("edit data from dashboard", data, ticketid);
-                          this.ticketController.saveTicket(data, ticketid);
+                          this.props.saveTicket(data,ticketid);
                       }} handleCloseDialog={(pagename)=>this.setState({showPage:'dashboard'},function(){this.handleCloseDialog("success")})}  afterFinished={(pagename)=>{
 
                         console.log("pagename", pagename)

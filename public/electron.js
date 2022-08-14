@@ -220,24 +220,31 @@ ipcMain.handle('printData', async(event, input)=>{
 })
 
 
-ipcMain.handle('getTicketCode', async(event)=>{
-var date = (await axios('/', {'method': 'HEAD'})).headers.get('date');
- console.log("Date now :::: ", new Date().toISOString(), moment().toISOString(), date);
+ipcMain.handle('getTicketCode', async(event)=>{ 
+ console.log("Date now :::: ","SELECT *  from ticket where Date(created_at) = Date('"+new Date().toISOString()+"') order by ticket_code desc");
   return new Promise((resolve, reject) => {     
-      db.all("SELECT *  from ticket order by ticket_code desc", (err, rows) => {
-          if(rows.length > 0){
-            console.log(rows[0].ticket_code)
-            var ticketcode = rows[0].ticket_code != '' && rows[0].ticket_code !== undefined &&rows[0].ticket_code!==null ? rows[0].ticket_code : 0;
-            var count = Number(ticketcode)+1;
-            console.log(count);
-            resolve({ticketid: String(count).padStart(4, '0'), res:rows});
-          }
-          else{
-            var count = 1;
-            resolve({ticketid: String(count).padStart(4, '0'), res:rows});
-            // resolve((err && err.message) || rows);
-          }
-      }); 
+    db.all("select * from ticket where Date(created_at) > Date('"+new Date().toISOString()+"')", (err, daterows) => {
+      if(daterows.length > 0){
+
+        resolve({ticketid: '',error:'System date mismatch. Please set correct date and time.', res:daterows});
+      }
+      else{
+        db.all("SELECT *  from ticket where Date(created_at) = Date('"+new Date().toISOString()+"') order by ticket_code desc", (err, rows) => {
+            if(rows.length > 0){
+              console.log(rows[0].ticket_code)
+              var ticketcode = rows[0].ticket_code != '' && rows[0].ticket_code !== undefined &&rows[0].ticket_code!==null ? rows[0].ticket_code : 0;
+              var count = Number(ticketcode)+1;
+              console.log(count);
+              resolve({ticketid: String(count).padStart(4, '0'), res:rows});
+            }
+            else{
+              var count = 1;
+              resolve({ticketid: String(count).padStart(4, '0'), res:rows});
+              // resolve((err && err.message) || rows);
+            }
+        })
+      }
+    })
   });
 })
 

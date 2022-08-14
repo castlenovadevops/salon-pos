@@ -54,6 +54,8 @@ export default class EmployeeSettingForm extends React.Component {
             employee_percentage:'',
             cash_percentage:'',
             check_percentage:'',
+            tips_cash_percentage:'',
+            tips_check_percentage:'',
             minimum_salary:'',
             isActive:1,
             userdetail:{},
@@ -251,7 +253,7 @@ syncIndividualEntry(mindex, idx, data, tbldata) {
                 dataManager.getData("select * from default_commission where businessId="+JSON.parse(businessdetail).id).then(response =>{
                     if (response instanceof Array) {
                         if(response.length > 0){
-                            this.setState({owner_percentage : response[0].owner_percentage,employee_percentage : response[0].emp_percentage,cash_percentage : response[0].cash_percentage, check_percentage : response[0].check_percentage}, function(){
+                            this.setState({owner_percentage : response[0].owner_percentage,employee_percentage : response[0].emp_percentage,cash_percentage : response[0].cash_percentage, check_percentage : response[0].check_percentage,tips_cash_percentage : response[0].tips_cash_percentage, tips_check_percentage : response[0].tips_check_percentage}, function(){
                                 this.handleValidation();
                             });
                         }
@@ -264,7 +266,7 @@ syncIndividualEntry(mindex, idx, data, tbldata) {
                     var data = res.data.data;
                     if(status === 200){
                         if(data.length > 0){
-                            this.setState({owner_percentage : data[0].owner_percentage,employee_percentage : data[0].emp_percentage,cash_percentage : data[0].cash_percentage, check_percentage : data[0].check_percentage}, function(){
+                            this.setState({owner_percentage : data[0].owner_percentage,employee_percentage : data[0].emp_percentage,cash_percentage : data[0].cash_percentage, check_percentage : data[0].check_percentage,tips_cash_percentage : data[0].tips_cash_percentage, tips_check_percentage : data[0].tips_check_percentage}, function(){
                                 this.handleValidation();
                             });
                         }
@@ -286,6 +288,14 @@ syncIndividualEntry(mindex, idx, data, tbldata) {
             var value = (100)-Number(e.target.value)
             this.setState({check_percentage: Number(value).toFixed(2)})
         }
+        else if(e.target.name === "tips_check_percentage") {
+            var valuet = (100)-Number(e.target.value)
+            this.setState({tips_cash_percentage: Number(valuet).toFixed(2)})
+        }
+        else if(e.target.name === "tips_cash_percentage") {
+            var valuetc = (100)-Number(e.target.value)
+            this.setState({tips_check_percentage: Number(valuetc).toFixed(2)})
+        }
         else if(e.target.name === "employee_percentage") {
             var value = (100)-Number(e.target.value)
             this.setState({owner_percentage: Number(value).toFixed(2)})
@@ -294,13 +304,14 @@ syncIndividualEntry(mindex, idx, data, tbldata) {
             var value = (100)-Number(e.target.value)
             this.setState({employee_percentage: Number(value).toFixed(2)})
         }
+        
       
 
     }
 
 
     handlechange(e){
-        if(e.target.name === "check_percentage" || e.target.name === "cash_percentage" || e.target.name === "employee_percentage" || e.target.name === "owner_percentage" ){
+        if(e.target.name === "check_percentage" || e.target.name === "cash_percentage" || e.target.name === "tips_check_percentage" || e.target.name === "tips_cash_percentage" || e.target.name === "employee_percentage" || e.target.name === "owner_percentage" ){
             if((e.target.value.match( "^.{"+config.inputpercentage+","+config.inputpercentage+"}$")===null) && e.target.value<=100 ) {
 
             
@@ -362,6 +373,8 @@ syncIndividualEntry(mindex, idx, data, tbldata) {
                 employee_percentage:'',
                 cash_percentage:'',
                 check_percentage:'',
+                tips_cash_percentage:'',
+                tips_check_percentage:'',
                 minimum_salary:''
             });
         });
@@ -376,31 +389,44 @@ syncIndividualEntry(mindex, idx, data, tbldata) {
             if(!this.state.isOnline) {
                 console.log("offline")
                 const dataManager = new DataManager()
-                dataManager.getData("select * from employee_salary where isActive =1 and   employeeId="+id+" and businessId="+JSON.parse(businessdetail).id).then(response =>{
+                dataManager.getData("select * from default_commission where businessId="+JSON.parse(businessdetail).id).then(response =>{
                     if (response instanceof Array) {
-                        // this.setState({employeelist: response}, function(){
-                        //     console.log(this.state.employeelist)
-                        // })
-                        console.log(response)
-                        if(response.length >0){
-                            this.setState({isEdit : true,isDisable: false,employeeId: id}, function(){
-                                this.setState({owner_percentage: response[0].owner_percentage,
-                                    employee_percentage:response[0].employee_percentage,
-                                    cash_percentage:response[0].cash_percentage,
-                                    check_percentage:response[0].check_percentage,
-                                    minimum_salary:response[0].minimum_salary
-                                });
-                            })
-                        }else{
-                            this.setState({isEdit : false,isDisable: true,employeeId: id}, function(){
-                                this.setState({
-                                    //owner_percentage: '',
-                                    // employee_percentage:'',
-                                    // cash_percentage:'',
-                                    // check_percentage:'',
-                                    minimum_salary:''
-                                });
-                                this.getDefault_commission();
+                        if(response.length > 0){
+                            this.setState({owner_percentage : response[0].owner_percentage,employee_percentage : response[0].emp_percentage,cash_percentage : response[0].cash_percentage, check_percentage : response[0].check_percentage,tips_cash_percentage : response[0].tips_cash_percentage, tips_check_percentage : response[0].tips_check_percentage}, function(){
+                          
+                                dataManager.getData("select * from employee_salary where isActive =1 and   employeeId="+id+" and businessId="+JSON.parse(businessdetail).id).then(response =>{
+                                    if (response instanceof Array) {
+                                        // this.setState({employeelist: response}, function(){
+                                        //     console.log(this.state.employeelist)
+                                        // }) 
+                                        var stateobj = Object.assign({}, this.state)
+
+                                        if(response.length >0){
+                                            console.log(response[0])
+                                            this.setState({isEdit : true,isDisable: false,employeeId: id}, function(){
+                                                this.setState({owner_percentage: response[0].owner_percentage,
+                                                    employee_percentage:response[0].employee_percentage,
+                                                    cash_percentage:response[0].cash_percentage,
+                                                    check_percentage:response[0].check_percentage,
+                                                    tips_cash_percentage:response[0].tips_cash_percentage !== null && response[0].tips_cash_percentage !== undefined ? response[0].tips_cash_percentage : stateobj.tips_cash_percentage,
+                                                    tips_check_percentage:response[0].tips_check_percentage!== null && response[0].tips_check_percentage !== undefined ? response[0].tips_check_percentage : stateobj.tips_check_percentage,
+                                                    minimum_salary:response[0].minimum_salary
+                                                });
+                                            })
+                                        }else{
+                                            this.setState({isEdit : false,isDisable: true,employeeId: id}, function(){
+                                                this.setState({
+                                                    //owner_percentage: '',
+                                                    // employee_percentage:'',
+                                                    // cash_percentage:'',
+                                                    // check_percentage:'',
+                                                    minimum_salary:''
+                                                });
+                                                this.getDefault_commission();
+                                            })
+                                        }
+                                    }
+                                })
                             })
                         }
                     }
@@ -409,33 +435,49 @@ syncIndividualEntry(mindex, idx, data, tbldata) {
             }
             else{
                 console.log("online")
-                axios.get(config.root+`/settings/employee_salary/detail/`+id+`/`+JSON.parse(businessdetail).id).then(res=>{ 
+
+                axios.get(config.root+`/settings/default_commission/list/`+JSON.parse(businessdetail).id).then(res=>{ 
                     var status = res.data.status;
                     var data = res.data.data;
                     if(status === 200){
-                        if(data.length >0){
-                            this.setState({isEdit : true,isDisable: false}, function(){
-                                this.setState({owner_percentage: data[0].owner_percentage,
-                                    employee_percentage:data[0].employee_percentage,
-                                    cash_percentage:data[0].cash_percentage,
-                                    check_percentage:data[0].check_percentage,
-                                    minimum_salary:data[0].minimum_salary
-                                });
-                            })
-                        }else{
-                            this.setState({isEdit : false,isDisable: true}, function(){
-                                this.setState({
-                                    //owner_percentage: '',
-                                    // employee_percentage:'',
-                                    // cash_percentage:'',
-                                    // check_percentage:'',
-                                    minimum_salary:''
-                                });
-                                this.getDefault_commission();
-                            })
+                        if(data.length > 0){
+                            this.setState({owner_percentage : data[0].owner_percentage,employee_percentage : data[0].emp_percentage,cash_percentage : data[0].cash_percentage, check_percentage : data[0].check_percentage,tips_cash_percentage : data[0].tips_cash_percentage, tips_check_percentage : data[0].tips_check_percentage}, function(){
+                               
+                                    var stateobj = Object.assign({}, this.state)
+                                    axios.get(config.root+`/settings/employee_salary/detail/`+id+`/`+JSON.parse(businessdetail).id).then(res=>{ 
+                                        var status = res.data.status;
+                                        var data = res.data.data;
+                                        if(status === 200){
+                                            if(data.length >0){
+                                                this.setState({isEdit : true,isDisable: false}, function(){
+                                                    this.setState({owner_percentage: data[0].owner_percentage,
+                                                        employee_percentage:data[0].employee_percentage,
+                                                        cash_percentage:data[0].cash_percentage,
+                                                        check_percentage:data[0].check_percentage,
+                                                        tips_cash_percentage:data[0].tips_cash_percentage !== null && data[0].tips_cash_percentage !== undefined ? data[0].tips_cash_percentage : stateobj.tips_cash_percentage,
+                                                        tips_check_percentage:data[0].tips_check_percentage!== null && data[0].tips_check_percentage !== undefined ? data[0].tips_check_percentage : stateobj.tips_check_percentage,
+                                                        minimum_salary:data[0].minimum_salary
+                                                    });
+                                                })
+                                            }else{
+                                                this.setState({isEdit : false,isDisable: true}, function(){
+                                                    this.setState({
+                                                        //owner_percentage: '',
+                                                        // employee_percentage:'',
+                                                        // cash_percentage:'',
+                                                        // check_percentage:'',
+                                                        minimum_salary:''
+                                                    });
+                                                    this.getDefault_commission();
+                                                })
+                                            }
+                                        }
+                                    
+                                    })
+                            });
                         }
                     }
-                
+                    
                 })
 
             }
@@ -521,7 +563,8 @@ syncIndividualEntry(mindex, idx, data, tbldata) {
             }
             totalCommission_Per = Number(this.state.owner_percentage)+Number(this.state.employee_percentage);
             totalDiscount_Per= Number(this.state.cash_percentage)+Number(this.state.check_percentage);
-            if(totalDiscount_Per === 100 && totalCommission_Per === 100){
+            var totalDiscount_tips= Number(this.state.tips_cash_percentage)+Number(this.state.tips_check_percentage);
+            if(totalDiscount_Per === 100 && totalCommission_Per === 100 && totalDiscount_tips === 100){
                 this.setState({perAlert_Open: false,alert_msg:''});
                 axios.post(config.root+`/settings/employee_salary/save`, input).then(res=>{
                         var status = res.data["status"];
@@ -540,19 +583,7 @@ syncIndividualEntry(mindex, idx, data, tbldata) {
                         }
                     }).catch(err=>{      
                 });
-            }
-            // else if(this.state.cash_percentage !== 0 && this.state.check_percentage !==0){
-            //     totalCommission_Per = Number(this.state.cash_percentage)+Number(this.state.check_percentage);
-            //     if(totalDiscount_Per === 100 && totalCommission_Per === 100){
-            //         axios.post(config.root+`/settings/employee_salary/save`, input).then(res=>{
-            //             var status = res.data["status"];
-            //             if(status === 200){
-            //                 this.setState({perAlert_Open: true,alert_msg: msg});
-            //             }
-            //         }).catch(err=>{      
-            //     });
-            //     }
-            // }
+            } 
             else {
                 this.setState({perAlert_Open: true,alert_msg:'Percentage Value Should be equal to 100 !'});
             }
@@ -644,7 +675,6 @@ syncIndividualEntry(mindex, idx, data, tbldata) {
                                             
                                         />
                                 </Stack>
-                                   
                                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                                         <Typography variant="subtitle2" gutterBottom style={{marginTop: 10}}> Commission Payment : </Typography>
                                     </Stack>
@@ -676,8 +706,39 @@ syncIndividualEntry(mindex, idx, data, tbldata) {
                                             
                                         />
                                     </Stack>
-
                                 
+                                   
+                                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                                        <Typography variant="subtitle2" gutterBottom style={{marginTop: 10}}> Tips Payment : </Typography>
+                                    </Stack>
+                                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                                        <TextFieldContent  
+                                            type="number" 
+                                            label="Cash Percentage" 
+                                            name="tips_cash_percentage"
+                                            disabled={!this.state.isOnline}
+                                            value={this.state.tips_cash_percentage||''}
+                                            
+                                            InputProps={{
+                                                endAdornment: <InputAdornment position="start">%</InputAdornment>,
+                                            }}
+                                            onChange={this.handlechange}
+                                            
+                                        />
+                                        <TextFieldContent  
+                                            type="number" 
+                                            label="Check Percentage" 
+                                            name="tips_check_percentage"
+                                            disabled={!this.state.isOnline}
+                                            value={this.state.tips_check_percentage || ''}
+                                           
+                                            InputProps={{
+                                                endAdornment: <InputAdornment position="start">%</InputAdornment>,
+                                            }}
+                                            onChange={this.handlechange}
+                                            
+                                        />
+                                    </Stack>
                                 <Stack direction="row" spacing={2} alignItems="center" justifyContent="center">
                                     {/* <div style={{ display : this.state.isOnline ? 'block':'none'}}> */}
                                         <ButtonContent size="large" variant="contained" onClick={()=>this.checkOnline()} disabled={this.state.isDisable || !this.state.isOnline} label={this.state.isEdit ? 'Update' : 'Save' } />

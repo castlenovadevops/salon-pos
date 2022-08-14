@@ -72,7 +72,8 @@ export default class ReportView extends React.Component  {
             transactions:[],
             disablePay: true,
             topaycash: 0,
-            topaycheck:0
+            topaycheck:0,
+            totalwithouttips: 0
         }
     }
     componentDidMount(){ 
@@ -86,19 +87,22 @@ export default class ReportView extends React.Component  {
                 console.log(this.state.ticket_details) 
 
                 var totalpayable  = 0;
+                var totalwithouttips = 0;
                 this.state.allcommission.forEach(elmt=>{
                     console.log(elmt)
                     if(elmt.ServiceAmount !== null ){
                         totalpayable += (Number(elmt.ServiceAmount)*(Number(elmt.emp_percent)/100)) ;
                     }
                 }) 
+                totalwithouttips = totalpayable-  this.state.selected_emp.Discount;
+               
                 totalpayable = totalpayable+ this.state.selected_emp.Tips - this.state.selected_emp.Discount;
-                this.setState({totalpayable: totalpayable}, ()=>{
+                this.setState({totalpayable: totalpayable, totalwithouttips: totalwithouttips}, ()=>{
                     this.setState({
                     //     cashpay: totalpayable*(Number(this.state.commission.cash_percentage)/100),
                     // checkpay: totalpayable*(Number(this.state.commission.check_percentage)/100), 
-                    topaycash: totalpayable*(Number(this.state.commission.cash_percentage)/100),
-                    topaycheck: totalpayable*(Number(this.state.commission.check_percentage)/100)}, ()=>{
+                    topaycash: (totalwithouttips*(Number(this.state.commission.cash_percentage)/100)),
+                    topaycheck: (totalwithouttips*(Number(this.state.commission.check_percentage)/100)) }, ()=>{
                         this.checkvalidation();
                     })
                 })       
@@ -285,20 +289,37 @@ export default class ReportView extends React.Component  {
                             </Grid>
                             <Grid container style={{margin:'0.5rem 0'}}>
                                 <Grid item xs={6}><b>Total</b></Grid>
-                                <Grid item xs={6}><b>${Number(this.state.totalpayable).toFixed(2)}</b></Grid>
+                                <Grid item xs={6}><b>${Number(this.state.totalwithouttips).toFixed(2)}</b></Grid>
+                            </Grid>
+                            <Grid container style={{margin:'0.5rem 0'}}>
+                                <Grid item xs={6}><b>Commission</b></Grid>
+                                <Grid item xs={6}><b> </b></Grid>
                             </Grid>
                             <Grid container style={{margin:'0.5rem 0'}}>
                                 <Grid item xs={6}><b>Cash({this.state.commission.cash_percentage+"%"})</b></Grid>
-                                <Grid item xs={6}><b>${Number(this.state.totalpayable * (this.state.commission.cash_percentage / 100)).toFixed(2)}</b></Grid>
+                                <Grid item xs={6}><b>${Number(this.state.topaycash).toFixed(2)}</b></Grid>
                             </Grid>
                             <Grid container style={{margin:'0.5rem 0'}}>
                                 <Grid item xs={6}><b>Check({this.state.commission.check_percentage+"%"})</b></Grid>
-                                <Grid item xs={6}><b>${Number(this.state.totalpayable * (this.state.commission.check_percentage / 100)).toFixed(2)}</b></Grid>
+                                <Grid item xs={6}><b>${Number(this.state.topaycheck).toFixed(2)}</b></Grid>
                             </Grid>
-                            {/* <Grid container style={{margin:'0.5rem 0'}}>
-                                <Grid item xs={6}><b>Paid Amount</b></Grid>
-                                <Grid item xs={6}><b>${Number(this.state.paidamount).toFixed(2)}</b></Grid>
-                            </Grid> */}
+
+                            <Grid container style={{margin:'0.5rem 0'}}>
+                                <Grid item xs={6}><b>Tips</b></Grid>
+                                <Grid item xs={6}><b> </b></Grid>
+                            </Grid>
+                            <Grid container style={{margin:'0.5rem 0'}}>
+                                <Grid item xs={6}><b>Cash({this.state.commission.tips_cash_percentage+"%"})</b></Grid>
+                                <Grid item xs={6}><b>${Number(this.state.selected_emp.Tips*(this.state.commission.tips_cash_percentage/100)).toFixed(2)}</b></Grid>
+                            </Grid>
+                            <Grid container style={{margin:'0.5rem 0'}}>
+                                <Grid item xs={6}><b>Check({this.state.commission.tips_check_percentage+"%"})</b></Grid>
+                                <Grid item xs={6}><b>${Number(this.state.selected_emp.Tips*(this.state.commission.tips_check_percentage/100)).toFixed(2)}</b></Grid>
+                            </Grid>
+                            <Grid container style={{margin:'0.5rem 0'}}>
+                                <Grid item xs={6}><b>Total payable</b></Grid>
+                                <Grid item xs={6}><b>${Number(this.state.totalpayable).toFixed(2)}</b></Grid>
+                            </Grid>
                     </div> 
                     </Stack> </>}
 

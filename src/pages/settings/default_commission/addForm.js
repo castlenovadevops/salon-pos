@@ -23,6 +23,8 @@ export default class CommissionForm extends React.Component {
             emp_percentage:"",
             cash_percentage:"",
             check_percentage:"",
+            tips_cash_percentage:"",
+            tips_check_percentage:"",
             isActive:1,
             userdetail:{},
             businessdetail:{},
@@ -74,6 +76,8 @@ export default class CommissionForm extends React.Component {
                 emp_percentage:nextProps.commissionToEdit.emp_percentage,
                 cash_percentage:nextProps.commissionToEdit.cash_percentage,
                 check_percentage:nextProps.commissionToEdit.check_percentage,
+                tips_cash_percentage:nextProps.commissionToEdit.tips_cash_percentage,
+                tips_check_percentage:nextProps.commissionToEdit.tips_check_percentage,
                 isActive:nextProps.commissionToEdit.isActive,isDisable:false }
                 console.log(obj)
             return obj;
@@ -86,7 +90,7 @@ export default class CommissionForm extends React.Component {
 
     handlekeypress(e){
        
-        if(e.target.name === "check_percentage"   || e.target.name === "cash_percentage" || e.target.name === "owner_percentage"   || e.target.name === "emp_percentage"){
+        if(e.target.name === "check_percentage"   || e.target.name === "cash_percentage" || e.target.name === "tips_check_percentage"   || e.target.name === "tips_cash_percentage" || e.target.name === "owner_percentage"   || e.target.name === "emp_percentage"){
             if(e.key === 'e'  || e.key === "+" || e.key === "-"){
                 e.preventDefault();
             }
@@ -126,13 +130,28 @@ export default class CommissionForm extends React.Component {
 
             })
         }
+
+        else if(e.target.name === "tips_cash_percentage") {
+            var tvalue2 = (100)-Number(e.target.value)
+            this.setState({tips_check_percentage: Number(tvalue2).toFixed(2)},function(){
+                this.handleValidation();
+
+            })
+        }
+        else if(e.target.name === "tips_check_percentage") {
+            var tvalue3 = (100)-Number(e.target.value)
+            this.setState({tips_cash_percentage:  Number(tvalue3).toFixed(2)},function(){
+                this.handleValidation();
+
+            })
+        }
       
 
     }
 
 
     handlechange(e){
-        if(e.target.name === "check_percentage"   || e.target.name === "cash_percentage" || e.target.name === "owner_percentage"   || e.target.name === "emp_percentage"){
+        if(e.target.name === "check_percentage"   || e.target.name === "cash_percentage" || e.target.name === "tips_check_percentage"   || e.target.name === "tips_cash_percentage" || e.target.name === "owner_percentage"   || e.target.name === "emp_percentage"){
          
             if((e.target.value.match( "^.{"+config.inputpercentage+","+config.inputpercentage+"}$")===null) && e.target.value<=100 ) {
               let statevbl = this.state
@@ -179,13 +198,20 @@ export default class CommissionForm extends React.Component {
         else if (!fields.cash_percentage) {
             formIsValid = false;
             this.setState({ isDisable: true })
-        }
-        // else{
-        //     this.setState({ isDisable: false })
-        // }
-
+        } 
         //check_percentage
         else if (!fields.check_percentage) {
+            formIsValid = false;
+            this.setState({ isDisable: true })
+        }
+
+        //cash_percentage
+        else if (!fields.tips_cash_percentage) {
+            formIsValid = false;
+            this.setState({ isDisable: true })
+        } 
+        //check_percentage
+        else if (!fields.tips_check_percentage) {
             formIsValid = false;
             this.setState({ isDisable: true })
         }
@@ -242,7 +268,8 @@ export default class CommissionForm extends React.Component {
   
               var totalPer1 = Number(this.state.owner_percentage)+Number(this.state.emp_percentage);
               totalPer = Number(this.state.cash_percentage)+Number(this.state.check_percentage);
-              if(totalPer === 100 && totalPer1 === 100){
+              var totalPertips = Number(this.state.tips_cash_percentage)+Number(this.state.tips_check_percentage);
+              if(totalPer === 100 && totalPer1 === 100 && totalPertips === 100){
                   this.setState({perAlert_Open: false,alert_msg:''});
                   axios.post(config.root+`/settings/default_commission/save`, input).then(res=>{
                       var status = res.data["status"];
@@ -277,6 +304,10 @@ export default class CommissionForm extends React.Component {
             <div style={{padding: 20}}>
             {this.state.isLoading && <LoaderContent show={this.state.isLoading} />}
             <form autoComplete="off" noValidate>
+
+            <Stack spacing={3} style={{'marginBottom':'1rem'}}>
+                <h5>Commission</h5>
+                </Stack>
                 <Stack spacing={3}>
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                         {/* <Typography variant="subtitle2" gutterBottom style={{marginTop: 10}}> Cash Percentage : </Typography> */}
@@ -351,6 +382,50 @@ export default class CommissionForm extends React.Component {
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}></Stack>
                     
                 </Stack>
+
+            <Stack spacing={3}  style={{'marginBottom':'1rem'}}>
+                <h5>Tips</h5>
+                </Stack>
+                <Stack spacing={3}> 
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                        {/* <Typography variant="subtitle2" gutterBottom style={{marginTop: 10}}> Cash Percentage : </Typography> */}
+                        <TextFieldContent 
+                            id="tips_cash_percentage" 
+                            required 
+                            type="number"
+                            name="tips_cash_percentage"  
+                            label="Cash Percentage" 
+                            value={this.state.tips_cash_percentage||''}
+                            variant="standard" 
+                            fullWidth
+                            
+                            InputProps={{
+                                endAdornment: <InputAdornment position="start">%</InputAdornment>,
+                            }}
+                            onChange={this.handlechange}
+                            onKeypress={this.handlekeypress}
+                        />
+                        <TextFieldContent 
+                            id="tips_check_percentage" 
+                            required 
+                            type="number"
+                            fullWidth
+                            name="tips_check_percentage" 
+                            label="Check Percentage" 
+                            value={this.state.tips_check_percentage||''}
+                            variant="standard" 
+                           
+                            InputProps={{
+                                endAdornment: <InputAdornment position="start">%</InputAdornment>,
+                            }}
+                            onChange={this.handlechange}
+                            onKeypress={this.handlekeypress}
+                        />
+                    </Stack>
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}></Stack>
+                    
+                </Stack>
+
                 <Stack direction="row" spacing={2} alignItems="center" justifyContent="center" style={{marginTop: 10}} >
                     {/* <div style={{ display : this.state.isOnline ? 'block':'none'}}> */}
                     <ButtonContent  size="large" variant="contained" disabled={this.state.isDisable || !this.state.isOnline} label={this.state.isEdit ? 'Update' : 'Save' } onClick={()=>this.checkOnline()}/>

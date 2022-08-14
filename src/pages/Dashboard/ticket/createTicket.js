@@ -225,7 +225,8 @@ export default class CreateTicket extends React.Component {
                 title: 'Buy c',
                 status: 0,
               }
-            ]
+            ],
+            dateerror:false
         }
 
 
@@ -276,7 +277,9 @@ export default class CreateTicket extends React.Component {
     } 
 
     componentDidMount() { 
-
+        this.loadData();
+    }
+    loadData(){
         window.api.getprinters().then(list=>{
             var printers = list.printers;
             this.setState({printers_list: printers, selected_printer: printers.length > 0 ? printers[0] : '' }  ) 
@@ -386,8 +389,16 @@ export default class CreateTicket extends React.Component {
 
     generateCode(){ 
         window.api.getTicketCode().then(res=>{ 
-            var ticket_code = String(res.ticketid).padStart(4, '0');
-            this.setState({ticketCode:ticket_code});
+            console.log(res)
+            if(res.ticketid !== ''){
+                var ticket_code = String(res.ticketid).padStart(4, '0');
+                this.setState({ticketCode:ticket_code, dateerror: false}, ()=>{
+                    console.log(this.state.dateerror, "dateerror sfsdfsdf")
+                });
+            }
+            else{
+                this.setState({dateerror: true})
+            }
         })
         // this.setState({ticketCode:  GenerateRandomCode.NumCode(4)});
     }
@@ -822,7 +833,7 @@ export default class CreateTicket extends React.Component {
                 this.setState({services_taken: services});
             }
  
-            element.taxes.map((t, j)=>{
+            element.taxes.forEach((t, j)=>{
                 var per_amt = 0;
                 if(t.tax_type === 'percentage'){
                     per_amt = (t.tax_value/100)*  Number(quantity_price);
@@ -3087,50 +3098,56 @@ createTicketForTransfer(toBeDelete) {
     var  detail = window.localStorage.getItem('businessdetail');
     if(detail !== undefined && detail !== 'undefined'){
         businessdetail = JSON.parse(detail);
-        window.api.getTicketCode().then(res=>{
-            window.api.getSyncUniqueId().then(csync=>{
-                var syncid = csync.syncid
-                var ticketid = res.ticketid;
-                if(!this.state.isEdit){
-                    ticketid = Number(res.ticketid)+1;
+
+            window.api.getTicketCode().then(res=>{
+                if(res.ticketid !== '' && res.error !== undefined){
+                    this.setState({dateerror: true})
                 }
-                var ticket_input = {
-                    ticket_code : String(ticketid).padStart(4, '0'),
-                    technician_id: this.state.technician_id,
-                    customer_id : this.state.customer_detail.id || '' ,
-                    businessId : businessdetail["id"],
-                    subtotal: 0,
-                    total_tax: 0,
-                    discounts: 0,
-                    grand_total: 0,
-                    tips_totalamt:0,
-                    tips_type:0,
-                    tips_percent:0,
-                    discount_id:0,
-                    discount_type:0,
-                    discount_value:0,
-                    discount_totalamt:0,
-                    notes: '',
-                    isDelete:0,
-                    created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
-                    created_by: this.state.employeedetail.id,
-                    updated_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
-                    updated_by: this.state.employeedetail.id,
-                    sync_id: syncid,
-                    sync_status:0
-                } 
-                // this.state.createTicketDataManager.saveEditTicket(false, ticket_input).then(res=>{
-                    this.ticketController.saveData({table_name:'ticket', data:ticket_input}).then(res=>{
-                    const sql = "select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value,t.sync_id, t.discount_totalamt, t.sync_id, c.name as customer_name from ticket as t left join customers as c on t.customer_id=c.sync_id where t.sync_id = '"+syncid+"'"
-                    this.state.dataManager.getData(sql).then(response =>{ 
-                        console.log("saveEditcreateTicket:::", sql,response) 
-                        this.setState({rowToTransfer: response[0]}, function(){
-                            this.transferService(toBeDelete);
-                        });
-                    });
-                })  
-            })
-        });
+                else{
+                    window.api.getSyncUniqueId().then(csync=>{
+                        var syncid = csync.syncid
+                        var ticketid = res.ticketid;
+                        if(!this.state.isEdit){
+                            ticketid = Number(res.ticketid)+1;
+                        }
+                        var ticket_input = {
+                            ticket_code : String(ticketid).padStart(4, '0'),
+                            technician_id: this.state.technician_id,
+                            customer_id : this.state.customer_detail.id || '' ,
+                            businessId : businessdetail["id"],
+                            subtotal: 0,
+                            total_tax: 0,
+                            discounts: 0,
+                            grand_total: 0,
+                            tips_totalamt:0,
+                            tips_type:0,
+                            tips_percent:0,
+                            discount_id:0,
+                            discount_type:0,
+                            discount_value:0,
+                            discount_totalamt:0,
+                            notes: '',
+                            isDelete:0,
+                            created_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
+                            created_by: this.state.employeedetail.id,
+                            updated_at: Moment().format('YYYY-MM-DDTHH:mm:ss'),
+                            updated_by: this.state.employeedetail.id,
+                            sync_id: syncid,
+                            sync_status:0
+                        } 
+                        // this.state.createTicketDataManager.saveEditTicket(false, ticket_input).then(res=>{
+                            this.ticketController.saveData({table_name:'ticket', data:ticket_input}).then(res=>{
+                            const sql = "select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value,t.sync_id, t.discount_totalamt, t.sync_id, c.name as customer_name from ticket as t left join customers as c on t.customer_id=c.sync_id where t.sync_id = '"+syncid+"'"
+                            this.state.dataManager.getData(sql).then(response =>{ 
+                                console.log("saveEditcreateTicket:::", sql,response) 
+                                this.setState({rowToTransfer: response[0]}, function(){
+                                    this.transferService(toBeDelete);
+                                });
+                            });
+                        })  
+                    })
+                }
+            }); 
     }
 
     // if(toBeDelete) {
@@ -4353,446 +4370,298 @@ render() {
     return (
        
         <div style={{height:'100%'}}>
-            
+            {!this.state.dateerror && <div>
 
-            <Grid item xs={12} spacing={2} style={{display:'flex',paddingTop: 20, paddingLeft: 20, paddingRight: 20, background:'#fff'}}   alignItems="center">
+                    <Grid item xs={12} spacing={2} style={{display:'flex',paddingTop: 20, paddingLeft: 20, paddingRight: 20, background:'#fff'}}   alignItems="center">
 
-                <Grid item xs={9}  style={{display:'flex'}} alignItems="center">
-                
-
-                <span style={{display: 'inline-block',whiteSpace: 'nowrap',overflow: "hidden",textOverflow: "ellipsis",maxWidth: 150,background: isDisabled? '#DCDCDC':'#134163', color: isDisabled?'#9C9C9C':'#ffffff',
-                borderRadius: 10,paddingLeft: 30, paddingRight: 30,paddingTop: 20,paddingBottom: 20,cursor: 'pointer', fontSize: 16,fontFamily: 'sans-serif'}}  onClick={()=>{
-                    if(!isDisabled) {
-                        this.openTechnician()
-                    }
-                }}  > 
-                    {(this.state.selectedTech != undefined || this.state.selectedTech != null) ? this.state.selectedTech.firstName+" "+this.state.selectedTech.lastName: ""}
-                </span>
-
-                <span style={{marginLeft: 20,display: 'inline-block',whiteSpace: 'nowrap',overflow: "hidden",textOverflow: "ellipsis",maxWidth: 200,background: isDisabled?
-                 '#DCDCDC':'#134163', color: isDisabled?'#9C9C9C':'#ffffff',
-                borderRadius: 10,paddingLeft: 30, paddingRight: 30,paddingTop: 20,paddingBottom: 20,cursor: 'pointer', fontSize: 14,fontFamily: 'sans-serif'}}  onClick={()=>{
-                    if(!isDisabled){
-                        if(Object.keys(this.state.customer_detail).length>0) {
-                            this.openCustomerDetail()
-                        }
-                        else {
-                            this.selectCustomer()
-                        }
-                    } 
-                }}  
-                >
-                {Object.keys(this.state.customer_detail).length===0 ? "Select Customer": this.state.customer_detail.name}
-                </span>
-
-                <AccountCircleIcon fontSize="large" style={{marginLeft: 20, cursor: 'pointer', color: isDisabled?'#DCDCDC':'#000000'}} 
-                onClick={()=>{
-                        if(!isDisabled) {
-                            this.selectCustomer()
-                        }
+                        <Grid item xs={9}  style={{display:'flex'}} alignItems="center">
                         
-                }}/>
+
+                        <span style={{display: 'inline-block',whiteSpace: 'nowrap',overflow: "hidden",textOverflow: "ellipsis",maxWidth: 150,background: isDisabled? '#DCDCDC':'#134163', color: isDisabled?'#9C9C9C':'#ffffff',
+                        borderRadius: 10,paddingLeft: 30, paddingRight: 30,paddingTop: 20,paddingBottom: 20,cursor: 'pointer', fontSize: 16,fontFamily: 'sans-serif'}}  onClick={()=>{
+                            if(!isDisabled) {
+                                this.openTechnician()
+                            }
+                        }}  > 
+                            {(this.state.selectedTech != undefined || this.state.selectedTech != null) ? this.state.selectedTech.firstName+" "+this.state.selectedTech.lastName: ""}
+                        </span>
+
+                        <span style={{marginLeft: 20,display: 'inline-block',whiteSpace: 'nowrap',overflow: "hidden",textOverflow: "ellipsis",maxWidth: 200,background: isDisabled?
+                        '#DCDCDC':'#134163', color: isDisabled?'#9C9C9C':'#ffffff',
+                        borderRadius: 10,paddingLeft: 30, paddingRight: 30,paddingTop: 20,paddingBottom: 20,cursor: 'pointer', fontSize: 14,fontFamily: 'sans-serif'}}  onClick={()=>{
+                            if(!isDisabled){
+                                if(Object.keys(this.state.customer_detail).length>0) {
+                                    this.openCustomerDetail()
+                                }
+                                else {
+                                    this.selectCustomer()
+                                }
+                            } 
+                        }}  
+                        >
+                        {Object.keys(this.state.customer_detail).length===0 ? "Select Customer": this.state.customer_detail.name}
+                        </span>
+
+                        <AccountCircleIcon fontSize="large" style={{marginLeft: 20, cursor: 'pointer', color: isDisabled?'#DCDCDC':'#000000'}} 
+                        onClick={()=>{
+                                if(!isDisabled) {
+                                    this.selectCustomer()
+                                }
+                                
+                        }}/>
+
+                        
+                        </Grid>
+
+                        <Grid item xs={3} style={{display:'flex', background: 'white'}} justify="flex-end" alignItems="center">
+                        {/* TICKET ID starts*/}
+                            
+                            {/* <div style={{marginLeft: 20,paddingTop: 15,paddingBottom: 15,paddingLeft: 20, background: '#E8E8E8',borderWidth:2,borderStyle: 'solid',borderColor: '#DFDFDF',
+                                paddingRight: 20,textTransform: 'none', borderRadius: 10, fontSize: 15}}>
+                                <Typography id="modal-modal-title" variant="h6"  align="center" >
+                                    TID - # {this.state.ticketCode}
+                                </Typography>
+                            </div> */}
+
+                            <div style={{marginLeft: 20, fontSize: 12}}>
+                                <Typography  fontSize="14"  align="center" maxWidth="90 px">
+                                    TID - # {this.state.ticketCode}
+                                </Typography>
+                            </div>
+                            
+                            
+                            {this.renderCloseButton()}
+                            
+                        </Grid>  
+                    </Grid>             
+                <Card>
+                    <CardContent style={{paddingBottom:'0', paddingLeft:0, paddingRight:0}}>
+                        
+                    {/* select technician */}
+                    <Grid container spacing={0}>
+
+                        <Grid item xs={7} style={{background: 'white',height: '100%', }}>
+
+                        
+
+                            {/* /**service & price detail */}
+                            <Grid item xs={12} spacing={0} style={{marginTop: -20, height: '100%',marginRight: -20, width: '100%', background: ''}}>
+                                <Grid >
+                                    {this.renderSelectedServices(isDisabled)}
+                                </Grid>
+                                <Grid style={{background: ''}}>
+                                
+                                    {this.renderPriceDetails()}
+                                </Grid>
+                                <Grid>
+                                    {this.renderButtons(isDisabled)}
+                                </Grid>
+                            </Grid>
+
+                    
+                        </Grid>
+
+                        <Grid item xs={5} style={{background: 'white', height: '100%', overflow: 'hidden'}}>
+                            {/* /** Services side menu */}
+                            {this.state.selectedRowServiceindex === -1 && 
+                                    this.renderServicesList(isDisabled)
+                            }
+                            {/* technicians side menu */}
+                            {this.state.selectedRowServiceindex !== -1 && 
+                                    this.renderServiceContent()
+                            }
+                        </Grid>
+                    
+                        
+                    </Grid>
+
+                    </CardContent>
+                </Card>
+
 
                 
-                </Grid>
 
-                <Grid item xs={3} style={{display:'flex', background: 'white'}} justify="flex-end" alignItems="center">
-                {/* TICKET ID starts*/}
-                    
-                    {/* <div style={{marginLeft: 20,paddingTop: 15,paddingBottom: 15,paddingLeft: 20, background: '#E8E8E8',borderWidth:2,borderStyle: 'solid',borderColor: '#DFDFDF',
-                        paddingRight: 20,textTransform: 'none', borderRadius: 10, fontSize: 15}}>
-                        <Typography id="modal-modal-title" variant="h6"  align="center" >
-                            TID - # {this.state.ticketCode}
-                        </Typography>
-                    </div> */}
-
-                    <div style={{marginLeft: 20, fontSize: 12}}>
-                        <Typography  fontSize="14"  align="center" maxWidth="90 px">
-                            TID - # {this.state.ticketCode}
-                        </Typography>
-                    </div>
-                    
-                    
-                    {this.renderCloseButton()}
-                    
-                </Grid>  
-            </Grid>             
-        <Card>
-            <CardContent style={{paddingBottom:'0', paddingLeft:0, paddingRight:0}}>
-                   
-            {/* select technician */}
-            <Grid container spacing={0}>
-
-                <Grid item xs={7} style={{background: 'white',height: '100%', }}>
-
-                   
-
-                    {/* /**service & price detail */}
-                    <Grid item xs={12} spacing={0} style={{marginTop: -20, height: '100%',marginRight: -20, width: '100%', background: ''}}>
-                        <Grid >
-                            {this.renderSelectedServices(isDisabled)}
-                        </Grid>
-                        <Grid style={{background: ''}}>
-                           
-                            {this.renderPriceDetails()}
-                        </Grid>
-                        <Grid>
-                            {this.renderButtons(isDisabled)}
-                        </Grid>
-                    </Grid>
-
-               
-                </Grid>
-
-                <Grid item xs={5} style={{background: 'white', height: '100%', overflow: 'hidden'}}>
-                    {/* /** Services side menu */}
-                    {this.state.selectedRowServiceindex === -1 && 
-                            this.renderServicesList(isDisabled)
-                    }
-                    {/* technicians side menu */}
-                    {this.state.selectedRowServiceindex !== -1 && 
-                            this.renderServiceContent()
-                    }
-                </Grid>
-               
                 
-            </Grid>
-
-            </CardContent>
-        </Card>
-
-
-        
-
-        
-{this.state.toggleOpen && <div>
-    <div style={{border:'1px solid',right:0, bottom:0,top:'0',left:'0',position:'absolute'}}>
-        <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
-        </div>
-        <div style={{background:'#fff', height:'80%', width:'700px', margin:'5% auto 0', position:'relative', borderRadius: 10}}>
-            <Grid container spacing={2}>
-                <Grid item xs={12} style={{display:'flex',marginTop:10}}>
-                    <Grid item xs={10}>
-                        <Typography id="modal-modal-title" variant="h6" component="h2" align="center"  style={{"color":'#134163'}}>Add New Customer</Typography>
-                    </Grid>
-                    <Grid item xs={2}>
-                        <Typography variant="subtitle2" align="center" style={{cursor:'pointer'}} onClick={() => this.handleCloseCustomer()}> <CloseIcon fontSize="small" style={{"color":'#134163'}}/></Typography>
-                    </Grid> 
-
-                </Grid>
-            </Grid>
-            
-            <AddCustomer afterSubmit={()=>{this.handleCloseCustomer(); this.getCustomerList()}}/>
-        </div>
-    </div>
-</div> }
-
-{/* validations for select service , technicians */}
-{this.state.snackbarOpen &&  <AlertModal title="Alert" msg="Please Select Services !" handleCloseAlert={()=>this.handleCloseAlert()}/>}
-
-{/* validations for select service , technicians */}
-{this.state.printalert &&  <AlertModal title="Alert" msg="No printers added yet." handleCloseAlert={()=>this.setState({printalert:false})}/>}
-    
-    {this.state.ticketcloseAlert_Open && <div>
-                        <div style={{border:'1px solid',right:0, bottom:0,top:'0',left:'0',position:'absolute'}}>
-                            <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
-                            </div>
-                            <div style={{background:'#fff', height:'180px', width:'500px', margin:'20% auto 0', position:'relative', borderRadius: 10}}>
-                            <Grid container spacing={2}>
-                                <Grid item xs={12} style={{display:'flex',marginTop:10}}>
-                                    <Grid item xs={10}>
-                                        <Typography id="modal-modal-title" variant="h6" component="h2" align="left" style={{marginLeft:20, "color":'#134163'}}>Confirmation</Typography>
-                                    </Grid>
-                                    <Grid item xs={2}>
-                                        <Typography variant="subtitle2" align="center" style={{cursor:'pointer'}} onClick={()=>this.handleCloseTicketAlert()}> <CloseIcon fontSize="small" style={{"color":'#134163'}}/></Typography>
-                                    </Grid> 
-
-                                </Grid>
-                                <Grid item xs={12} style={{display:'flex',marginTop:10}}>
-                                    <Typography id="modal-modal-title" variant="subtitle2" component="h2" align="left" style={{marginLeft:20}}>Are you sure to leave ?</Typography>
-                                </Grid>
-                                <Grid item xs={12} style={{display:'flex',marginTop:10}}>
-                                    <Grid item xs={8}></Grid>
-                                    <Grid item xs={4} style={{display: 'flex'}}>
-                                        <Button style={{marginRight: 10 , background:'#134163', color:'#fff'}} onClick={()=>this.handleClosePopup()}  variant="contained">Yes</Button>
-                                        <Button style={{marginRight: 10 , background:'#134163', color:'#fff'}} onClick={()=>this.handleCloseTicketAlert()}  variant="contained">No</Button>
-                                    </Grid> 
-                                </Grid>
-                            </Grid>
-
-                            </div>
-
-                        </div>
-                    </div> }
-
-
-
-    {this.state.ticketserviecloseAlert_Open && <div>
-        <div style={{border:'1px solid',right:0, bottom:0,top:'0',left:'0',position:'absolute'}}>
-            <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
-            </div>
-            <div style={{background:'#fff', height:'180px', width:'500px', margin:'20% auto 0', position:'relative', borderRadius: 10}}>
-            <Grid container spacing={2}>
-                <Grid item xs={12} style={{display:'flex',marginTop:10}}>
-                    <Grid item xs={10}>
-                        <Typography id="modal-modal-title" variant="h6" component="h2" align="left" style={{marginLeft:20, "color":'#134163'}}>Confirmation</Typography>
-                    </Grid>
-                    <Grid item xs={2}>
-                        <Typography variant="subtitle2" align="center" style={{cursor:'pointer'}} onClick={()=>this.handleCloseTicketServiceAlert()}> <CloseIcon fontSize="small" style={{"color":'#134163'}}/></Typography>
-                    </Grid> 
-
-                </Grid>
-                <Grid item xs={12} style={{display:'flex',marginTop:10}}>
-                    <Typography id="modal-modal-title" variant="subtitle2" component="h2" align="left" style={{marginLeft:20}}>Are you sure to remove this service ?</Typography>
-                </Grid>
-                <Grid item xs={12} style={{display:'flex',marginTop:10}}>
-                    <Grid item xs={8}></Grid>
-                    <Grid item xs={4} style={{display: 'flex'}}>
-                    
-                        <Button style={{marginRight: 10}} onClick={()=>this.handleTicketServiceAlert()} color="secondary" variant="contained">Yes</Button>
-                        <Button onClick={()=>this.handleCloseTicketServiceAlert()} color="secondary" variant="outlined">No</Button>
-                    </Grid>
-                    {/* <Typography id="modal-modal-title" variant="subtitle2" component="h2" align="right" style={{marginRight:20}}>Please Select Technicians for your Services !</Typography> */}
-                </Grid>
-            </Grid>
-
-            </div>
-
-        </div>
-    </div> }
-
- {/* Notes popup */}
-{this.state.addNotes_popup &&
-<NotesModal handleCloseAddNotes={()=>this.handleCloseAddNotes()} notes={this.state.notes} handlechangeNotes={(e)=>this.handlechangeNotes(e)} saveNotes={()=>this.saveNotes()}/>
-}
-
-{/* Discounts popup */}
-{this.state.addDiscount_popup &&
-<DiscountTicketModal handleCloseAddDiscounts={()=>this.handleCloseAddDiscounts()} ticket_discount_selected={this.state.ticket_discount_selected} ticket_grandTotal={this.state.totalamount} discount_list={this.state.discount_list} afterSubmitDiscount={(msg,disInput, opt)=>{this.handleCloseDiscounts(msg,disInput, opt); }}/>
-}
-
-{/* Tips popup */}
-{this.state.addTips_popup &&
- <TicketTipsModal handleCloseAddTips={()=>this.handleCloseAddTips()} 
- employee_list={this.state.employee_list} afterSubmitTips={(msg,tipsInput)=>{this.handleCloseTips(msg,tipsInput); }} 
- service_selected={this.state.services_taken} total_tips={this.state.tips_totalamt} tips_percent={this.state.tips_percent} tips_type={this.state.tips_type}/>
-}
-
-{/* Vaiable price popup */}
-{this.state.priceVariablePopup &&
- <VariablePriceModal handleClose={()=>this.handleCloseVariablePricePopup()} service={this.state.selectedservice} afterSubmitVariablePrice={(value)=>{this.afterSubmitVariablePrice(value) }}/>
-}
-
-
- {/* Within service void button popup */}
-{this.state.voidalertOpen && <VoidModal handleCloseVoidAlert={() => this.handleCloseVoidAlert()} updateVoidTicket={()=>this.updateVoidTicket()} 
-title="Alert" msg="Are You Sure To Void This Ticket ?"/> } 
-
- {/* Select cusotmer popup */}
-{this.state.isSelectCustomerEnabled && <div>
-    <div style={{border:'1px solid',right:0, bottom:0,top:'0',left:'0',position:'absolute'}}>
-        <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
-        </div>
-        <div style={{background:'#fff', height:'80%', width:'900px', margin:'5% auto 0', position:'relative', borderRadius: 10}}> 
-            <SelectCustomer handleCloseCustomer={()=>this.handleCloseCustomer()} afterSubmit={()=>{this.handleCloseCustomer()}} onSelectCustomer={this.onSelectCustomer}/>
-        </div>
-    </div>
-</div>}
-
-
-{/* Select technician popup */}
-{this.state.isSelectTechnician && <div>
-    <div style={{border:'1px solid',right:0, bottom:0,top:'0',left:'0',position:'absolute'}}>
-        <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
-        </div>
-        <div style={{background:'#fff', height:'80%', width:'900px', margin:'5% auto 0', position:'relative', borderRadius: 10}}>
-           
-            <ModalTitleBar onClose={()=>this.handleCloseTechnician()} title="Select Technician"/>
-
-            <SelectTechnician afterSubmit={()=>{this.handleCloseTechnician()}} onSelectTech={this.onSelectTechnician} technician={this.state.clockin_emp_list}/>
-        </div>
-    </div>
-</div>}
-
-{/* Select customer detail popup */}
-{this.state.isSelectCustomerDetail &&
-    <div style={{border:'1px solid',right:0, bottom:0,top:'0',left:'0',position:'absolute'}}>
-        <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
-    </div>
-    <div style={{background:'#fff', width:'900px', margin:'10% auto 0', position:'relative'}}>
-        
-        {/* <ModalTitleBar onClose={()=>this.closeCustomerDetail()} title="Customer Detail"/> */}
-      
-        <CustomerDetailModal open={this.state.isSelectCustomerDetail} onClose={()=>this.closeCustomerDetail()} 
-            handleClosePayment={(msg)=>this.closeCustomerDetail()} customerDetail={this.state.customer_detail}></CustomerDetailModal>
-
-    </div>
-    </div>
-}
-{/* </div>} */}
-{/* Split Item popup */} 
-{this.state.menu_selected_id === 5 && this.state.clockin_emp_list.length > 1 && this.state.disableerror === '' &&
- <TicketServiceSplitModal handleCloseSplit={()=>this.handleCloseSplit([])} employee_list={this.state.clockin_emp_list} 
- afterSubmit={(splitted)=>{  this.handleCloseSplit(splitted); }} service_selected={this.state.selectedRowService} />
-}
-{/** Make special request */}
-{this.state.menu_selected_id === 6 && this.state.ticketrequestAlert_Open && <div>
-        <div style={{border:'1px solid',right:0, bottom:0,top:'0',left:'0',position:'absolute'}}>
-            <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
-            </div>
-            <div style={{background:'#fff', height:'180px', width:'500px', margin:'20% auto 0', position:'relative', borderRadius:10}}>
-            <Grid container spacing={2}>
-                <Grid item xs={12} style={{display:'flex',marginTop:10}}>
-                    <Grid item xs={10}>
-                        <Typography id="modal-modal-title" variant="h6" component="h2" align="left" style={{marginLeft:20, "color":'#134163'}}>Confirmation</Typography>
-                    </Grid>
-                    <Grid item xs={2}>
-                        <Typography variant="subtitle2" align="center" style={{cursor:'pointer'}} onClick={()=>this.setState({ticketrequestAlert_Open:false, menu_selected_id:-1})}> <CloseIcon fontSize="small" style={{"color":'#134163'}}/></Typography>
-                    </Grid> 
-
-                </Grid>
-                <Grid item xs={12} style={{display:'flex',marginTop:10}}>
-                    <Typography id="modal-modal-title" variant="subtitle2" component="h2" align="left" style={{marginLeft:20}}>Are you sure to make this service to special request ?</Typography>
-                </Grid>
-                <Grid item xs={12} style={{display:'flex',marginTop:10}}>
-                    <Grid item xs={8}></Grid>
-                    <Grid item xs={4} style={{display: 'flex'}}>
-                    
-                        <Button style={{marginRight: 10}} onClick={()=>this.handleSpecialrequest()} color="secondary" variant="contained">Yes</Button>
-                        <Button onClick={()=>this.setState({ticketrequestAlert_Open:false, menu_selected_id:-1})} color="secondary" variant="outlined">No</Button>
-                    </Grid>
-                    {/* <Typography id="modal-modal-title" variant="subtitle2" component="h2" align="right" style={{marginRight:20}}>Please Select Technicians for your Services !</Typography> */}
-                </Grid>
-            </Grid>
-
-            </div>
-
-        </div>
-    </div> }
-    {this.state.transferpopup && <div>
-<div style={{border:'1px solid',right:0, bottom:0,top:'0',left:'0',position:'absolute'}}>
-            <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
-            </div>
-            <div style={{background:'#fff', height:'80%', width:'80%', margin:'5% auto 0', position:'relative', borderRadius: 10}}>
-            <Grid container spacing={2} style={{height: '100%'}}>
-               
-                <ModalTitleBar style={{height: 60}} title={"Open Tickets"} onClose={()=>this.setState({transferpopup:false})}/>
-                <Grid item xs={12} style={{padding:10, height: '80%'}}>
-
-                    <div style={{marginRight: 20,width: '100%', textAlign: 'right', float: 'right'}}>
-                    <Button style={{marginRight: 10}} onClick={()=>this.createNewTicketWithTransfer()} color="secondary" variant="contained">Create New Ticket</Button>
-                    </div>
-                   
-
-                    
-                    <TableContent style={{ height: '100%', background: ''}}  onRowClick={ this.ontransfer} data={this.state.open_tickets} columns={this.state.columns} />
-                </Grid> 
-            </Grid>
-
-            </div>
-
-        </div>
-</div>}
-
-
-{this.state.confirmtransfer && <div>
-                        <div style={{border:'1px solid',right:0, bottom:0,top:'0',left:'0',position:'absolute'}}>
-                            <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
-                            </div>
-                            <div style={{background:'#fff', height:'180px', width:'500px', margin:'20% auto 0', position:'relative'}}>
-                            <Grid container spacing={2}>
-                                <Grid item xs={12} style={{display:'flex',marginTop:10}}>
-                                    <Grid item xs={10}>
-                                        <Typography id="modal-modal-title" variant="h6" component="h2" align="left" style={{marginLeft:20}}>Confirmation</Typography>
-                                    </Grid>
-                                    <Grid item xs={2}> 
-                                    </Grid> 
-
-                                </Grid>
-                                
-                                <Grid item xs={12} style={{display:'flex',marginTop:10}}>
-                                    <Typography id="modal-modal-title" variant="subtitle2" component="h2" align="left" style={{marginLeft:20}}>Are you sure to transfer this service to this ticket ({this.state.rowToTransfer.ticket_code})?</Typography>
-                                </Grid>
-                                <Grid item xs={12} style={{display:'flex',marginTop:10}}>
-                                    <Grid item xs={8}></Grid>
-                                    <Grid item xs={4} style={{display: 'flex'}}>
-                                        <Button style={{marginRight: 10}} onClick={()=>this.transferService(false)} color="secondary" variant="contained">Yes</Button>
-                                        <Button onClick={()=>this.setState({confirmtransfer:false, rowToTransfer:{}})} color="secondary" variant="outlined">No</Button>
-                                    </Grid>
-                                    {/* <Typography id="modal-modal-title" variant="subtitle2" component="h2" align="right" style={{marginRight:20}}>Please Select Technicians for your Services !</Typography> */}
-                                </Grid>
-                            </Grid>
-
-                            </div>
-
-                        </div>
-                    </div> }
-{this.state.isCombine  && <div>
-<div style={{border:'1px solid',right:0, bottom:0,top:'0',left:'0',position:'absolute'}}>
-            <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
-            </div>
-            <div style={{background:'#fff', height:'80%', width:'80%', margin:'5% auto 0', position:'relative', borderRadius: 10}}>
-            <Grid container spacing={2}  style={{height: '100%'}}>
-                <Grid item xs={12} style={{display:'flex',marginTop:10}}>
-                    <Grid item xs={10}>
-                        <Typography id="modal-modal-title" variant="h6" component="h2" align="left" style={{marginLeft:20, "color":'#134163'}}>Open Tickets</Typography>
-                    </Grid>
-                    <Grid item xs={2}>
-                        <Typography variant="subtitle2" align="right" style={{cursor:'pointer', marginRight:'1rem'}} onClick={()=>this.setState({isCombine:false})}> <CloseIcon fontSize="small" style={{"color":'#134163'}}/></Typography>
-                    </Grid> 
-
-                </Grid>
-                <Grid item xs={12} style={{padding:10, height: '80%'}}> 
-                    <TableContent  style={{ height: '100%', background: ''}}  onRowClick={ this.onCombine} data={this.state.open_tickets} columns={this.state.columns} />
-                </Grid> 
-            </Grid>
-
-            </div>
-
-        </div>
-</div>}
-
-{this.state.confirmcombine && <div>
-                        <div style={{border:'1px solid',right:0, bottom:0,top:'0',left:'0',position:'absolute'}}>
-                            <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
-                            </div>
-                            <div style={{background:'#fff', height:'180px', width:'500px', margin:'20% auto 0', position:'relative'}}>
-                            <Grid container spacing={2}>
-                                <Grid item xs={12} style={{display:'flex',marginTop:10}}>
-                                    <Grid item xs={10}>
-                                        <Typography id="modal-modal-title" variant="h6" component="h2" align="left" style={{marginLeft:20}}>Confirmation</Typography>
-                                    </Grid>
-                                    <Grid item xs={2}> 
-                                    </Grid> 
-
-                                </Grid>
-                                
-                                <Grid item xs={12} style={{display:'flex',marginTop:10}}>
-                                    <Typography id="modal-modal-title" variant="subtitle2" component="h2" align="left" style={{marginLeft:20}}>Are you sure to combine all the services to this ticket ({this.state.rowToTransfer.ticket_code})?</Typography>
-                                </Grid>
-                                <Grid item xs={12} style={{display:'flex',marginTop:10}}>
-                                    <Grid item xs={8}></Grid>
-                                    <Grid item xs={4} style={{display: 'flex'}}>
-                                        <Button style={{marginRight: 10}} onClick={()=>this.combineService()} color="secondary" variant="contained">Yes</Button>
-                                        <Button onClick={()=>this.setState({confirmcombine:false, rowToTransfer:{}})} color="secondary" variant="outlined">No</Button>
-                                    </Grid>
-                                    {/* <Typography id="modal-modal-title" variant="subtitle2" component="h2" align="right" style={{marginRight:20}}>Please Select Technicians for your Services !</Typography> */}
-                                </Grid>
-                            </Grid>
-
-                            </div>
-
-                        </div>
-                    </div> }
-{this.state.disableerror != '' && <div>
+        {this.state.toggleOpen && <div>
             <div style={{border:'1px solid',right:0, bottom:0,top:'0',left:'0',position:'absolute'}}>
-            <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
-            </div>
-            <div style={{background:'#fff', height:'180px', width:'500px', margin:'20% auto 0', position:'relative', borderRadius:10}}>
+                <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
+                </div>
+                <div style={{background:'#fff', height:'80%', width:'700px', margin:'5% auto 0', position:'relative', borderRadius: 10}}>
                     <Grid container spacing={2}>
                         <Grid item xs={12} style={{display:'flex',marginTop:10}}>
                             <Grid item xs={10}>
-                                <Typography id="modal-modal-title" variant="h6" component="h2" align="left" style={{marginLeft:20, "color":'#134163'}}>Error</Typography>
+                                <Typography id="modal-modal-title" variant="h6" component="h2" align="center"  style={{"color":'#134163'}}>Add New Customer</Typography>
+                            </Grid>
+                            <Grid item xs={2}>
+                                <Typography variant="subtitle2" align="center" style={{cursor:'pointer'}} onClick={() => this.handleCloseCustomer()}> <CloseIcon fontSize="small" style={{"color":'#134163'}}/></Typography>
+                            </Grid> 
+
+                        </Grid>
+                    </Grid>
+                    
+                    <AddCustomer afterSubmit={()=>{this.handleCloseCustomer(); this.getCustomerList()}}/>
+                </div>
+            </div>
+        </div> }
+
+        {/* validations for select service , technicians */}
+        {this.state.snackbarOpen &&  <AlertModal title="Alert" msg="Please Select Services !" handleCloseAlert={()=>this.handleCloseAlert()}/>}
+
+        {/* validations for select service , technicians */}
+        {this.state.printalert &&  <AlertModal title="Alert" msg="No printers added yet." handleCloseAlert={()=>this.setState({printalert:false})}/>}
+            
+            {this.state.ticketcloseAlert_Open && <div>
+                                <div style={{border:'1px solid',right:0, bottom:0,top:'0',left:'0',position:'absolute'}}>
+                                    <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
+                                    </div>
+                                    <div style={{background:'#fff', height:'180px', width:'500px', margin:'20% auto 0', position:'relative', borderRadius: 10}}>
+                                    <Grid container spacing={2}>
+                                        <Grid item xs={12} style={{display:'flex',marginTop:10}}>
+                                            <Grid item xs={10}>
+                                                <Typography id="modal-modal-title" variant="h6" component="h2" align="left" style={{marginLeft:20, "color":'#134163'}}>Confirmation</Typography>
+                                            </Grid>
+                                            <Grid item xs={2}>
+                                                <Typography variant="subtitle2" align="center" style={{cursor:'pointer'}} onClick={()=>this.handleCloseTicketAlert()}> <CloseIcon fontSize="small" style={{"color":'#134163'}}/></Typography>
+                                            </Grid> 
+
+                                        </Grid>
+                                        <Grid item xs={12} style={{display:'flex',marginTop:10}}>
+                                            <Typography id="modal-modal-title" variant="subtitle2" component="h2" align="left" style={{marginLeft:20}}>Are you sure to leave ?</Typography>
+                                        </Grid>
+                                        <Grid item xs={12} style={{display:'flex',marginTop:10}}>
+                                            <Grid item xs={8}></Grid>
+                                            <Grid item xs={4} style={{display: 'flex'}}>
+                                                <Button style={{marginRight: 10 , background:'#134163', color:'#fff'}} onClick={()=>this.handleClosePopup()}  variant="contained">Yes</Button>
+                                                <Button style={{marginRight: 10 , background:'#134163', color:'#fff'}} onClick={()=>this.handleCloseTicketAlert()}  variant="contained">No</Button>
+                                            </Grid> 
+                                        </Grid>
+                                    </Grid>
+
+                                    </div>
+
+                                </div>
+                            </div> }
+
+
+
+            {this.state.ticketserviecloseAlert_Open && <div>
+                <div style={{border:'1px solid',right:0, bottom:0,top:'0',left:'0',position:'absolute'}}>
+                    <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
+                    </div>
+                    <div style={{background:'#fff', height:'180px', width:'500px', margin:'20% auto 0', position:'relative', borderRadius: 10}}>
+                    <Grid container spacing={2}>
+                        <Grid item xs={12} style={{display:'flex',marginTop:10}}>
+                            <Grid item xs={10}>
+                                <Typography id="modal-modal-title" variant="h6" component="h2" align="left" style={{marginLeft:20, "color":'#134163'}}>Confirmation</Typography>
+                            </Grid>
+                            <Grid item xs={2}>
+                                <Typography variant="subtitle2" align="center" style={{cursor:'pointer'}} onClick={()=>this.handleCloseTicketServiceAlert()}> <CloseIcon fontSize="small" style={{"color":'#134163'}}/></Typography>
+                            </Grid> 
+
+                        </Grid>
+                        <Grid item xs={12} style={{display:'flex',marginTop:10}}>
+                            <Typography id="modal-modal-title" variant="subtitle2" component="h2" align="left" style={{marginLeft:20}}>Are you sure to remove this service ?</Typography>
+                        </Grid>
+                        <Grid item xs={12} style={{display:'flex',marginTop:10}}>
+                            <Grid item xs={8}></Grid>
+                            <Grid item xs={4} style={{display: 'flex'}}>
+                            
+                                <Button style={{marginRight: 10}} onClick={()=>this.handleTicketServiceAlert()} color="secondary" variant="contained">Yes</Button>
+                                <Button onClick={()=>this.handleCloseTicketServiceAlert()} color="secondary" variant="outlined">No</Button>
+                            </Grid>
+                            {/* <Typography id="modal-modal-title" variant="subtitle2" component="h2" align="right" style={{marginRight:20}}>Please Select Technicians for your Services !</Typography> */}
+                        </Grid>
+                    </Grid>
+
+                    </div>
+
+                </div>
+            </div> }
+
+        {/* Notes popup */}
+        {this.state.addNotes_popup &&
+        <NotesModal handleCloseAddNotes={()=>this.handleCloseAddNotes()} notes={this.state.notes} handlechangeNotes={(e)=>this.handlechangeNotes(e)} saveNotes={()=>this.saveNotes()}/>
+        }
+
+        {/* Discounts popup */}
+        {this.state.addDiscount_popup &&
+        <DiscountTicketModal handleCloseAddDiscounts={()=>this.handleCloseAddDiscounts()} ticket_discount_selected={this.state.ticket_discount_selected} ticket_grandTotal={this.state.totalamount} discount_list={this.state.discount_list} afterSubmitDiscount={(msg,disInput, opt)=>{this.handleCloseDiscounts(msg,disInput, opt); }}/>
+        }
+
+        {/* Tips popup */}
+        {this.state.addTips_popup &&
+        <TicketTipsModal handleCloseAddTips={()=>this.handleCloseAddTips()} 
+        employee_list={this.state.employee_list} afterSubmitTips={(msg,tipsInput)=>{this.handleCloseTips(msg,tipsInput); }} 
+        service_selected={this.state.services_taken} total_tips={this.state.tips_totalamt} tips_percent={this.state.tips_percent} tips_type={this.state.tips_type}/>
+        }
+
+        {/* Vaiable price popup */}
+        {this.state.priceVariablePopup &&
+        <VariablePriceModal handleClose={()=>this.handleCloseVariablePricePopup()} service={this.state.selectedservice} afterSubmitVariablePrice={(value)=>{this.afterSubmitVariablePrice(value) }}/>
+        }
+
+
+        {/* Within service void button popup */}
+        {this.state.voidalertOpen && <VoidModal handleCloseVoidAlert={() => this.handleCloseVoidAlert()} updateVoidTicket={()=>this.updateVoidTicket()} 
+        title="Alert" msg="Are You Sure To Void This Ticket ?"/> } 
+
+        {/* Select cusotmer popup */}
+        {this.state.isSelectCustomerEnabled && <div>
+            <div style={{border:'1px solid',right:0, bottom:0,top:'0',left:'0',position:'absolute'}}>
+                <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
+                </div>
+                <div style={{background:'#fff', height:'80%', width:'900px', margin:'5% auto 0', position:'relative', borderRadius: 10}}> 
+                    <SelectCustomer handleCloseCustomer={()=>this.handleCloseCustomer()} afterSubmit={()=>{this.handleCloseCustomer()}} onSelectCustomer={this.onSelectCustomer}/>
+                </div>
+            </div>
+        </div>}
+
+
+        {/* Select technician popup */}
+        {this.state.isSelectTechnician && <div>
+            <div style={{border:'1px solid',right:0, bottom:0,top:'0',left:'0',position:'absolute'}}>
+                <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
+                </div>
+                <div style={{background:'#fff', height:'80%', width:'900px', margin:'5% auto 0', position:'relative', borderRadius: 10}}>
+                
+                    <ModalTitleBar onClose={()=>this.handleCloseTechnician()} title="Select Technician"/>
+
+                    <SelectTechnician afterSubmit={()=>{this.handleCloseTechnician()}} onSelectTech={this.onSelectTechnician} technician={this.state.clockin_emp_list}/>
+                </div>
+            </div>
+        </div>}
+
+        {/* Select customer detail popup */}
+        {this.state.isSelectCustomerDetail &&
+            <div style={{border:'1px solid',right:0, bottom:0,top:'0',left:'0',position:'absolute'}}>
+                <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
+            </div>
+            <div style={{background:'#fff', width:'900px', margin:'10% auto 0', position:'relative'}}>
+                
+                {/* <ModalTitleBar onClose={()=>this.closeCustomerDetail()} title="Customer Detail"/> */}
+            
+                <CustomerDetailModal open={this.state.isSelectCustomerDetail} onClose={()=>this.closeCustomerDetail()} 
+                    handleClosePayment={(msg)=>this.closeCustomerDetail()} customerDetail={this.state.customer_detail}></CustomerDetailModal>
+
+            </div>
+            </div>
+        }
+        {/* </div>} */}
+        {/* Split Item popup */} 
+        {this.state.menu_selected_id === 5 && this.state.clockin_emp_list.length > 1 && this.state.disableerror === '' &&
+        <TicketServiceSplitModal handleCloseSplit={()=>this.handleCloseSplit([])} employee_list={this.state.clockin_emp_list} 
+        afterSubmit={(splitted)=>{  this.handleCloseSplit(splitted); }} service_selected={this.state.selectedRowService} />
+        }
+        {/** Make special request */}
+        {this.state.menu_selected_id === 6 && this.state.ticketrequestAlert_Open && <div>
+                <div style={{border:'1px solid',right:0, bottom:0,top:'0',left:'0',position:'absolute'}}>
+                    <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
+                    </div>
+                    <div style={{background:'#fff', height:'180px', width:'500px', margin:'20% auto 0', position:'relative', borderRadius:10}}>
+                    <Grid container spacing={2}>
+                        <Grid item xs={12} style={{display:'flex',marginTop:10}}>
+                            <Grid item xs={10}>
+                                <Typography id="modal-modal-title" variant="h6" component="h2" align="left" style={{marginLeft:20, "color":'#134163'}}>Confirmation</Typography>
                             </Grid>
                             <Grid item xs={2}>
                                 <Typography variant="subtitle2" align="center" style={{cursor:'pointer'}} onClick={()=>this.setState({ticketrequestAlert_Open:false, menu_selected_id:-1})}> <CloseIcon fontSize="small" style={{"color":'#134163'}}/></Typography>
@@ -4800,69 +4669,230 @@ title="Alert" msg="Are You Sure To Void This Ticket ?"/> }
 
                         </Grid>
                         <Grid item xs={12} style={{display:'flex',marginTop:10}}>
-                            <Typography id="modal-modal-title" variant="subtitle2" component="h2" align="left" style={{marginLeft:20}}>{this.state.disableerror}</Typography>
+                            <Typography id="modal-modal-title" variant="subtitle2" component="h2" align="left" style={{marginLeft:20}}>Are you sure to make this service to special request ?</Typography>
                         </Grid>
                         <Grid item xs={12} style={{display:'flex',marginTop:10}}>
                             <Grid item xs={8}></Grid>
-                            <Grid item xs={4} style={{display: 'flex', justifyContent:'flex-end'}}>
-                                <Button style={{marginRight: 10}} onClick={()=>this.setState({disableerror:''})} color="secondary" variant="contained">OK</Button> 
+                            <Grid item xs={4} style={{display: 'flex'}}>
+                            
+                                <Button style={{marginRight: 10}} onClick={()=>this.handleSpecialrequest()} color="secondary" variant="contained">Yes</Button>
+                                <Button onClick={()=>this.setState({ticketrequestAlert_Open:false, menu_selected_id:-1})} color="secondary" variant="outlined">No</Button>
                             </Grid>
                             {/* <Typography id="modal-modal-title" variant="subtitle2" component="h2" align="right" style={{marginRight:20}}>Please Select Technicians for your Services !</Typography> */}
                         </Grid>
                     </Grid>
-            </div>
 
-        </div>
-                    </div> }
- {/* Payment popup */}
-{/* <PaymentModal open={this.state.openPayment} onClose={()=>this.handleClosePayment('')} 
-handleClosePayment={(msg)=>this.handleClosePayment(msg)} ticketDetail={this.state.ticketDetail}>
-    
-</PaymentModal>  */}
+                    </div>
 
-{/* Discounts popup */}
-{this.state.openPayment &&
- <PaymentModal open={this.state.openPayment} onClose={()=>this.handleClosePayment('')} 
- handleClosePayment={(msg)=>this.handleClosePayment(msg)} ticketDetail={this.state.ticketDetail}>
-     
- </PaymentModal> 
-}
-
-{/* /*** Transfer single service */ }
-
-{this.state.transferAlert && <div>
+                </div>
+            </div> }
+            {this.state.transferpopup && <div>
         <div style={{border:'1px solid',right:0, bottom:0,top:'0',left:'0',position:'absolute'}}>
-            <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
-            </div>
-            <div style={{background:'#fff', height:'180px', width:'500px', margin:'20% auto 0', position:'relative', borderRadius: 10}}>
-            <Grid container spacing={2}>
-                <Grid item xs={12} style={{display:'flex',marginTop:10}}>
-                    <Grid item xs={10}>
-                        <Typography id="modal-modal-title" variant="h6" component="h2" align="left" style={{marginLeft:20, "color":'#134163'}}>Confirmation</Typography>
-                    </Grid>
-                    <Grid item xs={2}>
-                        <Typography variant="subtitle2" align="center" style={{cursor:'pointer'}} onClick={()=>this.handleCloseTransferAlert()}> <CloseIcon fontSize="small" style={{"color":'#134163'}}/></Typography>
-                    </Grid> 
-
-                </Grid>
-                <Grid item xs={12} style={{display:'flex',marginTop:10}}>
-                    <Typography id="modal-modal-title" variant="subtitle2" component="h2" align="left" style={{marginLeft:20}}>Transfering this service will void the existing ticket (TID - # {this.state.ticketCode}) ? </Typography>
-                </Grid>
-                <Grid item xs={12} style={{display:'flex',marginTop:10}}>
-                    <Grid item xs={8}></Grid>
-                    <Grid item xs={4} style={{display: 'flex'}}>
+                    <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
+                    </div>
+                    <div style={{background:'#fff', height:'80%', width:'80%', margin:'5% auto 0', position:'relative', borderRadius: 10}}>
+                    <Grid container spacing={2} style={{height: '100%'}}>
                     
-                        <Button style={{marginRight: 10}} onClick={()=>this.handleTransferAlert()} color="secondary" variant="contained">Yes</Button>
-                        <Button onClick={()=>this.handleCloseTransferAlert()} color="secondary" variant="outlined">No</Button>
+                        <ModalTitleBar style={{height: 60}} title={"Open Tickets"} onClose={()=>this.setState({transferpopup:false})}/>
+                        <Grid item xs={12} style={{padding:10, height: '80%'}}>
+
+                            <div style={{marginRight: 20,width: '100%', textAlign: 'right', float: 'right'}}>
+                            <Button style={{marginRight: 10}} onClick={()=>this.createNewTicketWithTransfer()} color="secondary" variant="contained">Create New Ticket</Button>
+                            </div>
+                        
+
+                            
+                            <TableContent style={{ height: '100%', background: ''}}  onRowClick={ this.ontransfer} data={this.state.open_tickets} columns={this.state.columns} />
+                        </Grid> 
                     </Grid>
-                    {/* <Typography id="modal-modal-title" variant="subtitle2" component="h2" align="right" style={{marginRight:20}}>Please Select Technicians for your Services !</Typography> */}
-                </Grid>
-            </Grid>
 
-            </div>
+                    </div>
 
-        </div>
-    </div> }
+                </div>
+        </div>}
+
+
+        {this.state.confirmtransfer && <div>
+                                <div style={{border:'1px solid',right:0, bottom:0,top:'0',left:'0',position:'absolute'}}>
+                                    <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
+                                    </div>
+                                    <div style={{background:'#fff', height:'180px', width:'500px', margin:'20% auto 0', position:'relative'}}>
+                                    <Grid container spacing={2}>
+                                        <Grid item xs={12} style={{display:'flex',marginTop:10}}>
+                                            <Grid item xs={10}>
+                                                <Typography id="modal-modal-title" variant="h6" component="h2" align="left" style={{marginLeft:20}}>Confirmation</Typography>
+                                            </Grid>
+                                            <Grid item xs={2}> 
+                                            </Grid> 
+
+                                        </Grid>
+                                        
+                                        <Grid item xs={12} style={{display:'flex',marginTop:10}}>
+                                            <Typography id="modal-modal-title" variant="subtitle2" component="h2" align="left" style={{marginLeft:20}}>Are you sure to transfer this service to this ticket ({this.state.rowToTransfer.ticket_code})?</Typography>
+                                        </Grid>
+                                        <Grid item xs={12} style={{display:'flex',marginTop:10}}>
+                                            <Grid item xs={8}></Grid>
+                                            <Grid item xs={4} style={{display: 'flex'}}>
+                                                <Button style={{marginRight: 10}} onClick={()=>this.transferService(false)} color="secondary" variant="contained">Yes</Button>
+                                                <Button onClick={()=>this.setState({confirmtransfer:false, rowToTransfer:{}})} color="secondary" variant="outlined">No</Button>
+                                            </Grid>
+                                            {/* <Typography id="modal-modal-title" variant="subtitle2" component="h2" align="right" style={{marginRight:20}}>Please Select Technicians for your Services !</Typography> */}
+                                        </Grid>
+                                    </Grid>
+
+                                    </div>
+
+                                </div>
+                            </div> }
+        {this.state.isCombine  && <div>
+        <div style={{border:'1px solid',right:0, bottom:0,top:'0',left:'0',position:'absolute'}}>
+                    <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
+                    </div>
+                    <div style={{background:'#fff', height:'80%', width:'80%', margin:'5% auto 0', position:'relative', borderRadius: 10}}>
+                    <Grid container spacing={2}  style={{height: '100%'}}>
+                        <Grid item xs={12} style={{display:'flex',marginTop:10}}>
+                            <Grid item xs={10}>
+                                <Typography id="modal-modal-title" variant="h6" component="h2" align="left" style={{marginLeft:20, "color":'#134163'}}>Open Tickets</Typography>
+                            </Grid>
+                            <Grid item xs={2}>
+                                <Typography variant="subtitle2" align="right" style={{cursor:'pointer', marginRight:'1rem'}} onClick={()=>this.setState({isCombine:false})}> <CloseIcon fontSize="small" style={{"color":'#134163'}}/></Typography>
+                            </Grid> 
+
+                        </Grid>
+                        <Grid item xs={12} style={{padding:10, height: '80%'}}> 
+                            <TableContent  style={{ height: '100%', background: ''}}  onRowClick={ this.onCombine} data={this.state.open_tickets} columns={this.state.columns} />
+                        </Grid> 
+                    </Grid>
+
+                    </div>
+
+                </div>
+        </div>}
+
+        {this.state.confirmcombine && <div>
+                                <div style={{border:'1px solid',right:0, bottom:0,top:'0',left:'0',position:'absolute'}}>
+                                    <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
+                                    </div>
+                                    <div style={{background:'#fff', height:'180px', width:'500px', margin:'20% auto 0', position:'relative'}}>
+                                    <Grid container spacing={2}>
+                                        <Grid item xs={12} style={{display:'flex',marginTop:10}}>
+                                            <Grid item xs={10}>
+                                                <Typography id="modal-modal-title" variant="h6" component="h2" align="left" style={{marginLeft:20}}>Confirmation</Typography>
+                                            </Grid>
+                                            <Grid item xs={2}> 
+                                            </Grid> 
+
+                                        </Grid>
+                                        
+                                        <Grid item xs={12} style={{display:'flex',marginTop:10}}>
+                                            <Typography id="modal-modal-title" variant="subtitle2" component="h2" align="left" style={{marginLeft:20}}>Are you sure to combine all the services to this ticket ({this.state.rowToTransfer.ticket_code})?</Typography>
+                                        </Grid>
+                                        <Grid item xs={12} style={{display:'flex',marginTop:10}}>
+                                            <Grid item xs={8}></Grid>
+                                            <Grid item xs={4} style={{display: 'flex'}}>
+                                                <Button style={{marginRight: 10}} onClick={()=>this.combineService()} color="secondary" variant="contained">Yes</Button>
+                                                <Button onClick={()=>this.setState({confirmcombine:false, rowToTransfer:{}})} color="secondary" variant="outlined">No</Button>
+                                            </Grid>
+                                            {/* <Typography id="modal-modal-title" variant="subtitle2" component="h2" align="right" style={{marginRight:20}}>Please Select Technicians for your Services !</Typography> */}
+                                        </Grid>
+                                    </Grid>
+
+                                    </div>
+
+                                </div>
+                            </div> }
+        {this.state.disableerror != '' && <div>
+                    <div style={{border:'1px solid',right:0, bottom:0,top:'0',left:'0',position:'absolute'}}>
+                    <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
+                    </div>
+                    <div style={{background:'#fff', height:'180px', width:'500px', margin:'20% auto 0', position:'relative', borderRadius:10}}>
+                            <Grid container spacing={2}>
+                                <Grid item xs={12} style={{display:'flex',marginTop:10}}>
+                                    <Grid item xs={10}>
+                                        <Typography id="modal-modal-title" variant="h6" component="h2" align="left" style={{marginLeft:20, "color":'#134163'}}>Error</Typography>
+                                    </Grid>
+                                    <Grid item xs={2}>
+                                        <Typography variant="subtitle2" align="center" style={{cursor:'pointer'}} onClick={()=>this.setState({ticketrequestAlert_Open:false, menu_selected_id:-1})}> <CloseIcon fontSize="small" style={{"color":'#134163'}}/></Typography>
+                                    </Grid> 
+
+                                </Grid>
+                                <Grid item xs={12} style={{display:'flex',marginTop:10}}>
+                                    <Typography id="modal-modal-title" variant="subtitle2" component="h2" align="left" style={{marginLeft:20}}>{this.state.disableerror}</Typography>
+                                </Grid>
+                                <Grid item xs={12} style={{display:'flex',marginTop:10}}>
+                                    <Grid item xs={8}></Grid>
+                                    <Grid item xs={4} style={{display: 'flex', justifyContent:'flex-end'}}>
+                                        <Button style={{marginRight: 10}} onClick={()=>this.setState({disableerror:''})} color="secondary" variant="contained">OK</Button> 
+                                    </Grid>
+                                    {/* <Typography id="modal-modal-title" variant="subtitle2" component="h2" align="right" style={{marginRight:20}}>Please Select Technicians for your Services !</Typography> */}
+                                </Grid>
+                            </Grid>
+                    </div>
+
+                </div>
+                            </div> }
+        {/* Payment popup */}
+        {/* <PaymentModal open={this.state.openPayment} onClose={()=>this.handleClosePayment('')} 
+        handleClosePayment={(msg)=>this.handleClosePayment(msg)} ticketDetail={this.state.ticketDetail}>
+            
+        </PaymentModal>  */}
+
+        {/* Discounts popup */}
+        {this.state.openPayment &&
+        <PaymentModal open={this.state.openPayment} onClose={()=>this.handleClosePayment('')} 
+        handleClosePayment={(msg)=>this.handleClosePayment(msg)} ticketDetail={this.state.ticketDetail}>
+            
+        </PaymentModal> 
+        }
+
+        {/* /*** Transfer single service */ }
+
+        {this.state.transferAlert && <div>
+                <div style={{border:'1px solid',right:0, bottom:0,top:'0',left:'0',position:'absolute'}}>
+                    <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
+                    </div>
+                    <div style={{background:'#fff', height:'180px', width:'500px', margin:'20% auto 0', position:'relative', borderRadius: 10}}>
+                    <Grid container spacing={2}>
+                        <Grid item xs={12} style={{display:'flex',marginTop:10}}>
+                            <Grid item xs={10}>
+                                <Typography id="modal-modal-title" variant="h6" component="h2" align="left" style={{marginLeft:20, "color":'#134163'}}>Confirmation</Typography>
+                            </Grid>
+                            <Grid item xs={2}>
+                                <Typography variant="subtitle2" align="center" style={{cursor:'pointer'}} onClick={()=>this.handleCloseTransferAlert()}> <CloseIcon fontSize="small" style={{"color":'#134163'}}/></Typography>
+                            </Grid> 
+
+                        </Grid>
+                        <Grid item xs={12} style={{display:'flex',marginTop:10}}>
+                            <Typography id="modal-modal-title" variant="subtitle2" component="h2" align="left" style={{marginLeft:20}}>Transfering this service will void the existing ticket (TID - # {this.state.ticketCode}) ? </Typography>
+                        </Grid>
+                        <Grid item xs={12} style={{display:'flex',marginTop:10}}>
+                            <Grid item xs={8}></Grid>
+                            <Grid item xs={4} style={{display: 'flex'}}>
+                            
+                                <Button style={{marginRight: 10}} onClick={()=>this.handleTransferAlert()} color="secondary" variant="contained">Yes</Button>
+                                <Button onClick={()=>this.handleCloseTransferAlert()} color="secondary" variant="outlined">No</Button>
+                            </Grid>
+                            {/* <Typography id="modal-modal-title" variant="subtitle2" component="h2" align="right" style={{marginRight:20}}>Please Select Technicians for your Services !</Typography> */}
+                        </Grid>
+                    </Grid>
+
+                    </div>
+
+                </div>
+            </div> }
+            </div>}
+            {this.state.dateerror &&  <Card style={{height:'100%', display:'flex' , alignItems:'center', justifyContent:'center'}}>
+                    <CardContent style={{paddingBottom:'0', paddingLeft:0, paddingRight:0}}>
+                   <div style={{width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column'}}>
+                                                <Typography variant="h4" style={{color:"#999"}}>There's an issue with your system clock.</Typography>
+                                                <Typography variant="subtitle2" style={{color:"#999", marginBottom:'1rem'}}>We recommend that you check your system settings, adjust date and time and then try again.  </Typography>
+                                                <Button variant="contained" onClick={()=>{
+                                                    this.loadData()
+                                                }}>Reload</Button>
+                                            </div>
+                                            </CardContent>
+                                            </Card>
+                                        }
 
 {this.state.isLoading &&  <LoadingModal show={this.state.isLoading}></LoadingModal>}
 </div>
