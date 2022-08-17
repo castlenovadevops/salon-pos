@@ -365,14 +365,11 @@ export default class EmployeeReport extends React.Component {
 
             supplysql = `select SUM(service_cost) as PaidAmount from ticket_services as ts join ticket_payment as tp on tp.ticketref_id=ts.ticketref_id  where tp.isActive=1 and  tp.ticketref_id in   (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where   DATE(paid_at) = '`+input.from_date+`') and isDelete=0 and businessId=`+input.businessId+` and paid_status='paid') and ts.service_id in (select sync_id from services where producttype='product')`
 
-            profitsql= `select sum(cash_amt) as profit from employee_commission_detail as ec where (ec.cash_type_for='ownercommission' or ec.cash_type_for='product') and  ec.ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where   DATE(paid_at) = '`+input.from_date+`') and isDelete=0 and businessId=`+input.businessId+` and paid_status='paid')`; 
+            profitsql= `select sum(cash_amt) as profit from employee_commission_detail as ec where (ec.cash_type_for='ownercommission' or ec.cash_type_for='product') and ec.isActive=1  and  ec.ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where   DATE(paid_at) = '`+input.from_date+`') and isDelete=0 and businessId=`+input.businessId+` and paid_status='paid')`; 
         }  
-        // console.log(sql);
+        console.log(sql);
         // console.log(discountquery);
-        this.dataManager.getData(sql).then(results=>{ 
-            // console.log("%%%%%%%%")
-            // console.log(results);
-            // console.log("-------------")
+        this.dataManager.getData(sql).then(results=>{  
             this.dataManager.getData(discountquery).then(disres=>{ 
                 this.dataManager.getData(taxsql).then(taxres=>{  
                     this.dataManager.getData(cashsql).then(cashres=>{ 
@@ -384,7 +381,7 @@ export default class EmployeeReport extends React.Component {
 
                                             this.setState({supplydetail:supplyres, profitdetail:profitres.length >0? profitres[0]:{profit:0}}, ()=>{
                                                 console.log("################### supply detail")
-                                                console.log(data)
+                                                console.log(profitres)
                                                 console.log("###################")
                                             })
                                             this.formatResponse({
@@ -757,11 +754,11 @@ export default class EmployeeReport extends React.Component {
             var ticketservicecount = c_obj.ticketservicecount+obj.ticket_servicescount;
 
             var Amount = Number(c_obj.Amount);
+            Tips = Number(c_obj.Tips)+Number(obj.Tips) ;
+            Discount = Number(c_obj.Discount)+Number(obj.Discount); 
             Amount = Number(c_obj.Amount)+Number(obj.Amount);
             if(ticketcodes.indexOf(obj.ticket_code) === -1){
                 ticketcount += 1;  
-                Tips = Number(c_obj.Tips)+Number(obj.Tips) ;
-                Discount = Number(c_obj.Discount)+Number(obj.Discount); 
                 ticketslist.push(obj);
             }
             var resultobj = {

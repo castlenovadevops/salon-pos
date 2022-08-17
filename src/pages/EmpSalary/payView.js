@@ -101,7 +101,7 @@ export default class ReportView extends React.Component  {
                 }) 
                 totalwithouttips = totalpayable - this.state.selected_emp.Discount
                 totalpayable = totalpayable+ this.state.selected_emp.Tips - this.state.selected_emp.Discount;
-                this.setState({totalpayable: totalpayable}, ()=>{
+                 this.setState({totalpayable: totalpayable}, ()=>{
                     this.setState({
                     //     cashpay: totalpayable*(Number(this.state.commission.cash_percentage)/100),
                     // checkpay: totalpayable*(Number(this.state.commission.check_percentage)/100), 
@@ -358,15 +358,17 @@ export default class ReportView extends React.Component  {
                                         onKeyDown = {(e)=>{ 
                                             if(e.key === 'e'  || e.key === "+" || e.key === "-" ){ 
                                                 e.preventDefault();
-                                            } 
-                                
-                                        if( e.keyCode > 64 && e.keyCode < 91 ) {  
-                                            e.preventDefault(); 
-                                        }
-                                            if(e.key === "." && (e.target.value==="" || e.target.value.length===0) ) { 
+                                            }  
+                                            else if( e.keyCode > 64 && e.keyCode < 91 ) {  
+                                                e.preventDefault(); 
+                                            }
+                                            else if(e.key === "." && (e.target.value==="" || e.target.value.length===0) ) { 
                                                 e.preventDefault();
                                             
                                             } 
+                                            else if(e.target.value.length > 3 && e.keyCode !== 8 && e.keyCode !== 46){
+                                                e.preventDefault()
+                                            }
                                         }}
                                         style={{margin:'1rem 0'}}
                                     />
@@ -398,17 +400,16 @@ export default class ReportView extends React.Component  {
                                         onKeyDown = {(e)=>{ 
                                             if(e.key === 'e'  || e.key === "+" || e.key === "-" ){ 
                                                 e.preventDefault();
-                                            } 
-                                
-                                        else if( e.keyCode > 64 && e.keyCode < 91 ) {  
-                                            e.preventDefault(); 
-                                        }
+                                            }  
+                                            else if( e.keyCode > 64 && e.keyCode < 91 ) {  
+                                                e.preventDefault(); 
+                                            }
                                             else if(e.key === "." && (e.target.value==="" || e.target.value.length===0) ) { 
                                                 e.preventDefault();
                                             
                                             } 
-                                            else{
-                                                
+                                            else if(e.target.value.length > 3 && e.keyCode !== 8 && e.keyCode !== 46){
+                                                e.preventDefault()
                                             }
                                         }}
                                         style={{margin:'1rem 0'}}

@@ -555,6 +555,10 @@ export default class EmployeeReport extends React.Component {
                     if(empsal.length > 0){
                         commissiondetail = empsal[0];
                         console.log("commisison", commissiondetail)
+                        if(empsal[0].tips_cash_percentage === null){
+                            commissiondetail["tips_cash_percentage"] = defcom[0].tips_cash_percentage;
+                            commissiondetail["tips_check_percentage"] = defcom[0].tips_check_percentage;
+                        }
                     }
                     this.dataManager.getData(sql ).then(res=>{
                         this.dataManager.getData(commsql).then(comm=>{

@@ -380,6 +380,8 @@ class TicketPayment extends React.Component  {
                                     <Typography style={{margin: 10}} id="modal-modal-title" variant="subtitle2" align="left"> Pay For This Order</Typography>
 
                                     <Typography style={{margin: 10}} id="modal-modal-title" variant="subtitle2" align="left"> Order Subtotal : ${this.state.ticketDetail.subtotal}</Typography>
+                                    <Typography style={{margin: 10}} id="modal-modal-title" variant="subtitle2" align="left"> Tips : ${this.state.ticketDetail.tips_totalamt}</Typography>
+                                    <Typography style={{margin: 10}} id="modal-modal-title" variant="subtitle2" align="left"> Discount : ${this.state.ticketDetail.discount_totalamt}</Typography>
                                     <Typography style={{margin: 10}} id="modal-modal-title" variant="subtitle2" align="left"> Tax :  ${this.state.ticketDetail.total_tax} </Typography>
                                     <Typography style={{margin: 10}} id="modal-modal-title" variant="subtitle2" align="left"> Total : ${this.state.ticketDetail.grand_total}</Typography>
                                     {/* <Typography style={{margin: 10}} id="modal-modal-title" variant="subtitle2" align="left"> Amount Remaining</Typography> */}

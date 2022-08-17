@@ -1056,6 +1056,7 @@ export default class CreateTicket extends React.Component {
     }
 
     handleTicketPayment(){
+        
         this.setState({isLoading: true})
        if(this.state.isEdit){
            var detail = Object.assign({}, this.state.ticketSelected);

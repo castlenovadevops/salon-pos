@@ -145,6 +145,7 @@ class SplitService extends React.Component  {
             var synid = sync.syncid+"Split"+(this.state.splittedservice.length+1);
             var input =  {};
             input = Object.assign({},this.state.service_selected); 
+            console.log(this.state.service_selected)
             input.servicedetail["uniquId"]=undefined;
             input.process = "Splitted";
             input.employee_id = 0;
