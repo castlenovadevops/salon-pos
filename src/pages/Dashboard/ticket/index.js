@@ -1272,7 +1272,9 @@ onClockout() {
 
 handleChange(uvalue) {
     //console.log("newValue:",newValue)
-    this.setState({value: uvalue})
+    this.setState({value: uvalue, ticket_list:[], paid_ticket_list:[]}, ()=>{
+        this.getTicketList(true);
+    })
 };
 
 handleOpenTicket(){
@@ -1301,6 +1303,9 @@ getTicketList(loading){
     var todayDate = Moment(new Date()).format('YYYY-MM-DD');
 
 
+    let from_date = Moment(this.state.from_date).format('YYYY-MM-DD');
+    let to_date = Moment(this.state.to_date).format('YYYY-MM-DD');
+
     var sql = `select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value,t.sync_id, t.discount_totalamt, t.sync_id, c.name as customer_name from ticket as t left join customers as c on t.customer_id=c.sync_id where t.businessId='`+businessdetail["id"]
     +`' and t.isDelete!=1 and t.sync_status=0 order by t.created_at desc`
  
@@ -1309,14 +1314,17 @@ getTicketList(loading){
        if (response instanceof Array) {
       
            this.setState({unsyncedCount: response.length}, function() {
-
-            var sql = "select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value, t.discount_totalamt, t.sync_id,c.name as customer_name, tp.pay_mode, tp.paid_at from ticket as t left join customers as c on t.customer_id=c.sync_id left join ticket_payment as tp on tp.ticketref_id=t.sync_id where t.businessId='"+businessdetail["id"]+"' and t.isDelete!=1 order by t.created_at desc"
+            var sql = "select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value, t.discount_totalamt, t.sync_id,c.name as customer_name, tp.pay_mode,tp.paid_at from ticket as t left join customers as c on t.customer_id=c.sync_id left join ticket_payment as tp on tp.ticketref_id=t.sync_id where t.businessId='"+businessdetail["id"]+"' and t.isDelete!=1 and tp.paid_at between '"+from_date+"' and '"+to_date+"' order by ticket_code desc" 
+           
+            if(this.state.value === 0){
+                sql = "select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value, t.discount_totalamt, t.sync_id,c.name as customer_name, tp.pay_mode, tp.paid_at from ticket as t left join customers as c on t.customer_id=c.sync_id left join ticket_payment as tp on tp.ticketref_id=t.sync_id where t.businessId='"+businessdetail["id"]+"' and t.isDelete!=1 order by t.created_at desc"
+            }
            console.log(sql);
             this.state.dataManager.getData(sql).then(response =>{
                 console.log("response", response)
                 if (response instanceof Array) { 
                     let selected_ticket = response.filter(item => item.paid_status !== "paid")
-                    let selected_paid_ticket = response.filter(item => item.paid_status === "paid" && item.paid_at !== null && item.paid_at !== undefined && item.paid_at.indexOf(todayDate)>-1)
+                    let selected_paid_ticket = response.filter(item => item.paid_status === "paid" && item.paid_at !== null && item.paid_at !== undefined  )
                     this.setState({ticket_list: response,isLoading: false, unpaid_ticket_list:selected_ticket,paid_ticket_list: selected_paid_ticket, isLoading: false}, function() { 
                         this.state.unpaid_ticket_list.map((data)=>{
                             this.getTicketService(data.id)

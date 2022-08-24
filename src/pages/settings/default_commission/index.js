@@ -312,7 +312,7 @@ syncIndividualEntry(mindex, idx, data, tbldata) {
               <CommissionForm afterSubmit={(msg)=>{this.handleCloseform(msg);}} commissionToEdit={this.state.selectedcommission}/> 
               </div></div>
                 :
-                <div style={{boxShadow: " 0 4px 8px 0 rgba(0,0,0,0.2)", transition: "0.3s", height: '50%',background: 'white', width:'60%'}}>
+                <div style={{boxShadow: " 0 4px 8px 0 rgba(0,0,0,0.2)", transition: "0.3s", height: '70%',background: 'white', width:'60%'}}>
                 <div className="tabcontent" style={{ height: '100%', width: '100%', background: 'white',  }}>
                  <CommissionForm afterSubmit={(msg)=>{this.handleCloseform(msg);}}/>  </div></div>
                  

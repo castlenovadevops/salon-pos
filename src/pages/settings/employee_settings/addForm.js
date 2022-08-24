@@ -65,6 +65,7 @@ export default class EmployeeSettingForm extends React.Component {
             perAlert_Open: false,
             alert_msg:'',
             employeelist:[],
+            allemployeelist:[],
             searched:'',
             isOnline: false,
             offlineCheckAlert: false,
@@ -117,7 +118,7 @@ export default class EmployeeSettingForm extends React.Component {
                 const dataManager = new DataManager()
                 dataManager.getData("select * from users").then(response =>{
                     if (response instanceof Array) {
-                        this.setState({employeelist: response}, function(){
+                        this.setState({employeelist: response, allemployeelist:response}, function(){
                             console.log(this.state.employeelist)
                             if(response.length > 0){
                                 this.getEmp(response[0].id);
@@ -192,7 +193,7 @@ syncIndividualEntry(mindex, idx, data, tbldata) {
                 var data = res.data.data;
                 if(status === 200){
                     if(data.length >0){
-                        this.setState({employeelist:data}, function(){
+                        this.setState({employeelist:data, allemployeelist:data}, function(){
                             let selected_emp = this.state.employeelist.filter(item => item.staff_role === "Owner");
                             console.log("selected_emp selected_emp", selected_emp, this.state.employeeId)
                             // var newarr = this.state.employeelist.filter(function(item){
@@ -489,7 +490,10 @@ syncIndividualEntry(mindex, idx, data, tbldata) {
         //console.log(e.target.value);
         this.setState({searched : e.target.value}, function(){
             if(this.state.searched !== ''){
-                const filteredRows = this.state.employeelist.filter(item => item.firstName.includes(this.state.searched));
+                this.state.allemployeelist.forEach(i=>{
+                    console.log(i.firstName, i.firstName.indexOf(this.state.searched))
+                })
+                const filteredRows = this.state.allemployeelist.filter(item => item.firstName.toLowerCase().includes(this.state.searched.toLowerCase()));
                 this.setState({employeelist: filteredRows}) 
             }else{
                 this.getEmployeeList();
@@ -549,6 +553,7 @@ syncIndividualEntry(mindex, idx, data, tbldata) {
             delete input["perAlert_Open"];
             delete input["alert_msg"];
             delete input["employeelist"];
+            delete input["allemployeelist"]
             delete input["searched"];
             delete input["isOnline"];
             delete input["offlineCheckAlert"];
@@ -610,7 +615,7 @@ syncIndividualEntry(mindex, idx, data, tbldata) {
 
                         </Typography>
                         {this.state.employeelist.length>0 &&
-                            <div style={{height:'92%',borderRight:'2px solid #f0f0f0',borderLeft:'2px solid #f0f0f0', overflowY: "auto"}}>
+                            <div style={{height:'75%',borderRight:'2px solid #f0f0f0',borderLeft:'2px solid #f0f0f0', overflowY: "auto"}}>
                             
                                 {this.state.employeelist.map((emp, index) => (
                                     <Grid item xs={12} style={{'background':(this.state.employeeId ===emp.id ? '#134163':'transparent'),'color':(this.state.employeeId===emp.id ? '#fff':'#000')}} >
