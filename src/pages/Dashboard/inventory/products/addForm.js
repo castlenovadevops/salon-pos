@@ -118,6 +118,11 @@ export default class ProductForm extends React.Component {
                     this.getServiceCategories();
                 })
             }
+            else{
+
+                this.setState({ isCustom: false, isDefault: true })
+                this.getDefaultTax()
+            }
         }, 100);
         this.getAllTax();
         this.getDefaultTax();
