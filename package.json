@@ -1,8 +1,8 @@
 {
-  "name": "astropos",
+  "name": "castlenova",
   "version": "1.0.0",
   "private": true,
-  "main": "build/electron.js",
+  "main": "build/elect.js",
   "homepage": "./",
   "dependencies": {
     "@emotion/react": "^11.5.0",
@@ -46,15 +46,16 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start-react": "PORT=9000 BROWSER=none react-scripts start",
+    "start-react": "react-scripts start",
     "build-react": "react-scripts build",
     "start-electron": "nodemon --watch ./public/* --exec \"electron .\"",
-    "start": "cp electron.js ./public/electron.js && cp electron.js ./build/electron.js && concurrently \"npm run start-react\" \"wait-on http://localhost:9000 && npm run start-electron\" ",
-    "startcomplete": "rm -rf ./userdata && cp db/empty.sqlite3 db/salon.sqlite3 &&  cp electron.js ./build/electron.js && concurrently \"npm run start-react\" \"wait-on http://localhost:9000 && npm run start-electron\" ",
+    "start": "cp elect.js ./public/elect.js && cp elect.js ./build/elect.js && concurrently \"npm run start-react\" \"wait-on http://localhost:9000 && npm run start-electron\" ",
+    "start:win": "concurrently \"npm run start-react\" \"wait-on http://localhost:3000 && npm run start-electron\" ",
+    "startcomplete": "rm -rf ./userdata && cp db/empty.sqlite3 db/salon.sqlite3 &&  cp elect.js ./build/elect.js && concurrently \"npm run start-react\" \"wait-on http://localhost:9000 && npm run start-electron\" ",
     "postinstall": "electron-builder install-app-deps",
     "pack-app": "npm run build-react && electron-builder -mwl --dir",
     "pack-build": "electron-builder --dir",
-    "build": "cp electron.js ./public/electron.js && cp db/empty.sqlite3 db/salon.sqlite3 && cp electron.js ./build/electron.js && npm run build-react && electron-builder -mw",
+    "build": "cp elect.js ./public/elect.js && cp db/empty.sqlite3 db/salon.sqlite3 && cp elect.js ./build/elect.js && npm run build-react && electron-builder -mw",
     "rebuild": "electron-rebuild -f -w sqlite3",
     "rebuild-arm64": "electron-rebuild -f --arch=arm64"
   },

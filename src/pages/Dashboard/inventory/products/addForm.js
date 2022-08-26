@@ -151,7 +151,9 @@ export default class ProductForm extends React.Component {
                 categories.push(elmt.category_id);
                 if (i === res.length - 1) { 
                     console.log(categories)
-                    this.setState({ selectedcategory: categories }); 
+                    this.setState({ selectedcategory: categories }, ()=>{
+                        this.handleValidation();
+                    }); 
                 }
             })
         }) 
@@ -204,6 +206,8 @@ export default class ProductForm extends React.Component {
     handleValidation() {
         let formIsValid = true;
         let fields = this.state;
+        console.log("field validatiaon")
+        console.log(fields.tax_type, fields.taxes.length);
         //name
         if (!fields.name) {
             formIsValid = false;
@@ -226,6 +230,11 @@ export default class ProductForm extends React.Component {
             formIsValid = false;
             this.setState({ isDisable: true });
         }
+        else if(fields.tax_type === 'custom' && fields.taxes.length === 0){
+            console.log("tax custom")
+            formIsValid = false;
+            this.setState({ isDisable: true });
+        }
         else {
             this.setState({ isDisable: false });
         }
@@ -238,18 +247,22 @@ export default class ProductForm extends React.Component {
         });
     }
     handleradio(e) {
-        this.setState({ tax_type: e.target.value })
-        if (e.target.value === 'default') {
-            this.setState({ isCustom: false, isDefault: true })
-            this.getDefaultTax()
-        }
-        else if (e.target.value === 'custom') {
-            this.setState({ isCustom: true, isDefault: false })
-            this.getAllTax();
-        }
-        else {
-            this.setState({ isCustom: false, isDefault: false });
-        }
+        this.setState({ tax_type: e.target.value },()=>{
+            if (e.target.value === 'default') {
+                this.setState({ isCustom: false, isDefault: true, taxes:[], service_taxes:[] })
+                this.getDefaultTax();
+                this.handleValidation();
+            }
+            else if (e.target.value === 'custom') {
+                this.setState({ isCustom: true, isDefault: false })
+                this.getAllTax();
+                this.handleValidation();
+            }
+            else {
+                this.setState({ isCustom: false, isDefault: false, taxes:[], service_taxes:[] });
+                this.handleValidation();
+            }
+        });
 
     }
     handleCheckbox(event) {
@@ -279,7 +292,9 @@ export default class ProductForm extends React.Component {
             taxArr.push(value);
         }
         console.log(taxArr)
-        this.setState({ taxes: taxArr });
+        this.setState({ taxes: taxArr },()=>{
+            this.handleValidation();
+        });
     }
     getDefaultTax() {
 
@@ -736,7 +751,7 @@ export default class ProductForm extends React.Component {
                                     <FormLabel component="legend" style={{ marginTop: '10px', display: !this.state.isTax_available ? 'block' : 'none' }}>No Tax Found!</FormLabel>
                                 </FormControl>
                             </Stack>
-                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} style={{display: (this.state.isDefault && this.state.isTax_available)  ? 'block':'none'}}>
+                            {this.state.isDefault && this.state.isTax_available && <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} >
                                 <Box sx={{ display: 'flex', alignItems: 'flex-end', }}>
                                     {/* <FormControl sx={{ m: 3 }} component="fieldset" variant="standard" > */}
                                     <div style={{display: this.state.isDefaultTax_available ? 'block': 'none'}}>    
@@ -765,8 +780,9 @@ export default class ProductForm extends React.Component {
                                     </div>
                                     <FormLabel component="legend" style={{marginTop:'10px',display: !this.state.isDefaultTax_available  ? 'block': 'none'}}>No Default Tax Found!</FormLabel>
                                 </Box>
-                            </Stack>
-                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} style={{display: (this.state.isCustom && this.state.isTax_available)  ? 'block':'none'}}>
+                            </Stack>}
+                            
+                            { (this.state.isCustom && this.state.isTax_available)  && <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} >
                                 <Box sx={{ display: 'flex', alignItems: 'flex-start' , flexDirection:'column'}}>
                                  
 
@@ -777,38 +793,10 @@ export default class ProductForm extends React.Component {
                                      label={v.tax_name + " (" + v.tax_value + " " + v.tax_type + ")"}
                                      onChange={(e) => { this.handleCheckbox(e); }}
                                      inputProps={{ 'aria-label': 'controlled' }}
-                                   /> {v.tax_name + " (" + v.tax_value + " " + v.tax_type + ")"}<br/></div>
-
-                                // <Checkbox value={v.id} checked={this.isTaxCheck(v.id)} name={v.id} onChange={(e) => { this.handleCheckbox(e); }} label={v.name}/>
-                                })}
-                                    {/* <FormControl sx={{ m: 3 }} component="fieldset" variant="standard">
-                                        {this.state.all_taxDetail.length > 0 && this.state.all_taxDetail.map((v, i) => {
-                                            if (this.state.isEdit) {
-                                                return (<FormGroup>
-                                                    <FormControlLabel
-                                                        control={
-                                                            <Checkbox value={v.id} checked={this.isTaxCheck(v.id)} name={v.id} onChange={(e) => { this.handleCheckbox(e); }} />
-                                                        }
-                                                        label={v.tax_name + " (" + v.tax_value + " " + v.tax_type + ")"}
-                                                    // label={v.tax_name+" ("+v.tax_value + v.tax_type === 'percentage' ? '%' : '$'+")" }
-                                                    />
-                                                </FormGroup>
-                                                )
-                                            } else {
-                                                return (<FormGroup>
-                                                    <FormControlLabel
-                                                        control={
-                                                            <Checkbox value={v.id} name={v.tax_name} onChange={(e) => { this.handleCheckbox(e); }} />
-                                                        }
-                                                        label={v.tax_name + " (" + v.tax_value + " " + v.tax_type + ")"}
-                                                    />
-                                                </FormGroup>
-                                                )
-                                            }
-                                        })}
-                                    </FormControl> */}
+                                   /> {v.tax_name + " (" + v.tax_value + " " + v.tax_type + ")"}<br/></div>  
+                                })} 
                                 </Box>
-                            </Stack>
+                            </Stack>} 
                             <Stack direction="row" spacing={2} alignItems="center" justifyContent="center">
                                 <ButtonContent size="large" variant="contained" disabled={this.state.isDisable} label={this.state.isEdit ? 'Update' : 'Save'} onClick={() => this.saveService()} />
                                 <ButtonContent size="large" variant="outlined" label="Cancel" onClick={() => this.handleclose()} />

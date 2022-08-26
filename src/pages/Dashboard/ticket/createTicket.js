@@ -3288,23 +3288,24 @@ printTicket() {
                 var data = [];
                 data.push({
                     type: "text", 
-                    value: "TOP PAYMENT SOLUTIONS - Main",
+                    value: this.state.businessdetail.name,//"TOP PAYMENT SOLUTIONS - Main",
                     style: `text-align:center;`,
                     css: {  "font-weight": "700", "font-size": "16px" },
                     }); 
                 
                 data.push({
                     type: "text", 
-                    value: "3675 CRESTWOOD PKWY STE <br> DULUTH, GA  300965045 <br> 7706804075",
+                    value: this.state.businessdetail.address1+"<br/>"+ this.state.businessdetail.address2+"<br/>"+this.state.businessdetail.city+"<br/>" +this.state.businessdetail.state+ this.state.businessdetail.zipcode+"<br/>"+ this.state.businessdetail.businessphone, //"3675 CRESTWOOD PKWY STE <br> DULUTH, GA  300965045 <br> 7706804075",
                     style: `text-align:center;`,
                     css: { "font-size": "12px","margin-top": 2 },
                     }); 
                 data.push({
                     type: "text", 
-                    value: "http://toppaymentsolutions.com",
+                    value: "",//"http://toppaymentsolutions.com",
                     style: `text-align:center;`,
                     css: { "font-size": "10px","margin-top": 2 },
                     }); 
+
 
                 data.push({
                     type: "text", 

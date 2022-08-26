@@ -23,7 +23,8 @@ const db = new sqlite3.Database(
   }
 );
 
-// Menu.setApplicationMenu(null);
+Menu.setApplicationMenu(null);
+var splash;
 const createWindow = () => {
 
   splash = new BrowserWindow({width: 600, height: 300, alwaysOnTop: true, frame: false});
@@ -61,7 +62,7 @@ const createWindow = () => {
   mainWindow.maximize();
   // mainWindow.setSize(1024, 768);
   mainWindow.setMenuBarVisibility(false);
-  mainWindow.setApplicationMenu(null);
+  // mainWindow.setApplicationMenu(null);
     mainWindow.removeMenu();
   if (isDev) {
     mainWindow.webContents.on('did-frame-finish-load', () => {
