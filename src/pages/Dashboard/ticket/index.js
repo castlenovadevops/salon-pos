@@ -566,7 +566,7 @@ getClosedTicketsByDate(){
        if (response instanceof Array) {
       
            this.setState({unsyncedCount: response.length}, function() { 
-            var sql = "select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value, t.discount_totalamt, t.sync_id,c.name as customer_name, tp.pay_mode,tp.paid_at,tp.card_type, tp.notes as  payment_notes from ticket as t left join customers as c on t.customer_id=c.sync_id left join ticket_payment as tp on tp.ticketref_id=t.sync_id where t.businessId='"+businessdetail["id"]+"' and t.isDelete!=1 and DATE(tp.paid_at) between '"+from_date+"' and '"+to_date+"' order by ticket_code desc" 
+            var sql = "select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value, t.discount_totalamt, t.sync_id,c.name as customer_name, tp.pay_mode,tp.paid_at,tp.card_type, tp.notes as  payment_notes from ticket as t left join customers as c on t.customer_id=c.sync_id left join ticket_payment as tp on tp.ticketref_id=t.sync_id where t.businessId='"+businessdetail["id"]+"' and t.isDelete!=1 and DATE(tp.paid_at) between '"+from_date+"' and '"+to_date+"' order by tp.paid_at desc" 
             this.state.dataManager.getData(sql).then(response =>{
                 
                 if (response instanceof Array) { 
@@ -1323,10 +1323,10 @@ getTicketList(loading){
        if (response instanceof Array) {
       
            this.setState({unsyncedCount: response.length}, function() {
-            var sql = "select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value, t.discount_totalamt, t.sync_id,c.name as customer_name, tp.pay_mode,tp.paid_at, tp.card_type, tp.notes as payment_notes from ticket as t left join customers as c on t.customer_id=c.sync_id left join ticket_payment as tp on tp.ticketref_id=t.sync_id where t.businessId='"+businessdetail["id"]+"' and t.isDelete!=1 and DATE(tp.paid_at) between '"+from_date+"' and '"+to_date+"' order by ticket_code desc" 
+            var sql = "select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value, t.discount_totalamt, t.sync_id,c.name as customer_name, tp.pay_mode,tp.paid_at, tp.card_type, tp.notes as payment_notes from ticket as t left join customers as c on t.customer_id=c.sync_id left join ticket_payment as tp on tp.ticketref_id=t.sync_id where t.businessId='"+businessdetail["id"]+"' and t.isDelete!=1 and DATE(tp.paid_at) between '"+from_date+"' and '"+to_date+"' order by tp.paid_at desc" 
            
             if(this.state.value === 0){
-                sql = "select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value, t.discount_totalamt, t.sync_id,c.name as customer_name, tp.pay_mode, tp.paid_at,tp.card_type, tp.notes as payment_notes from ticket as t left join customers as c on t.customer_id=c.sync_id left join ticket_payment as tp on tp.ticketref_id=t.sync_id where t.businessId='"+businessdetail["id"]+"' and t.isDelete!=1 order by t.created_at desc"
+                sql = "select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value, t.discount_totalamt, t.sync_id,c.name as customer_name, tp.pay_mode, tp.paid_at,tp.card_type, tp.notes as payment_notes from ticket as t left join customers as c on t.customer_id=c.sync_id left join ticket_payment as tp on tp.ticketref_id=t.sync_id where t.businessId='"+businessdetail["id"]+"' and t.isDelete!=1 order by  tp.paid_at desc"
             }
            console.log(sql);
             this.state.dataManager.getData(sql).then(response =>{
@@ -1454,12 +1454,13 @@ render()  {
                             <div key="1" data-grid={{x: 0, y: 0,w: 4, h: 4.8}} style={{ padding:'5px 0',overflow:'auto', height:'100%'}}>
                             {/* style={{marginTop:10,maxHeight:'calc(50% - 20px)',height:'calc(50% - 20px)',overflow:'auto',padding:'0 0.75rem', boxShadow:'none', border:'1px solid #f0f0f0', borderBottom:0}} */}
                                 <Card style={{marginTop:-10,maxHeight:'50%',height:'50%',overflow:'auto',  boxShadow:'none', border:'1px solid #f0f0f0', borderBottom:0}}>
-                                    <CardContent style={{padding:'0 0 16px 0'}}>
+                                    <CardContent style={{padding:'0 0 16px 0', height:'100%'}}>
                                             <Typography style={{borderBottom:'1px solid #f0f0f0',background:'#134163',color:'#fff', padding:'0.5rem 0'}} variant="h6" align="center"> 
                                             Clocked-In Technicians</Typography> 
-                                            <div style={{display: 'flex', marginTop: 10, flexWrap:'wrap' ,padding:'0 0.75rem'}}>
+                                            <div style={{display: 'flex', marginTop: 10, flexWrap:'wrap' ,padding:'0 0.75rem', height:'calc(100% - 60px)', overflow:'auto', alignContent:'baseline'}}>
                                                 {this.state.staff_list.map((staff,i)=>{
                                                     let value;
+                                                    
                                                     if(staff.clocked_status !== null && staff.clocked_status.toLowerCase() === 'Clock-in'.toLowerCase() && staff.staff_role !== 'SA'){ 
                                                         value =  
                                                         <Grid className='techbtn'  item xs={4} style={{background:"",paddingRight: 2,paddingLeft: 2, paddingTop:2,paddingBottom:2,minWidth:(this.state.hide)?'90%':'33.33%', cursor:'pointer'}}> 
@@ -1489,16 +1490,16 @@ render()  {
                                         </CardContent>
                                 </Card>
                                 <Card style={{maxHeight:'50%',height:'50%',overflow:'auto', boxShadow:'none', border:'1px solid #f0f0f0', borderBottom:0}}>
-                                    <CardContent style={{padding:'0 0 16px 0'}}>
+                                    <CardContent style={{padding:'0 0 16px 0', height:'100%'}}>
                                             <Typography style={{borderBottom:'1px solid #f0f0f0',background:'#134163',color:'#fff', padding:'0.5rem 0'}} variant="h6" align="center"> 
                                             Technicians</Typography>
-                                            <div style={{display: 'flex', marginTop: 10, flexWrap:'wrap',padding:'0 0.75rem' }}>
+                                            <div style={{display: 'flex', marginTop: 10, flexWrap:'wrap',padding:'0 0.75rem', height:'calc(100% - 60px)', overflow:'auto', alignContent:'baseline'}}>
                                                 {this.state.staff_list.map((staff,i)=>{
                                                     let value;
                                                     if(staff.clocked_status === null ||  staff.clocked_status.toLowerCase() !== 'Clock-in'.toLowerCase() && staff.staff_role !== 'SA' ){ 
                                                         value = 
                                                         <Grid className='techbtn'  item xs={4} style={{background:"",paddingRight: 2,paddingLeft: 2, paddingTop:2,paddingBottom:2,minWidth:(this.state.hide)?'90%':'33.33%', cursor:'pointer'}}> 
-                                                        <div style={{background: '#F2F2F2',height:65,borderBottom: '0px solid #bee1f7', display: 'table',borderRadius: 10,display:'flex',alignItems:'center', justifyContent:'center',marginTop:10,marginBottom:5 }} 
+                                                        <div style={{background: '#F2F2F2',height:65,borderBottom: '0px solid #bee1f7', display: 'table',borderRadius: 10,display:'flex',alignItems:'center', justifyContent:'center', }} 
                                                         onDoubleClick={()=>{
                                                                  this.setState({ticketowner:staff})
                                                                  this.handleOpenClockin()
@@ -1555,16 +1556,9 @@ render()  {
                                 
                             </div>
 
-                            {(this.state.value ==1) && 
-                                <div style={{display:'flex', alignItems:'right', justifyContent:'flex-end', marginRight: 10}}> 
-                                    <IconButton onClick={()=>{
-                                        this.setState({showDatePopup: true})
-                                    }}><CalendarMonthOutlined/></IconButton>
-                                </div> 
-                            }
 
                             {(this.state.value ==0 && this.state.hide) && 
-                            <TableContent style={{ height: '100%', width: '100%',marginBottom: 10}}
+                            <TableContent style={{ marginBottom: 10}}
                             data={this.state.unpaid_ticket_list} 
                             columns={this.state.reponsiveColumns}
                             onRowClick={ this.onRowClick}
@@ -1572,28 +1566,36 @@ render()  {
                             }
 
                             {(this.state.value ==0 && this.state.hide==false) && 
-                           <TableContent style={{ height: '100%', width: '100%',marginBottom: 10}}
+                           <TableContent style={{ marginBottom: 10}}
                            data={this.state.unpaid_ticket_list} 
                            columns={this.state.columns}
                            onRowClick={ this.onRowClick}
                            />
                            }
 
-                            {(this.state.value ==1 &&  this.state.hide) && 
-                                <TableContent style={{ height: '100%', width: '100%',marginBottom: 10}}
-                                data={this.state.paid_ticket_list} 
-                                columns={this.state.closedticket_reponsiveColumns}
-                                onRowClick={ this.onRowClick}
-                            />
-                            }
+                            {(this.state.value ==1) && <div style={{position:'relative', height:'100%'}}>
+                                    <div style={{display:'flex', alignItems:'right', justifyContent:'flex-end', marginRight: 10, position:'absolute', right:0}}> 
+                                        <IconButton onClick={()=>{
+                                            this.setState({showDatePopup: true})
+                                        }}><CalendarMonthOutlined/></IconButton>
+                                    </div> 
+                                    {(this.state.value ==1 &&  this.state.hide) && 
+                                        <TableContent style={{ marginBottom: 10}}
+                                        data={this.state.paid_ticket_list} 
+                                        columns={this.state.closedticket_reponsiveColumns}
+                                        onRowClick={ this.onRowClick}
+                                    />
+                                    }
 
 
-                            {(this.state.value ==1 &&  this.state.hide==false) && 
-                                <TableContent style={{ height: '100%', width: '100%',marginBottom: 10}}
-                                data={this.state.paid_ticket_list} 
-                                columns={this.state.closedticket_columns}
-                                onRowClick={ this.onRowClick}
-                            />
+                                    {(this.state.value ==1 &&  this.state.hide==false) && 
+                                        <TableContent style={{  marginBottom: 10}}
+                                        data={this.state.paid_ticket_list} 
+                                        columns={this.state.closedticket_columns}
+                                        onRowClick={ this.onRowClick}
+                                    />
+                                }
+                                </div>
                             }
 
                             </Box>

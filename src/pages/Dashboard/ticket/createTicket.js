@@ -722,7 +722,7 @@ export default class CreateTicket extends React.Component {
   
     getTaxes(){
         var businessdetail = JSON.parse(window.localStorage.getItem('businessdetail'));
-        const sql = "select sync_id as id, tax_name, tax_type, tax_value, isDefault, created_at, created_by, updated_at, updated_by, status, businessId, sync_status, sync_id from taxes where businessId="+businessdetail.id+" and status=\"active\""; 
+        const sql = "select sync_id as id, tax_name, tax_type, tax_value, isDefault, created_at, created_by, updated_at, updated_by, status, businessId, sync_status, sync_id from taxes where status='active'"; 
         console.log("getTaxes::",sql)
         this.state.dataManager.getData(sql).then(taxes=>{ 
             this.setState({businesstaxes: taxes}, function(){})
@@ -4062,7 +4062,7 @@ handleCheckbox(e,selectedtax ){
     }
     else{   
         console.log("2.handleCheckbox")
-        var idx = taxids.indexOf(Number(selectedtax.id));
+        var idx = taxids.indexOf(selectedtax.id);
         taxes.splice(idx, 1);
         service.taxes = taxes;
        
@@ -4613,7 +4613,7 @@ render() {
                 <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
                 </div>
                 <div style={{background:'#fff', height:'80%', width:'900px', margin:'5% auto 0', position:'relative', borderRadius: 10}}> 
-                    <SelectCustomer handleCloseCustomer={()=>this.handleCloseCustomer()} afterSubmit={()=>{this.handleCloseCustomer()}} onSelectCustomer={this.onSelectCustomer}/>
+                    <SelectCustomer customerDetail={this.state.customer_detail} handleCloseCustomer={()=>this.handleCloseCustomer()} afterSubmit={()=>{this.handleCloseCustomer()}} onSelectCustomer={this.onSelectCustomer}/>
                 </div>
             </div>
         </div>}

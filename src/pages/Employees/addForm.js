@@ -111,6 +111,15 @@ export default class EmployeeForm extends React.Component {
             this.setState(statevbl);
             this.handleValidation();
           }
+          else{ 
+            console.log("cjheck zipcode")
+            let statevbl = this.state
+            if(statevbl[e.target.name].length > e.target.value.length){
+              statevbl[e.target.name] = e.target.value;
+              this.setState(statevbl);
+              this.handleValidation();
+            }
+          }
         }
         else if(e.target.name === "state"){
           if(e.target.value.match( "^.{3,3}$")===null) {
@@ -131,7 +140,8 @@ export default class EmployeeForm extends React.Component {
     }
 
     handlechangepasscode(e){
-      const numberPattern = new RegExp(/^[0-9\b]+$/);
+      const numberPattern = new RegExp(/^[0-9\b]+$/); 
+      console.log(e.target.value, "value")
       if (numberPattern.test(e.target.value)) {
         if(this.state.passcode.length < 4){
           this.setState({passcode: e.target.value});
@@ -141,9 +151,15 @@ export default class EmployeeForm extends React.Component {
            this.setState({passcode: str.slice(0, -1)});
           }
         }
-        this.handleValidation();
-        
+        this.handleValidation(); 
       } 
+      else{ 
+        console.log("cjheck passcode")
+        if(this.state.passcode.length > e.target.value.length){
+          var str = this.state.passcode
+         this.setState({passcode: str.slice(0, -1)});
+        }
+      }
       // else{
       //   this.setState({passcode: ''});
       // }

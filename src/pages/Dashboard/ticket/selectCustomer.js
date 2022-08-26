@@ -30,6 +30,7 @@ export default class SelectCustomer extends React.Component {
             origincustomers: [],
             isAddCustomerOpen: false,
             isLoading: false,
+            customerDetail:{},
             columns:[
                 {
                     field: 'name',
@@ -76,7 +77,8 @@ export default class SelectCustomer extends React.Component {
                     editable: false,
                     renderCell: (params) => (
                         <strong>  
-                            <ButtonContent color="success" variant="contained" size="small"  onClick={()=>this.onSelectCustomer(params.row)} label="Select"/>
+                            {this.state.customerDetail.id !== params.row.id && <ButtonContent color="success" variant="contained" size="small"  onClick={()=>this.onSelectCustomer(params.row)} label="Select"/>}
+                            {this.state.customerDetail.id === params.row.id && <ButtonContent color="success" variant="contained" size="small"  onClick={()=>this.onDeSelectCustomer(params.row)} label="Deselect"/>}
                         </strong>
                     )
                 },
@@ -89,9 +91,22 @@ export default class SelectCustomer extends React.Component {
     }
 
    
+
+    static getDerivedStateFromProps(nextProps, prevState){
+        if(nextProps.customerDetail!==prevState.customerDetail ){
+            return { customerDetail: nextProps.customerDetail};
+        }
+        else return null;
+     }
+
     
     componentDidMount(){
-        this.getCustomerList()
+        this.getCustomerList(); 
+        if(this.props.customerDetail.name !== undefined){
+            if(Object.keys(this.props.customerDetail).length > 0){
+                this.setState({customerDetail: this.props.customerDetail})
+            }
+        }
     }
    
     requestSearch(searchVal) { 
@@ -162,10 +177,12 @@ export default class SelectCustomer extends React.Component {
         })
     }
 
-    onSelectCustomer(row) {
-        
-        
+    onSelectCustomer(row) { 
         this.props.onSelectCustomer(row); 
+    } 
+    
+    onDeSelectCustomer(row) { 
+        this.props.onSelectCustomer({}); 
     }
         
     render(){

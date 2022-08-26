@@ -205,21 +205,21 @@ export default class TextFieldContent extends React.Component {
           e.target.name === "tax_value" || e.target.name === "employee_percentage" || e.target.name === "owner_percentage"||
           e.target.name === "check_percentage" || e.target.name === "cash_percentage" || e.target.name === "employee_percentage" || e.target.name === "owner_percentage" ||
           e.target.name === "discount_value" || e.target.name === "emp_division" ||e.target.name === "owner_division" || e.target.name === "service_price" || e.target.mame === "variable_price"
-          ||e.target.name === "price" || e.target.name === "cost"){  
+          ||e.target.name === "price" || e.target.name === "cost" || e.target.name === "zipcode" || e.target.name ==='passcode'){  
             if(e.key === 'e'  || e.key === "+" || e.key === "-" ){ 
+              console.log( e.keyCode , "1keycode")
                 e.preventDefault();
+            } 
+            else if( e.keyCode > 64 && e.keyCode < 91 ) {
+              console.log( e.keyCode , "2keycode")  
+                e.preventDefault(); 
             }
-
-          const numberPattern = new RegExp(/^[0-9\b]+$/); 
-
-          if( e.keyCode > 64 && e.keyCode < 91 ) {  
-              e.preventDefault(); 
-          }
-            if(e.key === "." && (e.target.value==="" || e.target.value.length===0) ) { 
-                e.preventDefault();
-               
+            else if(e.key === "." && e.keyCode !== 8 && (e.target.value==="" || e.target.value.length===0) ) { 
+              console.log( e.keyCode , "keycode")
+                  e.preventDefault();
+                
+              }
             }
-          }
         }}
        
       />

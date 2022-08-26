@@ -262,7 +262,7 @@ export default class App extends React.Component {
                     Employee 
                 </Grid>
             </Grid>
-            <div style={{ width: '100%', height:  'calc(100% - 0px)',overflow: 'hidden', background: 'white'}}>
+            <div style={{ width: '100%', height:  'calc(100% - 60px)',overflow: 'hidden', background: 'white'}}>
         
             <div style={{width: '100%', height: 'calc(100% - 0px)',paddingLeft: 0,paddingTop: 0,paddingBottom: 0,overflowY:'auto', overflowX:'hidden', 
             boxSizing: 'content-box', background: 'white'}}>

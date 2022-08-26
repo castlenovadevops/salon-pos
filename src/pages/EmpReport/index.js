@@ -1342,8 +1342,7 @@ export default class EmployeeReport extends React.Component {
                                 <Grid item xs={2}>{ Number(totalAmount) > 0 ? "$"+( Number(totalAmount)).toFixed(2) : '-' }</Grid>
                             </Grid>
                         </div>)
-                        totalAmount += emp.taxamount
-
+                        totalAmount += emp.taxamount 
                     reportdetail.push(<div style={{display:'flex',width:'100%', alignItems:'flex-start', justifyContent:'flex-start', flexDirection:'column', marginTop:'2rem'}}>
 
                             <Typography variant="h6" style={{textTransform:'capitalize', fontWeight:'700'}}>Discounts</Typography>
@@ -1372,16 +1371,16 @@ export default class EmployeeReport extends React.Component {
                             </Grid> 
 
 
-                            <Grid container style={{textTransform:'capitalize', fontWeight:'700', display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:'2rem', width:'100%',}}>
+                            {/* <Grid container style={{textTransform:'capitalize', fontWeight:'700', display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:'2rem', width:'100%',}}>
                         <Grid item xs={8}>Supplies</Grid>
                         <Grid item xs={4}>${emp.supplies_amt !== null ? Number(emp.supplies_amt).toFixed(2) : '0.00'}</Grid>
                         
+                    </Grid> */}
                         <Grid container style={{textTransform:'capitalize', fontWeight:'700', display:'flex', alignItems:'center', justifyContent:'space-between',  width:'100%',}}>
                             <Grid item xs={8}>Tax Amount</Grid>
                             <Grid item xs={4}>${emp.taxamount !== null ? Number(emp.taxamount).toFixed(2) : '0.00'}</Grid>
                         </Grid> 
 
-                    </Grid>
                         <Grid container style={{textTransform:'capitalize', fontWeight:'700', display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:'2rem', width:'100%',}}>
                             <Grid item xs={8}>Payment Methods</Grid>
                             <Grid item xs={4}></Grid>
@@ -1405,6 +1404,10 @@ export default class EmployeeReport extends React.Component {
                         <Grid container style={{textTransform:'capitalize', fontWeight:'700', display:'flex', alignItems:'center', justifyContent:'space-between',  width:'100%',}}>
                             <Grid item xs={8}>Net</Grid>
                             <Grid item xs={4}>${emp.nett !== null ? Number(Number(emp.nett) - Number(discounttotal)).toFixed(2) : '0.00'}</Grid>
+                        </Grid> 
+                        <Grid container style={{textTransform:'capitalize', fontWeight:'700', display:'flex', alignItems:'center', justifyContent:'space-between',  width:'100%',}}>
+                            <Grid item xs={8}>Net Total</Grid>
+                            <Grid item xs={4}>${emp.nett !== null ? Number(Number(emp.nett) - Number(discounttotal) + Number(totalTips)).toFixed(2) : '0.00'}</Grid>
                         </Grid> 
                         </div>)
                 }
