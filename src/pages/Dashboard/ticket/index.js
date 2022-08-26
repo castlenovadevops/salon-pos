@@ -566,7 +566,7 @@ getClosedTicketsByDate(){
        if (response instanceof Array) {
       
            this.setState({unsyncedCount: response.length}, function() { 
-            var sql = "select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value, t.discount_totalamt, t.sync_id,c.name as customer_name, tp.pay_mode,tp.paid_at from ticket as t left join customers as c on t.customer_id=c.sync_id left join ticket_payment as tp on tp.ticketref_id=t.sync_id where t.businessId='"+businessdetail["id"]+"' and t.isDelete!=1 and tp.paid_at between '"+from_date+"' and '"+to_date+"' order by ticket_code desc" 
+            var sql = "select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value, t.discount_totalamt, t.sync_id,c.name as customer_name, tp.pay_mode,tp.paid_at,tp.card_type, tp.notes as  payment_notes from ticket as t left join customers as c on t.customer_id=c.sync_id left join ticket_payment as tp on tp.ticketref_id=t.sync_id where t.businessId='"+businessdetail["id"]+"' and t.isDelete!=1 and DATE(tp.paid_at) between '"+from_date+"' and '"+to_date+"' order by ticket_code desc" 
             this.state.dataManager.getData(sql).then(response =>{
                 
                 if (response instanceof Array) { 
@@ -721,6 +721,7 @@ addServices = (servicein, i, response) => new Promise((resolve, reject) => {
 printTicket() {
     var print_data = this.processPrintDetails()
     //console.log("service_data", service_data)
+        // var businessdetail = this.state.businessdetail;
         var printerName = window.localStorage.getItem('defaultprinter')
         if(printerName != undefined && printerName != ''){
             this.setState({print_data: print_data}, function() {
@@ -738,16 +739,14 @@ printTicket() {
                     bodydata.push([
                         {
                             type: "text", 
-                            value: "<div style='display:flex;flex-direction:column;'><div>"+ser["quantity"]+"&nbsp;&nbsp;&nbsp;&nbsp;"+ser["name"]+"</div>"+
+                            value: "<div style='display:flex;flex-direction:column;'><div style='text-align:left;'>"+ser["quantity"]+"&nbsp;&nbsp;&nbsp;&nbsp;"+ser["name"]+"</div>"+
                             ((ser["tax"] === "") ? "":ser["tax"])+
-                            ((ser["discount"] === "") ? "":ser["discount"]),
-                            style: `text-align:left;`,
+                            ((ser["discount"] === "") ? "":ser["discount"]), 
                             css: {  "font-size": "12px" },
                         },
                         {
                             type: "text", 
-                            value: "<div style='display:flex;flex-direction:column;'><div>"+"$"+ser["total"]+"<div>"+ser["ratedetails"],
-                            style: `text-align:left;`,
+                            value: "<div style='display:flex;flex-direction:column;'><div >"+"$"+Number(ser["total"]).toFixed(2)+"</div>"+ser["ratedetails"],
                             css: {  "font-weight": "500","font-size": "14px" },
                         },
                         // {
@@ -764,20 +763,20 @@ printTicket() {
             
                 data.push({
                     type: "text", 
-                    value: "TOP PAYMENT SOLUTIONS - Main",
+                    value: this.state.businessdetail.name,//"TOP PAYMENT SOLUTIONS - Main",
                     style: `text-align:center;`,
                     css: {  "font-weight": "700", "font-size": "16px" },
                     }); 
                 
                 data.push({
                     type: "text", 
-                    value: "3675 CRESTWOOD PKWY STE <br> DULUTH, GA  300965045 <br> 7706804075",
+                    value: this.state.businessdetail.address1+"<br/>"+ this.state.businessdetail.address2+"<br/>"+this.state.businessdetail.city+"<br/>" +this.state.businessdetail.state+ this.state.businessdetail.zipcode+"<br/>"+ this.state.businessdetail.businessphone, //"3675 CRESTWOOD PKWY STE <br> DULUTH, GA  300965045 <br> 7706804075",
                     style: `text-align:center;`,
                     css: { "font-size": "12px","margin-top": 2 },
                     }); 
                 data.push({
                     type: "text", 
-                    value: "http://toppaymentsolutions.com",
+                    value: "",//"http://toppaymentsolutions.com",
                     style: `text-align:center;`,
                     css: { "font-size": "10px","margin-top": 2 },
                     }); 
@@ -821,20 +820,30 @@ printTicket() {
                     style: `text-align:left;`,
                     css: { "font-weight": "700", "font-size": "14px","margin-top": -10 },
                 }); 
+                if(this.state.value === 1){
                     data.push({
                         type: "text", 
-                        value: "<div style='display: flex; justify-content: space-between;'><p >CASH SALE</p> <p>$"+Number(total).toFixed(2)+"</p> </div>",
+                        value: "<div style='display: flex; justify-content: space-between;'><p style='text-transform:uppercase;'>"+this.state.ticketDetail.pay_mode+" SALE</p> <p>$"+Number(total).toFixed(2)+"</p> </div>",
                         style: `text-align:left;`,
                         css: {  "font-size": "14px","margin-top": -25 },
                     });
-
-                    data.push({
-                        type: "text", 
-                        value:  "<div style='display: flex; justify-content: space-between;'><p >Cash tendered</p> <p>$"+Number(total).toFixed(2)+"</p> </div>",
-                        style: `text-align:left;`,
-                        css: { "font-size": "14px","margin-top": -25 },
-                    }); 
-
+                    if(this.state.ticketDetail.pay_mode.toLowerCase() === 'cash'){
+                        data.push({
+                            type: "text", 
+                            value:  "<div style='display: flex; justify-content: space-between;'><p >Cash tendered</p> <p>$"+Number(total).toFixed(2)+"</p> </div>",
+                            style: `text-align:left;`,
+                            css: { "font-size": "14px","margin-top": -25 },
+                        }); 
+                    }
+                    else{
+                        data.push({
+                            type: "text", 
+                            value:  "<div style='display: flex; justify-content: space-between;'><p style='text-transform:uppercase;'>"+this.state.ticketDetail.card_type+"&nbsp;&nbsp;"+this.state.ticketDetail.payment_notes+"</p> <p>$"+Number(total).toFixed(2)+"</p> </div>",
+                            style: `text-align:left;`,
+                            css: { "font-size": "14px","margin-top": -25 },
+                        }); 
+                    }
+                }
                 data.push({
                     type: "text", 
                     value:  "Enjoy!",
@@ -855,7 +864,7 @@ printTicket() {
 
 
 }
-
+ 
 processPrintDetails() {
 
     var service_data = []
@@ -1314,10 +1323,10 @@ getTicketList(loading){
        if (response instanceof Array) {
       
            this.setState({unsyncedCount: response.length}, function() {
-            var sql = "select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value, t.discount_totalamt, t.sync_id,c.name as customer_name, tp.pay_mode,tp.paid_at from ticket as t left join customers as c on t.customer_id=c.sync_id left join ticket_payment as tp on tp.ticketref_id=t.sync_id where t.businessId='"+businessdetail["id"]+"' and t.isDelete!=1 and tp.paid_at between '"+from_date+"' and '"+to_date+"' order by ticket_code desc" 
+            var sql = "select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value, t.discount_totalamt, t.sync_id,c.name as customer_name, tp.pay_mode,tp.paid_at, tp.card_type, tp.notes as payment_notes from ticket as t left join customers as c on t.customer_id=c.sync_id left join ticket_payment as tp on tp.ticketref_id=t.sync_id where t.businessId='"+businessdetail["id"]+"' and t.isDelete!=1 and DATE(tp.paid_at) between '"+from_date+"' and '"+to_date+"' order by ticket_code desc" 
            
             if(this.state.value === 0){
-                sql = "select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value, t.discount_totalamt, t.sync_id,c.name as customer_name, tp.pay_mode, tp.paid_at from ticket as t left join customers as c on t.customer_id=c.sync_id left join ticket_payment as tp on tp.ticketref_id=t.sync_id where t.businessId='"+businessdetail["id"]+"' and t.isDelete!=1 order by t.created_at desc"
+                sql = "select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value, t.discount_totalamt, t.sync_id,c.name as customer_name, tp.pay_mode, tp.paid_at,tp.card_type, tp.notes as payment_notes from ticket as t left join customers as c on t.customer_id=c.sync_id left join ticket_payment as tp on tp.ticketref_id=t.sync_id where t.businessId='"+businessdetail["id"]+"' and t.isDelete!=1 order by t.created_at desc"
             }
            console.log(sql);
             this.state.dataManager.getData(sql).then(response =>{

@@ -7,7 +7,7 @@ import plusFill from '@iconify/icons-eva/plus-fill';
 // import { DataGrid } from '@mui/x-data-grid';
 // material
 
-import { Stack, Container, Typography, Select, MenuItem,Grid, Card, CardContent, TextField, Checkbox} from '@mui/material';
+import { Stack,  List , ListItem, ListItemIcon, ListItemText,Container, Card, Breadcrumbs, Typography,Link,InputAdornment,Grid} from '@mui/material';
 
 import DataManager from '../../../controller/datacontroller'
 import ModalTitleBar from '../../../components/Modal/Titlebar';
@@ -17,7 +17,7 @@ import LoaderContent from '../../../components/formComponents/LoaderDialog';
 import AppBarContent from '../../TopBar';
 import DrawerContent from '../../Drawer';
 import { Print } from '@mui/icons-material';
-// import TextFieldContent from '../../../components/formComponents/TextField';
+// import TextFieldContent from '../../../components/TextField';
 // import TextareaAutosizeContent from '../../../components/TextareaAutosize'
 
 export default class PrinterSetting extends React.Component {
@@ -44,11 +44,7 @@ export default class PrinterSetting extends React.Component {
             decimal_point:1,
             printers_list: [],
             defaultprinter:'',
-            adddialog:false,
-            printer_nickname:'',
-            print_bill:[],
-            print_receipt:[],
-            print_servicereceipt:[]
+            adddialog:false
         };
         this.savePrinter = this.savePrinter.bind(this);
         this.handleclose = this.handleclose.bind(this);
@@ -60,64 +56,8 @@ export default class PrinterSetting extends React.Component {
         this.handleCloseMenu = this.handleCloseMenu.bind(this) 
         this.handleClick = this.handleClick.bind(this);
         this.handlePageEvent = this.handlePageEvent.bind(this);
-        this.handleCheckbox = this.handleCheckbox.bind(this);
-        this.handleReceiptCheckbox = this.handleReceiptCheckbox.bind(this); 
-        this.handleServiceCheckbox = this.handleServiceCheckbox.bind(this);
-        this.checkValue = this.checkValue.bind(this);
+        
     }
-
-    checkValue(obj, value){
-        var checkobj = this.state[obj];
-        // if(checkobj.indexOf(value) !== -1){
-        //     return true;
-        // }
-        // else{
-        //     return false;
-        // }
-    }
-
-    handleCheckbox(e){
-        if(this.state.print_bill.indexOf(e.target.value) !== -1){
-            var obj = this.state.print_bill;
-            var idx = obj.indexOf(e.target.value);
-            obj.splice(idx,1);
-            this.setState({print_bill: obj});
-        }
-        else{
-            var obj = this.state.print_bill;
-            obj.push(e.target.value);
-            this.setState({print_bill: obj})
-        }
-    }
-    handleServiceCheckbox(e){
-        if(this.state.print_servicereceipt.indexOf(e.target.value) !== -1){
-            var obj = this.state.print_servicereceipt;
-            var idx = obj.indexOf(e.target.value);
-            obj.splice(idx,1);
-            this.setState({print_servicereceipt: obj});
-        }
-        else{
-            var obj = this.state.print_servicereceipt;
-            obj.push(e.target.value);
-            this.setState({print_servicereceipt: obj})
-        }
-    }
-
-    handleReceiptCheckbox(e){
-        if(this.state.print_receipt.indexOf(e.target.value) !== -1){
-            var obj = this.state.print_receipt;
-            var idx = obj.indexOf(e.target.value);
-            obj.splice(idx,1);
-            this.setState({print_receipt: obj});
-        }
-        else{
-            var obj = this.state.print_receipt;
-            obj.push(e.target.value);
-            this.setState({print_receipt: obj})
-        }
-    }
-
-
     componentDidMount(){
         let printer = window.localStorage.getItem("defaultprinter");
         if(printer != undefined && printer != '')
@@ -365,103 +305,39 @@ export default class PrinterSetting extends React.Component {
             </Stack>  
 
 
-           {!this.state.adddialog &&  <Stack direction="row" alignItems="center" justifyContent="space-between" mb={3} mt={3}>
+           {this.state.defaultprinter != '' && <Stack direction="row" alignItems="center" justifyContent="space-between" mb={3} mt={3}>
                 <Typography variant="h6" style={{display:'flex', alignItems:'center'}}>
                     <Print />&nbsp;&nbsp;{ window.localStorage.getItem('defaultprinterdisplayname')}
                 </Typography> 
             </Stack>  }
 
-            {this.state.adddialog && 
-                    <Card>
-                        <CardContent>   
-                            <Stack spacing={3}>
-                                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                                    <Typography variant="div" style={{display:'flex', alignItems:'center', width:'300px'}}>
-                                            Printer Name:
-                                    </Typography> 
-                                    <TextField 
-                                        style={{width:'200px'}}
-                                        label="Printer Name"
-                                        variant="standard"
-                                        name="printer_nickname"
-                                        id="printer_nickname"
-                                        required
-                                        value={this.state.printer_nickname}
-                                        onChange={this.handlechange}
-                                    />
-                                </Stack>
-                                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                                    <Typography variant="div" style={{display:'flex', alignItems:'center', width:'300px'}}>
-                                            Printer Device:
-                                    </Typography> 
-                                    <Select variant='outlined'  placeholder={'Select Printer'}
-                                        style={{width:'200px'}}>
-                                        {this.state.printers_list.map(p=>{
-                                            return (
-                                                <MenuItem  button>
-                                                    {p.displayName}
-                                                </MenuItem> 
-                                            )
-                                        })} 
-                                    </Select>
-                                </Stack>
+            {this.state.adddialog && <div>
+                    <div style={{border:'1px solid',right:0, bottom:0,top:'0',left:'0',position:'absolute', zIndex:'999999'}}>
+                        <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
+                        </div>
+                        <div style={{background:'#fff', height:'80%',  width:'60%', margin:'5% auto 0', overflow:'auto', position:'relative'}}>
+                        
+                            <ModalTitleBar onClose={()=>this.setState({adddialog:false})} title="Add Printer"/>
+                            <div style={{  overflow:'hidden auto'}}>
+                            <List >
+                                {this.state.printers_list.map(p=>{
+                                    return (
+                                        <ListItem  button   style= {{marginLeft: 10, cursor:'pointer', padding:'1.5rem'}}  onClick={()=>{ 
+                                            window.localStorage.setItem('defaultprinterdisplayname', p.displayName);
+                                            window.localStorage.setItem('defaultprinter', p.name);
+                                            this.setState({defaultprinter: p.displayName, adddialog: false});
+                                        }}>
+                                            <ListItemIcon><Print /></ListItemIcon>
+                                            <ListItemText primary={p.displayName} />
+                                        </ListItem> 
+                                    )
+                                })}
 
-                                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                                        <Typography variant="div" style={{display:'flex', alignItems:'center', width:'300px'}}>
-                                                Print Service Ticket:
-                                        </Typography>   
-                                        <Checkbox 
-                                            checked = {this.checkValue('print_servicereceipt', 'Customer')}
-                                            value={'Customer'}
-                                            label={'Customer'}
-                                            onChange={(e) => { this.handleServiceCheckbox(e); }}
-                                            inputProps={{ 'aria-label': 'controlled' }}
-                                        /> 
-                                        <Checkbox 
-                                            checked = {this.checkValue('print_servicereceipt', 'Technician')}
-                                            value={'Technician'} 
-                                            label={'Technician'}
-                                            onChange={(e) => { this.handleServiceCheckbox(e); }}
-                                            inputProps={{ 'aria-label': 'controlled' }}
-                                    />
-                                </Stack>
-
-                                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                                        <Typography variant="div" style={{display:'flex', alignItems:'center', width:'300px'}}>
-                                                Print Bill (Open Tickets):
-                                        </Typography>   
-                                        <Checkbox 
-                                            checked = {this.checkValue('print_bill', 'Customer')}
-                                            value={'Customer'}
-                                            label={'Customer'}
-                                            onChange={(e) => { this.handleCheckbox(e); }}
-                                            inputProps={{ 'aria-label': 'controlled' }}
-                                       /> 
-                                </Stack>
-
-                                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                                        <Typography variant="div" style={{display:'flex', alignItems:'center', width:'300px'}}>
-                                                Print Receipt:
-                                        </Typography>   
-                                        <Checkbox 
-                                            checked = {this.checkValue('print_receipt', 'Customer')}
-                                            value={'Customer'}
-                                            label={'Customer'}
-                                            onChange={(e) => { this.handleReceiptCheckbox(e); }}
-                                            inputProps={{ 'aria-label': 'controlled' }}
-                                        /> 
-                                        <Checkbox 
-                                            checked = {this.checkValue('print_receipt', 'Technician')}
-                                            value={'Technician'} 
-                                            label={'Technician'}
-                                            onChange={(e) => { this.handleReceiptCheckbox(e); }}
-                                            inputProps={{ 'aria-label': 'controlled' }}
-                                        />
-                                </Stack>
-
-                            </Stack>
-                        </CardContent>
-                    </Card> }
+                            </List>
+                            </div>
+                        </div>
+                    </div>
+                </div>}
 
 
         </Container> 
