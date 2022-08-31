@@ -1442,6 +1442,11 @@ export default class EmployeeReport extends React.Component {
                 }
                 let from_date = Moment(this.state.from_date).format('MM-DD-YYYY');
                 let to_date = Moment(this.state.to_date).format('MM-DD-YYYY');
+                
+            var discountdata= this.state.discountdata[0]; 
+
+            var tdiscounttotal = discountdata !==undefined ?  discountdata.OwnerDiscount+discountdata.EmpDiscount+discountdata.OwnerEmpDiscount : 0;
+
                 var data = [];
                 data.push({
                     type: "text", 
@@ -1470,6 +1475,14 @@ export default class EmployeeReport extends React.Component {
                     css: {  "font-size": "14px","margin-top": 10, "margin-left": 0 },
                     });
 
+                    var discounttotal = 0
+                    var totalAmount = 0
+                    var totalTips = 0
+                    this.state.empReport[0].tickets.forEach(t=>{
+                        discounttotal = discounttotal+ Number(t.Discount);
+                        totalAmount = totalAmount+ Number(t.Amount);
+                        totalTips = totalTips+ Number(t.Tips);
+                    });
                 if(this.state.empReport[0].tickets.length > 0){
                     data.push({
                         type: 'table',
@@ -1519,35 +1532,35 @@ export default class EmployeeReport extends React.Component {
 
                     data.push({
                         type: "text", 
-                        value: "<div style='width:70%;float:left;'>Owner</div><div style='width:30%;float:left;'>$0.00</div>",
+                        value: "<div style='width:70%;float:left;'>Owner</div><div style='width:30%;float:left;'>$"+(this.state.empReport[0].discountdata.OwnerDiscount !== undefined ? Number(this.state.empReport[0].discountdata.OwnerDiscount).toFixed(2) : "0.00")+"</div>",
                         style: `text-align:left;`,
                         css: {  "font-size": "16px","margin-top": 10, "margin-left": 0 },
                         });
 
                     data.push({
                         type: "text", 
-                        value: "<div style='width:70%;float:left;'>Employee</div><div style='width:30%;float:left;'>$0.00</div>",
+                        value: "<div style='width:70%;float:left;'>Employee</div><div style='width:30%;float:left;'>$"+(this.state.empReport[0].discountdata.EmpDiscount !== undefined ? Number(this.state.empReport[0].discountdata.EmpDiscount).toFixed(2) : "0.00")+"</div>",
                         style: `text-align:left;`,
                         css: {  "font-size": "16px","margin-top": 10, "margin-left": 0 },
                         });
 
                     data.push({
                         type: "text", 
-                        value: "<div style='width:70%;float:left;'>Owner & Employee</div><div style='width:30%;float:left;'>"+this.state.empReport[0].tickets[0].Discount+"</div>",
+                        value: "<div style='width:70%;float:left;'>Owner & Employee</div><div style='width:30%;float:left;'>$"+(this.state.empReport[0].discountdata.OwnerEmpDiscount !== undefined ? Number(this.state.empReport[0].discountdata.OwnerEmpDiscount).toFixed(2) : "0.00")+"</div>",
                         style: `text-align:left;`,
                         css: {  "font-size": "16px","margin-top": 10, "margin-left": 0 },
                         });
 
                     data.push({
                         type: "text", 
-                        value: "<div style='width:70%;float:left;'>Total</div><div style='width:30%;float:left;'>"+this.state.empReport[0].tickets[0].Discount+"</div>",
+                        value: "<div style='width:70%;float:left;'>Total</div><div style='width:30%;float:left;'>$"+Number(tdiscounttotal).toFixed(2)+"</div>",
                         style: `text-align:left;font-weight:bold;`,
                         css: {  "font-size": "16px","font-weight":"bold","margin-top": 10, "margin-left": 0 },
                         });
 
                     data.push({
                         type: "text", 
-                        value: "<div style='width:70%;float:left;'>Supplies</div><div style='width:30%;float:left;'>$0.00</div>",
+                        value: "<div style='width:70%;float:left;'>Supplies</div><div style='width:30%;float:left;'>$"+(this.state.supplydetail.length > 0 ? Number(this.state.supplydetail[0].PaidAmount).toFixed(2) : '0.00')+"</div>",
                         style: `text-align:left;font-weight:bold;`,
                         css: {  "font-size": "16px","font-weight":"bold","margin-top": 10, "margin-left": 0 },
                         });
@@ -1581,7 +1594,7 @@ export default class EmployeeReport extends React.Component {
 
                     data.push({
                         type: "text", 
-                        value: "<div style='width:70%;float:left;'>Amount Collected</div><div style='width:30%;float:left;'>"+this.state.empReport[0].tickets[0].Amount+"</div>",
+                        value: "<div style='width:70%;float:left;'>Amount Collected</div><div style='width:30%;float:left;'>$"+Number(this.state.ownertotal).toFixed(2)+"</div>",
                         style: `text-align:left;font-weight:bold;`,
                         css: {  "font-size": "16px","font-weight":"bold","margin-top": 10, "margin-left": 0 },
                         });
@@ -1660,6 +1673,149 @@ export default class EmployeeReport extends React.Component {
                         style: `text-align:left;`,
                         css: {  "font-size": "14px","margin-top": 10, "margin-left": 0 },
                         });
+                        
+                    var cashdata = [];
+                    var total = 0;
+                    emp.tickets.forEach(t=>{ 
+                        var isCash = t.ticketslist.filter(p=>p.pay_mode === 'cash');
+                        var isCredit = t.ticketslist.filter(p=>p.pay_mode === 'card' && p.card_type ==='credit');
+                        var isDebit = t.ticketslist.filter(p=>p.pay_mode === 'card' && p.card_type ==='debit');
+                        if(isCash.length === 0){
+                            var isCashdata = cashdata.filter(t=>t.pay_mode === 'Cash');
+                            if(isCashdata.length === 0 ){
+                                cashdata.push({
+                                    PaidAmount:0,
+                                    pay_mode:'Cash',
+                                    card_type:''
+                                })
+                            }
+                        }
+                        else{
+                            var damount = 0;
+                            var pamount = 0; 
+                            isCash.forEach((e,ti)=>{
+                                damount += Number(e.Discount)+Number(e.TicketDiscount);
+                                pamount += Number(e.Amount)+ Number(e.Tips); 
+                                if(ti === isCash.length-1){ 
+                                    total+=Number(pamount);
+                                    
+                                    var isCashdata = cashdata.filter(t=>t.pay_mode === 'Cash');
+                                    if(isCashdata.length === 0 ){
+                                        cashdata.push({ 
+                                            PaidAmount:pamount-damount,
+                                            pay_mode:'Cash',
+                                        })
+                                    }
+                                    else{
+                                        var finaldata = [];
+                                        cashdata.forEach((element, cidx) => {
+                                            if(element.pay_mode === 'Cash'){
+                                                element["PaidAmount"] = Number(element["PaidAmount"]) + pamount-damount
+                                            }
+                                            finaldata.push(element);
+                                            if(cidx === cashdata.length -1){
+                                                cashdata = finaldata;
+                                            }
+                                        });
+                                    }
+                                }
+                            }) 
+                        }
+                
+                        if(isCredit.length === 0){ 
+                            var isCreditdata = cashdata.filter(t=>t.pay_mode === 'Credit Card');
+                            if(isCreditdata.length === 0 ){
+                                cashdata.push({
+                                    PaidAmount:0,
+                                    pay_mode:'Credit Card',
+                                    card_type:''
+                                })
+                            }
+                        }
+                        else{ 
+                            var dccamount = 0
+                            var pccamount = 0
+                            isCredit.forEach((e,ti)=>{
+                                pccamount += Number(e.Amount)+ Number(e.Tips); 
+                                dccamount += Number(e.Discount)+Number(e.TicketDiscount); 
+                                if(ti === isCredit.length-1){ 
+                                    total+=Number(pccamount);
+
+                                    var isCashdata = cashdata.filter(t=>t.pay_mode === 'Credit Card');
+                                    if(isCashdata.length === 0 ){
+                                            
+                                        cashdata.push({ 
+                                            PaidAmount:pccamount-dccamount,
+                                            pay_mode:'Credit Card',
+                                        })
+                                    }
+                                    else{
+                                        var finaldata = [];
+                                        cashdata.forEach((element, cidx) => {
+                                            if(element.pay_mode === 'Credit Card'){
+                                                element["PaidAmount"] = Number(element["PaidAmount"]) + pccamount-dccamount
+                                            }
+                                            finaldata.push(element);
+                                            if(cidx === cashdata.length -1){
+                                                cashdata = finaldata;
+                                            }
+                                        });
+                                    }
+                                }
+                            }) 
+                        }
+                
+                        if(isDebit.length === 0){ 
+
+                            var isDebitdata = cashdata.filter(t=>t.pay_mode === 'Debit Card');
+                            if(isDebitdata.length === 0 ){
+                                cashdata.push({
+                                    PaidAmount:0,
+                                    pay_mode:'Debit Card',
+                                    card_type:''
+                                })
+                            } 
+                        }
+                        else{ 
+                            var ddamount = 0;
+                            var pdamount = 0
+                            isDebit.forEach((e,ti)=>{
+                                pdamount += Number(e.Amount)+ Number(e.Tips); 
+                                ddamount += Number(e.Discount)+Number(e.TicketDiscount);
+                                if(ti === isDebit.length-1){ 
+                                    total+=Number(pdamount);
+                                    var isCashdata = cashdata.filter(t=>t.pay_mode === 'Cash');
+                                    if(isCashdata.length === 0 ){
+                                        cashdata.push({ 
+                                            PaidAmount:pdamount-ddamount,
+                                            pay_mode:'Debit Card',
+                                        })
+                                    }
+                                    else{
+                                        var finaldata = [];
+                                        cashdata.forEach((element, cidx) => {
+                                            if(element.pay_mode === 'Cash'){
+                                                element["PaidAmount"] = Number(element["PaidAmount"]) + pdamount-ddamount
+                                            }
+                                            finaldata.push(element);
+                                            if(cidx === cashdata.length -1){
+                                                cashdata = finaldata;
+                                            }
+                                        });
+                                    }
+                                    
+                                }
+                            }) 
+                        }
+ 
+                        totalAmount = total;
+                        totalTips = totalTips+ Number(t.Tips); 
+                    })
+
+                    
+
+                    discounttotal += emp.discountdata.OwnerDiscount+emp.discountdata.EmpDiscount+emp.discountdata.OwnerEmpDiscount;
+
 
                     if(emp.tickets.length > 0){
                         tbldata.push({
@@ -1710,21 +1866,21 @@ export default class EmployeeReport extends React.Component {
 
                         tbldata.push({
                             type: "text", 
-                            value: "<div style='width:70%;float:left;'>Owner</div><div style='width:30%;float:left;'>$0.00</div>",
+                            value: "<div style='width:70%;float:left;'>Owner</div><div style='width:30%;float:left;'>$"+Number(emp.discountdata.OwnerDiscount).toFixed(2)+"</div>",
                             style: `text-align:left;`,
                             css: {  "font-size": "16px","margin-top": 10, "margin-left": 0 },
                             });
 
                         tbldata.push({
                             type: "text", 
-                            value: "<div style='width:70%;float:left;'>Employee</div><div style='width:30%;float:left;'>$0.00</div>",
+                            value: "<div style='width:70%;float:left;'>Employee</div><div style='width:30%;float:left;'>$"+Number(emp.discountdata.OwnerEmpDiscount).toFixed(2)+"</div>",
                             style: `text-align:left;`,
                             css: {  "font-size": "16px","margin-top": 10, "margin-left": 0 },
                             });
 
                         tbldata.push({
                             type: "text", 
-                            value: "<div style='width:70%;float:left;'>Owner & Employee</div><div style='width:30%;float:left;'>$"+Number(discounttotal).toFixed(2)+"</div>",
+                            value: "<div style='width:70%;float:left;'>Owner & Employee</div><div style='width:30%;float:left;'>$"+Number(emp.discountdata.OwnerEmpDiscount).toFixed(2)+"</div>",
                             style: `text-align:left;`,
                             css: {  "font-size": "16px","margin-top": 10, "margin-left": 0 },
                             });
@@ -1736,12 +1892,12 @@ export default class EmployeeReport extends React.Component {
                             css: {  "font-size": "16px","font-weight":"bold","margin-top": 10, "margin-left": 0 },
                             });
 
-                        tbldata.push({
-                            type: "text", 
-                            value: "<div style='width:70%;float:left;'>Supplies</div><div style='width:30%;float:left;'>$0.00</div>",
-                            style: `text-align:left;font-weight:bold;padding-bottom:20px;`,
-                            css: {  "font-size": "16px","font-weight":"bold","margin-top": 10, "margin-left": 0 },
-                            });  
+                        // tbldata.push({
+                        //     type: "text", 
+                        //     value: "<div style='width:70%;float:left;'>Supplies</div><div style='width:30%;float:left;'>$0.00</div>",
+                        //     style: `text-align:left;font-weight:bold;padding-bottom:20px;`,
+                        //     css: {  "font-size": "16px","font-weight":"bold","margin-top": 10, "margin-left": 0 },
+                        //     });  
                     }
                     else{ 
                         tbldata.push({
@@ -1755,7 +1911,7 @@ export default class EmployeeReport extends React.Component {
                     tbldata.push({
                         type: "text", 
                         value:  this.state.businessdetail.name+" - Reported: "+Moment(new Date()).format('MM-DD-YYYY hh:mm A'),
-                        style: `text-align:center;border-bottom:1px dotted #000;margin-top:20px;padding-top:20px;padding-bottom:20px;`,
+                        style: `text-align:center;border-bottom:1px dotted #000;margin-top:40px;padding-top:30px;padding-bottom:20px;`,
                         css: {  "font-size": "14px","margin-top":10, "border-bottom":"1px dotted #000"},
                     });
 

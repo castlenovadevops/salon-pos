@@ -1326,7 +1326,7 @@ getTicketList(loading){
             var sql = "select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value, t.discount_totalamt, t.sync_id,c.name as customer_name, tp.pay_mode,tp.paid_at, tp.card_type, tp.notes as payment_notes from ticket as t left join customers as c on t.customer_id=c.sync_id left join ticket_payment as tp on tp.ticketref_id=t.sync_id where t.businessId='"+businessdetail["id"]+"' and t.isDelete!=1 and DATE(tp.paid_at) between '"+from_date+"' and '"+to_date+"' order by tp.paid_at desc" 
            
             if(this.state.value === 0){
-                sql = "select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value, t.discount_totalamt, t.sync_id,c.name as customer_name, tp.pay_mode, tp.paid_at,tp.card_type, tp.notes as payment_notes from ticket as t left join customers as c on t.customer_id=c.sync_id left join ticket_payment as tp on tp.ticketref_id=t.sync_id where t.businessId='"+businessdetail["id"]+"' and t.isDelete!=1 order by  tp.paid_at desc"
+                sql = "select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value, t.discount_totalamt, t.sync_id,c.name as customer_name, tp.pay_mode, tp.paid_at,tp.card_type, tp.notes as payment_notes from ticket as t left join customers as c on t.customer_id=c.sync_id left join ticket_payment as tp on tp.ticketref_id=t.sync_id where t.businessId='"+businessdetail["id"]+"' and t.isDelete!=1 order by  t.created_at desc"
             }
            console.log(sql);
             this.state.dataManager.getData(sql).then(response =>{
@@ -1616,7 +1616,13 @@ render()  {
                                 <Grid item xs={3}>
                                 {/* onClick={handleOpenTicket} */}
                                     <Button className='btmbtn' style={{borderColor:'#fff',borderTop:0, borderBottom:0}} onClick={()=>{ 
-                                        this.handleOpenTicket();
+
+                                        var employeedetail = window.localStorage.getItem('employeedetail');
+                                        if(employeedetail !== undefined){
+                                            this.setState({ ticketowner:JSON.parse(employeedetail) },()=>{ 
+                                                this.handleOpenTicket();
+                                            })
+                                        }
                                     }} fullWidth variant="outlined">Create Ticket</Button>
                                 </Grid>
                                 <Grid item xs={2}>

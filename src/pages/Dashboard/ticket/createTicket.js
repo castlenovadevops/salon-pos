@@ -62,6 +62,7 @@ export default class CreateTicket extends React.Component {
             isPaidOnOpen:false,
             open: false,
             employeedetail:{},
+            businessdetail:{},
             ticketCode:'',
             customer: '',
             customers:[],
@@ -285,6 +286,9 @@ export default class CreateTicket extends React.Component {
             this.setState({printers_list: printers, selected_printer: printers.length > 0 ? printers[0] : '' }  ) 
         })  
         
+
+        var businessdetail = JSON.parse(window.localStorage.getItem('businessdetail'));
+        this.setState({businessdetail: businessdetail});
         if(this.props.ticketSelected !== undefined){ 
             var disInput = {};
             var ticket = Object.assign({},this.props.ticketSelected);
@@ -3272,6 +3276,7 @@ getOpenTicketsCombine(){
 
 printTicket() {
     console.log("printTicket")
+    
     var print_data = this.processPrintDetails()
     //////console.log("service_data", service_data)
         var printerName = window.localStorage.getItem('defaultprinter')
@@ -3401,6 +3406,9 @@ printTicket() {
 
                 window.api.printdata({printername: printerName, data: data}).then(res=>{ 
                     ////console.log(res);
+                    if(!this.state.isPaidOnOpen){
+                        this.printEmployeeReceipt()
+                    }
                 })
 
 
@@ -3411,6 +3419,143 @@ printTicket() {
         }
 
 
+}
+
+printEmployeeReceipt(){
+    var emps = []
+    var thisobj = this;
+    this.state.services_taken.forEach((e, i)=>{
+        if(emps.indexOf(e.employee_id) === -1){
+            emps.push(e.employee_id)
+        }
+        if(i=== thisobj.state.services_taken.length-1){
+            console.log("PRINT EMP RECEIPT")
+            var printerName = window.localStorage.getItem('defaultprinter')
+            if(printerName != undefined && printerName != ''){
+                thisobj.printEmployeeReceiptIndividual(0, emps, printerName);
+            }
+            else{
+                thisobj.setState({printtalert:true})
+            }
+
+        }
+    });
+}
+
+printEmployeeReceiptIndividual(idx, emps, printerName){
+    if(idx < emps.length){
+            var emp = emps[idx];
+            var response = this.processEmployeePrintDetails(emp);
+            var print_data = response.data;
+            var total = response.total;
+            var data = [];
+                data.push({
+                    type: "text", 
+                    value: this.state.businessdetail.name+"<br/>Employee Receipt",//"TOP PAYMENT SOLUTIONS - Main",
+                    style: `text-align:center;`,
+                    css: {  "font-weight": "700", "font-size": "16px" },
+                    }); 
+                
+                data.push({
+                    type: "text", 
+                    value: this.state.businessdetail.address1+"<br/>"+ this.state.businessdetail.address2+"<br/>"+this.state.businessdetail.city+"<br/>" +this.state.businessdetail.state+ this.state.businessdetail.zipcode+"<br/>"+ this.state.businessdetail.businessphone, //"3675 CRESTWOOD PKWY STE <br> DULUTH, GA  300965045 <br> 7706804075",
+                    style: `text-align:center;`,
+                    css: { "font-size": "12px","margin-top": 2 },
+                    }); 
+                data.push({
+                    type: "text", 
+                    value: "",//"http://toppaymentsolutions.com",
+                    style: `text-align:center;`,
+                    css: { "font-size": "10px","margin-top": 2 },
+                    });  
+
+                data.push({
+                    type: "text", 
+                    value: "<div style='display: flex; justify-content: space-between;'><p >Employee: "+this.getEmployeeName(emp)+"</p><p>Ticket:"+this.state.ticketCode+"</p>",
+                    style: `text-align:left;`,
+                    css: {  "font-size": "12px","margin-top": 5 },
+                    }); 
+                
+                data.push({
+                    type: 'table',
+                    // style: 'border: 0px solid #ddd',
+                    css: {"margin-left": 10,"margin-top": 10,"margin-bottom": 10},
+                
+                    tableBody: print_data.map((ser,index)=>{
+                    
+                        return [
+                            {
+                                type: "text", 
+                                value: ser["quantity"]+"&nbsp;&nbsp;&nbsp;&nbsp;"+ser["name"] ,
+                                style: `text-align:left;`,
+                                css: {  "font-size": "12px" },
+                            },
+                            {
+                                type: "text", 
+                                value: "$"+ser["price"],
+                                style: `text-align:left;`,
+                                css: {  "font-weight": "500","font-size": "14px" },
+                            },
+                            {
+                                type: "text", 
+                                value:  "$"+ser["total"],
+                                style: `text-align:left;`,
+                                css: {  "font-weight": "500","font-size": "14px" },
+                            },
+                        ]
+
+                    }),
+                
+                    tableBodyStyle: 'border: 0.0px solid #ddd',
+                    tableSeperatorStyle: 'border: 0.0px solid #ddd'
+                
+                }) 
+                
+                data.push({
+                    type: "text", 
+                    value:  "<div style='display: flex; justify-content: space-between;'><p >Total</p> <p>$"+total+"</p> </div>",
+                    style: `text-align:left;`,
+                    css: { "font-weight": "700", "font-size": "14px","margin-top": -10 },
+                });  
+
+                data.push({
+                    type: "text", 
+                    value:  this.state.businessdetail.name+" - Printed: "+Moment(new Date()).format('MM-DD-YYYY hh:mm A'),
+                    style: `text-align:center;border-bottom:1px dotted #000;margin-top:40px;padding-top:30px;padding-bottom:20px;`,
+                    css: {  "font-size": "14px","margin-top":10, "border-bottom":"1px dotted #000"},
+                });
+
+                window.api.printdata({printername: printerName, data: data}).then(res=>{ 
+                    console.log(res);
+                    this.printEmployeeReceiptIndividual(idx+1, emps, printerName)
+                })
+    }
+    else{
+        console.log("ARRAY COMPLETED")
+    }
+}
+
+
+
+processEmployeePrintDetails(empid) {
+
+    var service_data = []
+    var total = 0;
+    this.state.services_taken.forEach(( ser,index) => {
+        if(ser.employee_id === empid){
+            total +=  ser.subtotal;
+            service_data.push({
+                "name" : ser.servicedetail.name,
+                "price":  ser.perunit_cost,
+                "total": ser.subtotal, 
+                "quantity": ser.qty
+            })
+        } 
+    })
+
+   return {data: service_data, total:total}
+
+    
 }
 
 processPrintDetails() {

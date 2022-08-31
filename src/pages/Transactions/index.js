@@ -17,6 +17,7 @@ import AppBarContent from '../TopBar';
 import DrawerContent from '../Drawer'; 
 import ModalHeader from '../../components/Modal/Titlebar';
  
+import AlertModal from '../../components/Modal/alertModal';
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -52,7 +53,8 @@ export default class App extends React.Component {
         selectedemps:[],
         type:'paid',
         transactiondetail:{},
-        showDetail:false
+        showDetail:false,
+        printalert:false
     }
     
     this.logout = this.logout.bind(this);
@@ -63,6 +65,94 @@ export default class App extends React.Component {
     this.handlechangeFromDate = this.handlechangeFromDate.bind(this);
     this.handlechangeToDate = this.handlechangeToDate.bind(this);
     this.getTransactions = this.getTransactions.bind(this);
+    this.printData = this.printData.bind(this);
+  }
+
+  printData(txn){
+    var printerName = window.localStorage.getItem('defaultprinter')
+        if(printerName != undefined && printerName != ''){ 
+                // this.setState({printpopup: true})  
+                var data = []; 
+                var bodydata = [] 
+            
+                data.push({
+                    type: "text", 
+                    value: this.state.businessdetail.name,//"TOP PAYMENT SOLUTIONS - Main",
+                    style: `text-align:center;`,
+                    css: {  "font-weight": "700", "font-size": "16px" },
+                    }); 
+                
+                data.push({
+                    type: "text", 
+                    value: this.state.businessdetail.address1+"<br/>"+ this.state.businessdetail.address2+"<br/>"+this.state.businessdetail.city+"<br/>" +this.state.businessdetail.state+ this.state.businessdetail.zipcode+"<br/>"+ this.state.businessdetail.businessphone, //"3675 CRESTWOOD PKWY STE <br> DULUTH, GA  300965045 <br> 7706804075",
+                    style: `text-align:center;`,
+                    css: { "font-size": "12px","margin-top": 2 },
+                    }); 
+                data.push({
+                    type: "text", 
+                    value: "",//"http://toppaymentsolutions.com",
+                    style: `text-align:center;`,
+                    css: { "font-size": "10px","margin-top": 2 },
+                    }); 
+ 
+                data.push({
+                    type: "text", 
+                    value: "Cashier: "+this.getEmpName(txn.technician_id),
+                    style: `text-align:left;`,
+                    css: {  "font-size": "12px","margin-top": 5 },
+                    });
+                data.push({
+                    type: "text", 
+                    value:  Moment(new Date()).format('MM-DD-YYYY hh:mm A'),
+                    style: `text-align:left;`,
+                    css: {  "font-size": "12px","margin-top": 5 },
+                    }); 
+
+                data.push({
+                    type: "text", 
+                    value:  "<div style='display: flex; justify-content: space-between;text-transform:capitalize;'><p >Total</p> <p>$"+(txn.paid_amount !== null && txn.paid_amount !== undefined ? Number(txn.paid_amount).toFixed(2) : '$0.00')+"</p> </div>",
+                    style: `text-align:left;`,
+                    css: { "font-weight": "700", "font-size": "14px"  },
+                })
+                data.push({
+                    type: "text", 
+                    value:  "<div style='display: flex; justify-content: space-between;text-transform:capitalize;'><p >"+(txn.pay_mode !== null && txn.pay_mode.toLowerCase() === 'cash' ? 'Cash' : txn.card_type+" Card")+" SALE</p> <p>$"+(txn.paid_amount !== null && txn.paid_amount !== undefined ? Number(txn.paid_amount).toFixed(2) : '$0.00')+"</p> </div>",
+                    style: `text-align:left;`,
+                    css: { "font-weight": "700", "font-size":"14px"},
+                });  
+                if(txn.pay_mode === 'cash'){ 
+                    data.push({
+                        type: "text", 
+                        value:  "<div style='display: flex; justify-content: space-between;text-transform:capitalize;'><p >Cash tendered</p> <p>$"+(txn.paid_amount !== null && txn.paid_amount !== undefined ? Number(txn.paid_amount).toFixed(2) : '$0.00')+"</p> </div>",
+                        style: `text-align:left;`,
+                        css: { "font-weight": "700", "font-size": "14px" },
+                    });  
+                }
+                else{ 
+                    data.push({
+                        type: "text", 
+                        value:  "<div style='display: flex; justify-content: space-between;text-transform:capitalize;'><p >"+txn.card_type+" Card</p> <p>"+(txn.paid_amount !== null && txn.paid_amount !== undefined ? Number(txn.paid_amount).toFixed(2) : '$0.00')+"</p> </div>",
+                        style: `text-align:left;`,
+                        css: { "font-weight": "700", "font-size": "14px" },
+                    });  
+                }
+                data.push({
+                    type: "text", 
+                    value:  "Enjoy!",
+                    style: `text-align:left;`,
+                    css: { "font-size": "14px","margin-top": 0 },
+                });
+
+                window.api.printdata({printername: printerName, data: data}).then(res=>{ 
+                    console.log(res); 
+                })
+
+
+         
+        }
+        else{
+            this.setState({printalert:true})
+        }
   }
  
     handlechangeFromDate(e){
@@ -252,7 +342,7 @@ export default class App extends React.Component {
                 <Grid item xs={1} style={{height:'100%',width:'100%', margin:0, padding:10, fontSize:'14px', fontWeight:'bold'}}> 
                     Total
                 </Grid>
-                <Grid item xs={2} style={{height:'100%',width:'100%', margin:0, padding:10, fontSize:'14px', fontWeight:'bold'}}> 
+                <Grid item xs={1} style={{height:'100%',width:'100%', margin:0, padding:10, fontSize:'14px', fontWeight:'bold'}}> 
                     Payment Mode
                 </Grid> 
                 <Grid item xs={2} style={{height:'100%',width:'100%', margin:0, padding:'10px 20px', fontSize:'14px', fontWeight:'bold'}}> 
@@ -261,6 +351,10 @@ export default class App extends React.Component {
                 <Grid item xs={2} style={{height:'100%',width:'100%', margin:0, padding:'10px 20px', fontSize:'14px', fontWeight:'bold'}}> 
                     Employee 
                 </Grid>
+
+                <Grid item xs={1} style={{height:'100%',width:'100%', margin:0, padding:10, fontSize:'14px', fontWeight:'bold'}}> 
+                    
+                </Grid> 
             </Grid>
             <div style={{ width: '100%', height:  'calc(100% - 60px)',overflow: 'hidden', background: 'white'}}>
         
@@ -268,36 +362,63 @@ export default class App extends React.Component {
             boxSizing: 'content-box', background: 'white'}}>
             {this.state.transactions.map(t=>{ 
                 // console.log("transactions:",t)
-                return <Grid container spacing={3}  style={{height:'80px', cursor:'pointer', width:'100%', margin:0, padding: '10px 0',borderBottom:'1px solid #f0f0f0'}} onClick={()=>{ 
+                return <Grid container spacing={3}  style={{height:'80px', cursor:'pointer', width:'100%', margin:0, padding: '10px 0',borderBottom:'1px solid #f0f0f0'}} >
+                <Grid item xs={2} style={{height:'100%',width:'100%', margin:0, padding:'10px 20px', fontSize:'14px'}} onClick={()=>{ 
                     this.setState({transactiondetail: t}, ()=>{
                         this.setState({showDetail: true})
                     })
-                }}>
-                <Grid item xs={2} style={{height:'100%',width:'100%', margin:0, padding:'10px 20px', fontSize:'14px'}}> 
+                }}> 
                     {Moment(t.created_at).format("HH:mm:ss a")}<br/>
                     <span style={{color:'#ccc'}}>{Moment(t.created_at).format("MM/DD/YYYY")}</span>
                 </Grid>
-                <Grid item xs={1} style={{height:'100%',width:'100%', margin:0, padding:10, fontSize:'14px'}}> 
+                <Grid item xs={1} style={{height:'100%',width:'100%', margin:0, padding:10, fontSize:'14px'}} onClick={()=>{ 
+                    this.setState({transactiondetail: t}, ()=>{
+                        this.setState({showDetail: true})
+                    })
+                }}> 
                      {t.ticket_code}
                 </Grid>
                 {/* <Grid item xs={2} style={{height:'100%',width:'100%', margin:0, padding:10, fontSize:'14px'}}> 
                      
                 </Grid> */}
-                <Grid item xs={2} style={{height:'100%',width:'100%', margin:0, padding:10, fontSize:'14px'}}> 
+                <Grid item xs={2} style={{height:'100%',width:'100%', margin:0, padding:10, fontSize:'14px'}} onClick={()=>{ 
+                    this.setState({transactiondetail: t}, ()=>{
+                        this.setState({showDetail: true})
+                    })
+                }}> 
                     <b>Payment</b>
                 </Grid>
-                <Grid item xs={1} style={{height:'100%',width:'100%', margin:0, padding:10, fontSize:'14px'}}> 
+                <Grid item xs={1} style={{height:'100%',width:'100%', margin:0, padding:10, fontSize:'14px'}} onClick={()=>{ 
+                    this.setState({transactiondetail: t}, ()=>{
+                        this.setState({showDetail: true})
+                    })
+                }}> 
                     <b>${Number(t.paid_amount).toFixed(2)}</b>
                 </Grid>
-                <Grid item xs={2} style={{height:'100%',width:'100%', margin:0, padding:10, fontSize:'14px', textTransform:'capitalize'}}> 
+                <Grid item xs={1} style={{height:'100%',width:'100%', margin:0, padding:10, fontSize:'14px', textTransform:'capitalize'}} onClick={()=>{ 
+                    this.setState({transactiondetail: t}, ()=>{
+                        this.setState({showDetail: true})
+                    })
+                }}> 
                     <b>{t.pay_mode !== null && t.pay_mode.toLowerCase() === 'cash' ? 'Cash' : t.card_type}</b>
                 </Grid> 
-                <Grid item xs={2} style={{height:'100%',width:'100%', margin:0, padding:'10px 20px', fontSize:'14px'}}> 
+                <Grid item xs={2} style={{height:'100%',width:'100%', margin:0, padding:'10px 20px', fontSize:'14px'}} onClick={()=>{ 
+                    this.setState({transactiondetail: t}, ()=>{
+                        this.setState({showDetail: true})
+                    })
+                }}> 
                     {Moment(t.paid_at).format("HH:mm:ss a")}<br/>
                     <span style={{color:'#ccc'}}>{Moment(t.paid_at).format("MM/DD/YYYY")}</span>
                 </Grid>
-                <Grid item xs={2} style={{height:'100%',width:'100%', margin:0, padding:'10px 20px', fontSize:'14px', textTransform:'capitalize'}}> 
+                <Grid item xs={2} style={{height:'100%',width:'100%', margin:0, padding:'10px 20px', fontSize:'14px', textTransform:'capitalize'}} onClick={()=>{ 
+                    this.setState({transactiondetail: t}, ()=>{
+                        this.setState({showDetail: true})
+                    })
+                }}> 
                     {this.getEmpName(t.technician_id)}
+                </Grid>
+                <Grid item xs={1} style={{height:'100%',width:'100%', margin:0, padding:10, fontSize:'14px', textTransform:'capitalize'}}> 
+                    <Print style={{marginLeft:'1rem'}} onClick={(e)=>{e.preventDefault();this.printData(t)}}/>
                 </Grid>
             </Grid>
             })}
@@ -353,6 +474,7 @@ export default class App extends React.Component {
     render() {
         return(
             <div style={{height:'100%'}}> 
+
                 {this.state.isLoading &&  <LoaderContent show={this.state.isLoading}></LoaderContent>}
                 <AppBarContent  businessdetail={this.state.businessdetail} currentTime={this.state.currentTime}  
                 handleClick={()=>this.handleClick()}   /> 
@@ -386,6 +508,7 @@ export default class App extends React.Component {
                             </Grid>
                     </Grid> 
 
+                    {this.state.printalert &&  <AlertModal title="Alert" msg="No printers added yet." handleCloseAlert={()=>this.setState({printalert:false})}/>}
             <Dialog
                     className="custommodal"
                         open={this.state.showDatePopup}
