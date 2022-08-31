@@ -126,8 +126,13 @@ export default class Commission extends React.Component {
       var condition = navigator.onLine ? 'online' : 'offline';
       this.setState({isOnline: (condition=="online") ? true: false}, function (){
         if(!this.state.isOnline) {
+          
+      var detail = window.localStorage.getItem('businessdetail');
+      if(detail !== undefined && detail !== null){
+        var businessdetail = JSON.parse(detail);
+
           const dataManager = new DataManager()
-          dataManager.getData("select * from default_commission").then(response =>{
+          dataManager.getData("select * from default_commission where businessId="+businessdetail["id"]).then(response =>{
               if (response instanceof Array) {
                   this.setState({commissionlist: response}, function(){
                       if(this.state.commissionlist.length> 0){
@@ -138,6 +143,7 @@ export default class Commission extends React.Component {
               }
              
           })
+        }
   
         }
         else{

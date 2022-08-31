@@ -192,9 +192,11 @@ componentDidMount(){
 
 
   customerlist() {
+    var detail = window.localStorage.getItem('businessdetail');
+    var businessdetail = JSON.parse(detail);
     this.setState({isLoading: true},()=>{
       // 
-      this.dataManager.getData("select sync_id as id, member_id, name, email, dob, first_visit, last_visit, visit_count, total_spent, loyality_point, address1, address2, city,state, zipcode,created_at, created_by, updated_at, updated_by, status, phone, businessId, sync_status, sync_id from customers").then(response =>{
+      this.dataManager.getData("select sync_id as id, member_id, name, email, dob, first_visit, last_visit, visit_count, total_spent, loyality_point, address1, address2, city,state, zipcode,created_at, created_by, updated_at, updated_by, status, phone, businessId, sync_status, sync_id from customers where businessId="+businessdetail["id"]).then(response =>{
         if (response instanceof Array) {
             this.setState({customerlist: response, isLoading: false}, function(){ 
                 // console.log(this.state.customerlist)

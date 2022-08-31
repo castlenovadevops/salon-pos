@@ -201,11 +201,11 @@ handlePageEvent(pagename){
 
   getServicesList(){
     this.setState({isLoading: true});
-    var businessdetail = window.localStorage.getItem('businessdetail');
-    if(businessdetail !== undefined && businessdetail !== null){
-
+    var detail = window.localStorage.getItem('businessdetail');
+    if(detail !== undefined && detail !== null){
+      var businessdetail = JSON.parse(detail);
 // "select sync_id as id,sync_id,name, status, description, created_at, created_by, updated_at, updated_by, price, businessId, tax_type, cost, pricetype, sku, producttype, productcode   from services"
-      this.dataManager.getData("select (select group_concat(name) from category where sync_id in (select category_id from services_category where service_id = s.id or service_id=s.sync_id and status='active') or id in (select category_id from services_category where service_id = s.id or service_id=s.sync_id and status='active')) as category_name, s.sync_id as id,s.name, s.status, s.description, s.created_at, s.created_by, s.updated_at, s.updated_by, s.price, s.businessId, s.tax_type, s.cost, s.pricetype, s.sku, s.producttype, s.productcode from services as s  order by s.created_at asc").then(response => {
+      this.dataManager.getData("select (select group_concat(name) from category where sync_id in (select category_id from services_category where service_id = s.id or service_id=s.sync_id and status='active') or id in (select category_id from services_category where service_id = s.id or service_id=s.sync_id and status='active')) as category_name, s.sync_id as id,s.name, s.status, s.description, s.created_at, s.created_by, s.updated_at, s.updated_by, s.price, s.businessId, s.tax_type, s.cost, s.pricetype, s.sku, s.producttype, s.productcode from services as s where s.businessId="+businessdetail["id"]+"  order by s.created_at asc").then(response => {
         if (response instanceof Array) {
             this.setState({ serviceslist: response }, function () {
                 this.setState({ isLoading: false });

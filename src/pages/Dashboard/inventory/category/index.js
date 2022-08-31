@@ -137,8 +137,9 @@ export default class Category extends React.Component {
 
   getCategoryList(){
     this.setState({isLoading: true});
-    var businessdetail = window.localStorage.getItem('businessdetail');
-    if(businessdetail !== undefined && businessdetail !== null){
+    var detail = window.localStorage.getItem('businessdetail');
+    if(detail !== undefined && detail !== null){
+      var businessdetail = JSON.parse(detail);
       // this.setState({businessdetail: businessdetail})
         // axios.get(config.root+`/inventory/category/`+JSON.parse(businessdetail).id).then(res=>{
         //   this.setState({isLoading: false});
@@ -146,7 +147,7 @@ export default class Category extends React.Component {
         // })
         this.setState({businessdetail: businessdetail}, ()=>{
           const dataManager = new DataManager()
-          dataManager.getData("select sync_id as id, name, status, description,created_at, created_by, updated_at, updated_by,businessId, sync_status from category order by created_at asc").then(response =>{ 
+          dataManager.getData("select sync_id as id, name, status, description,created_at, created_by, updated_at, updated_by,businessId, sync_status from category where businessId="+businessdetail["id"]+" order by created_at asc").then(response =>{ 
               if (response instanceof Array) {
                   this.setState({categorylist: response, isLoading: false}, function(){
                     console.log(this.state.categorylist);

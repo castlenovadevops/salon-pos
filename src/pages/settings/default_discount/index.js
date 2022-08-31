@@ -84,39 +84,42 @@ export default class DefaultDiscount extends React.Component {
   }
   componentDidMount(){
    
-    var condition = navigator.onLine ? 'online' : 'offline';
-    this.setState({isOnline: (condition==="online") ? true: false}, function(){
-      if(!this.state.isOnline) {
-        const dataManager = new DataManager() 
-        dataManager.getData("select * from default_discount_division").then(response =>{
-            if (response instanceof Array) {
-                this.setState({default_discountlist: response}, function(){
-                  this.setState({selectedDiscount:this.state.default_discountlist[0]}, ()=>{
-                    console.log(this.state.selectedDiscount); 
+    var detail = window.localStorage.getItem('businessdetail');
+    if(detail !== undefined && detail !== null){
+      var businessdetail = JSON.parse(detail);
+      var condition = navigator.onLine ? 'online' : 'offline';
+      this.setState({isOnline: (condition==="online") ? true: false}, function(){
+        if(!this.state.isOnline) {
+          const dataManager = new DataManager() 
+          dataManager.getData("select * from default_discount_division where businessId="+businessdetail["id"]).then(response =>{
+              if (response instanceof Array) {
+                  this.setState({default_discountlist: response}, function(){
+                    this.setState({selectedDiscount:this.state.default_discountlist[0]}, ()=>{
+                      console.log(this.state.selectedDiscount); 
+                    })
                   })
-                })
-            }
-           
-        })
-  
-      }
-      else {
-        this.setState({mastertables:[{
-          name: "default_discount_division",
-          tablename: 'default_discount_division',
-          progressText: "Synchronizing Discount Division...",
-          progresscompletion: 10,
-          url: config.root + `/settings/default_discount/list/` + JSON.parse(window.localStorage.getItem('businessdetail')).id,
-          syncurl:''
-      } ]},()=>{
-
-        this.getDef_DiscountList();
-        })
-      }
-    })
-
-  
+              }
+            
+          })
     
+        }
+        else {
+          this.setState({mastertables:[{
+            name: "default_discount_division",
+            tablename: 'default_discount_division',
+            progressText: "Synchronizing Discount Division...",
+            progresscompletion: 10,
+            url: config.root + `/settings/default_discount/list/` + JSON.parse(window.localStorage.getItem('businessdetail')).id,
+            syncurl:''
+        } ]},()=>{
+
+          this.getDef_DiscountList();
+          })
+        }
+      })
+
+    }
+      
   }
 
 

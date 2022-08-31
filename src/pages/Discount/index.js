@@ -181,6 +181,8 @@ export default class Discount extends React.Component {
     
   }
   getDiscountList() { 
+    var detail = window.localStorage.getItem('businessdetail');
+    var businessdetail = JSON.parse(detail);
     // console.log("getDiscountList")
     this.setState({isLoading: true});
         // axios.get(config.root+`/discount/list/`+JSON.parse(window.localStorage.getItem("businessdetail")).id).then(res=>{
@@ -189,7 +191,7 @@ export default class Discount extends React.Component {
         //         console.log("getDiscountList",this.state.discountlist)
         //     })
         // }); 
-        this.dataManager.getData("select sync_id as id, name, discount_type, discount_value, division_type, owner_division, emp_division, created_at, created_by, updated_at, updated_by, status, businessId, sync_status, sync_id from discounts").then(response =>{
+        this.dataManager.getData("select sync_id as id, name, discount_type, discount_value, division_type, owner_division, emp_division, created_at, created_by, updated_at, updated_by, status, businessId, sync_status, sync_id from discounts where businessId="+businessdetail["id"]).then(response =>{
           if (response instanceof Array) {
               this.setState({discountlist: response, isLoading:false}, function(){
                   // console.log(this.state.employeelist)

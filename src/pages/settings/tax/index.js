@@ -186,9 +186,10 @@ export default class Tax extends React.Component {
 
     taxlist() {
         this.setState({ isLoading: true });
-        var businessdetail = window.localStorage.getItem('businessdetail');
-        if (businessdetail !== undefined && businessdetail !== null) {
-            this.dataManager.getData("select sync_id as id, tax_name, tax_type, tax_value, isDefault, created_at, updated_at, status from taxes").then(response => {
+        var detail = window.localStorage.getItem('businessdetail');
+        if (detail !== undefined && detail !== null) {
+            var businessdetail = JSON.parse(detail);
+            this.dataManager.getData("select sync_id as id, tax_name, tax_type, tax_value, isDefault, created_at, updated_at, status from taxes where businessId="+businessdetail["id"]).then(response => {
                 if (response instanceof Array) {
                     this.setState({ taxlist: response }, function () {
                         this.setState({ isLoading: false });
