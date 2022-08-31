@@ -1574,12 +1574,12 @@ render()  {
                            }
 
                             {(this.state.value ==1) && <div style={{position:'relative', height:'100%'}}>
-                                    <div style={{display:'flex', alignItems:'right', justifyContent:'flex-end', marginRight: 10, position:'absolute', right:0}}> 
+                                    <div style={{display:'flex', alignItems:'right', justifyContent:'flex-end', marginRight: 10, position:'absolute', right:0, zIndex:99999}}> 
                                         <IconButton onClick={()=>{
                                             this.setState({showDatePopup: true})
                                         }}><CalendarMonthOutlined/></IconButton>
                                     </div> 
-                                    {(this.state.value ==1 &&  this.state.hide) && 
+                                    {(this.state.value === 1 &&  this.state.hide) && 
                                         <TableContent style={{ marginBottom: 10}}
                                         data={this.state.paid_ticket_list} 
                                         columns={this.state.closedticket_reponsiveColumns}

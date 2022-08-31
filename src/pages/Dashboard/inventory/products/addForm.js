@@ -97,7 +97,8 @@ export default class ProductForm extends React.Component {
     componentDidMount() {
         setTimeout(() => {
             if (this.props.serviceToEdit !== undefined) {
-                this.setState({ serviceSelected: this.props.serviceToEdit, isEdit: true, isDisable: false }, function () {
+                console.log("Edit condition");
+                this.setState({isLoading:true, serviceSelected: this.props.serviceToEdit, isEdit: true, isDisable: false }, function () {
                     let statevbl = this.state
                     statevbl = this.state.serviceSelected;
                     this.setState(statevbl);
@@ -114,8 +115,6 @@ export default class ProductForm extends React.Component {
                     else {
                         this.setState({ isCustom: false, isDefault: false });
                     }
-
-                    this.getServiceCategories();
                 })
             }
             else{
@@ -145,17 +144,25 @@ export default class ProductForm extends React.Component {
         }, 100);
     }
     getServiceCategories() {  
+        console.log("get service categories");
         this.dataManager.getData(`select * from services_category where service_id='` + this.state.serviceSelected.id + `' and status='active'`).then(res => {
             var categories = [];
-            res.forEach((elmt, i) => {
-                categories.push(elmt.category_id);
-                if (i === res.length - 1) { 
-                    console.log(categories)
-                    this.setState({ selectedcategory: categories }, ()=>{
-                        this.handleValidation();
-                    }); 
-                }
-            })
+            if(res.length > 0){
+                res.forEach((elmt, i) => {
+                    categories.push(elmt.category_id);
+                    if (i === res.length - 1) { 
+                        console.log("get service categories");
+                        this.setState({ selectedcategory: categories }, ()=>{
+                            this.setState({isLoading:false})
+                            this.handleValidation();
+                        }); 
+                    }
+                })
+            }
+            else{ 
+                console.log("else get service categories");
+                this.setState({isLoading:false})
+            }
         }) 
     }
     getCategoryList() {
@@ -331,17 +338,26 @@ export default class ProductForm extends React.Component {
     }
     getTaxByServices(serviceId) {   
         this.dataManager.getData(`select * from services_tax where service_id='` + serviceId + `' and status='active'`).then(res => {
-            setTimeout(function() { 
+            setTimeout(function() {
+                if(res.length > 0){ 
                 this.setState({service_taxes:res}, function(){
                     var taxes = []
                     this.state.service_taxes.forEach((elmt)=>{
                         taxes.push(elmt.tax_id)
                         this.setState({taxes:taxes}, function(){  
+
+
+                    this.getServiceCategories();
                         })
                     })
                 });
+            }
+            else{
+
+                    this.getServiceCategories();
+            }
                 
-            }.bind(this), 1000);
+            }.bind(this), 100);
         })
     }
 

@@ -3,7 +3,8 @@ const isDev = require('electron-is-dev');
 const path = require('path');
 const sqlite3 = require('sqlite3');  
 require('v8-compile-cache');
-
+const moment = require('moment');
+const axios = require('axios');
 const  {machineId} = require('node-machine-id');
 let mainWindow;  
 
@@ -25,6 +26,7 @@ const db = new sqlite3.Database(
 
 Menu.setApplicationMenu(null);
 var splash;
+
 const createWindow = () => {
 
   splash = new BrowserWindow({width: 600, height: 300, alwaysOnTop: true, frame: false});
@@ -55,7 +57,7 @@ const createWindow = () => {
   });  
   mainWindow.loadURL(
     isDev
-      ? 'http://localhost:3000' 
+      ? 'http://localhost:9000' 
       : `file://${path.join(__dirname, '../build/index.html')}`
   ); 
   // mainWindow.setIcon(path.join(__dirname, '/icon.png'));
@@ -218,23 +220,31 @@ ipcMain.handle('printData', async(event, input)=>{
 })
 
 
-ipcMain.handle('getTicketCode', async(event)=>{
- 
+ipcMain.handle('getTicketCode', async(event)=>{ 
+ console.log("Date now :::: ","SELECT *  from ticket where Date(created_at) = Date('"+new Date().toISOString()+"') order by ticket_code desc");
   return new Promise((resolve, reject) => {     
-      db.all("SELECT *  from ticket order by ticket_code desc", (err, rows) => {
-          if(rows.length > 0){
-            console.log(rows[0].ticket_code)
-            var ticketcode = rows[0].ticket_code != '' && rows[0].ticket_code !== undefined &&rows[0].ticket_code!==null ? rows[0].ticket_code : 0;
-            var count = Number(ticketcode)+1;
-            console.log(count);
-            resolve({ticketid: String(count).padStart(4, '0'), res:rows});
-          }
-          else{
-            var count = 1;
-            resolve({ticketid: String(count).padStart(4, '0'), res:rows});
-            // resolve((err && err.message) || rows);
-          }
-      }); 
+    db.all("select * from ticket where Date(created_at) > Date('"+new Date().toISOString()+"')", (err, daterows) => {
+      if(daterows.length > 0){
+
+        resolve({ticketid: '',error:'System date mismatch. Please set correct date and time.', res:daterows});
+      }
+      else{
+        db.all("SELECT *  from ticket where Date(created_at) = Date('"+new Date().toISOString()+"') order by ticket_code desc", (err, rows) => {
+            if(rows.length > 0){
+              console.log(rows[0].ticket_code)
+              var ticketcode = rows[0].ticket_code != '' && rows[0].ticket_code !== undefined &&rows[0].ticket_code!==null ? rows[0].ticket_code : 0;
+              var count = Number(ticketcode)+1;
+              console.log(count);
+              resolve({ticketid: String(count).padStart(4, '0'), res:rows});
+            }
+            else{
+              var count = 1;
+              resolve({ticketid: String(count).padStart(4, '0'), res:rows});
+              // resolve((err && err.message) || rows);
+            }
+        })
+      }
+    })
   });
 })
 

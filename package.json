@@ -46,11 +46,12 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start-react": "react-scripts start",
+    "start-react": "PORT=9000 BROWSER=none react-scripts start",
+    "startwin-react":"react-scripts start",
     "build-react": "react-scripts build",
     "start-electron": "nodemon --watch ./public/* --exec \"electron .\"",
     "start": "cp elect.js ./public/elect.js && cp elect.js ./build/elect.js && concurrently \"npm run start-react\" \"wait-on http://localhost:9000 && npm run start-electron\" ",
-    "start:win": "concurrently \"npm run start-react\" \"wait-on http://localhost:3000 && npm run start-electron\" ",
+    "start:win": "concurrently \"npm run startwin-react\" \"wait-on http://localhost:3000 && npm run start-electron\" ",
     "startcomplete": "rm -rf ./userdata && cp db/empty.sqlite3 db/salon.sqlite3 &&  cp elect.js ./build/elect.js && concurrently \"npm run start-react\" \"wait-on http://localhost:9000 && npm run start-electron\" ",
     "postinstall": "electron-builder install-app-deps",
     "pack-app": "npm run build-react && electron-builder -mwl --dir",
