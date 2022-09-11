@@ -14,6 +14,7 @@ import Slide from '@material-ui/core/Slide';
 import AlertModal from '../../../components/Modal/alertModal';
 import axios from 'axios';
 import {CalendarMonthOutlined} from '@mui/icons-material';
+import CloseIcon from '@mui/icons-material/Close';
 import DesktopDatePicker from '@mui/lab/DesktopDatePicker';
 import LocalizationProvider from '@mui/lab/LocalizationProvider';
 import AdapterDateFns from '@mui/lab/AdapterDateFns'; 
@@ -486,6 +487,8 @@ constructor(props){
         from_date:new Date(),
         to_date:new Date(),
         showDatePopup: false, 
+        closedticketprint:false,
+        printtype:'',
     }
     this.handlePageEvent = this.handlePageEvent.bind(this);
     this.handleOpen = this.handleOpen.bind(this)
@@ -593,36 +596,37 @@ handleTicketPrint(row){
     console.log("handleTicketPrint",row.id)
 
     var printerName = window.localStorage.getItem('defaultprinter')
-        if(printerName != undefined && printerName != ''){
+        if(printerName !== null &&printerName !== undefined && printerName !== ''){
+            
+                console.log(row);
+                    this.setState({ticketDetail:row, services_taken:[]}, ()=>{
+                    var ticket_id = this.state.ticketDetail.id;
+                    this.setState({isLoading: true})
+                    const sql = "select ts.*,s.*,ts.sync_id as uniquId, rn.id as notesid, rn.notes as requestNotes, d.name as discount_name from ticket_services as ts INNER JOIN services as s ON ts.service_id = s.sync_id left join ticketservice_requestnotes as rn on rn.ticket_id=ts.ticket_id and rn.service_id=ts.service_id and rn.isActive=1 left join discounts as d on d.id = ts.discount_id where ts.ticketref_id =  '"+ticket_id+"'  and ts.isActive=1" 
 
-        this.setState({ticketDetail:row, services_taken:[]}, ()=>{
-        var ticket_id = this.state.ticketDetail.id;
-        this.setState({isLoading: true})
-        const sql = "select ts.*,s.*,ts.sync_id as uniquId, rn.id as notesid, rn.notes as requestNotes, d.name as discount_name from ticket_services as ts INNER JOIN services as s ON ts.service_id = s.sync_id left join ticketservice_requestnotes as rn on rn.ticket_id=ts.ticket_id and rn.service_id=ts.service_id and rn.isActive=1 left join discounts as d on d.id = ts.discount_id where ts.ticketref_id =  '"+ticket_id+"'  and ts.isActive=1" 
+                    console.log("handleTicketPrint, handleTicketPrint",sql)
+                    this.state.dataManager.getData(sql).then(response =>{ 
+                        if (response instanceof Array) { 
+                            console.log("handleTicketPrint",response.length)
+                            for (var i=0;i < response.length; i++){ 
+                                this.addServices(response[i], i, response)  
+                                if(i === response.length-1){
+                                    this.setState({isLoading: false})
+                                }
+                            }
+                            if(response.length ===0){
 
-        console.log("handleTicketPrint, handleTicketPrint",sql)
-        this.state.dataManager.getData(sql).then(response =>{ 
-            if (response instanceof Array) { 
-                console.log("handleTicketPrint",response.length)
-                for (var i=0;i < response.length; i++){ 
-                    this.addServices(response[i], i, response)  
-                    if(i === response.length-1){
-                        this.setState({isLoading: false})
-                    }
-                }
-                if(response.length ===0){
-
-                    this.setState({isLoading: false})
-                }
-            }
-        })
-    
-    
-    })
-}
-else{
-    this.setState({printalert:true})
-}
+                                this.setState({isLoading: false})
+                            }
+                        }
+                    })
+                
+                
+                }) 
+        }
+        else{
+            this.setState({closedticketprint:false, printalert:true})
+        }
 
 
 } 
@@ -712,7 +716,12 @@ addServices = (servicein, i, response) => new Promise((resolve, reject) => {
         console.log("addServices", obj)
         this.setState({services_taken: services}, ()=>{
             if(i === response.length -1){ 
-                setTimeout(this.printTicket(), 1000);
+                if(this.state.value === 1){
+                    this.setState({closedticketprint: true});
+                }
+                else{
+                    setTimeout(this.printTicket(), 1000);
+                }
             }
         })
     });
@@ -723,143 +732,156 @@ printTicket() {
     //console.log("service_data", service_data)
         // var businessdetail = this.state.businessdetail;
         var printerName = window.localStorage.getItem('defaultprinter')
-        if(printerName != undefined && printerName != ''){
-            this.setState({print_data: print_data}, function() {
-                // this.setState({printpopup: true}) 
-                var total=Number(this.state.ticketDetail.grand_total).toFixed(2)
-                var ticketid = this.state.ticketDetail.ticket_code;
-                console.log(printerName);
-                var data = [];
+        if(printerName !== null &&printerName !== undefined && printerName !== ''){
+            if(this.state.printtype === 'employee'){
+                this.printEmployeeReceipt();
+            }
+            else{
+                this.setState({print_data: print_data}, function() {
+                    // this.setState({printpopup: true}) 
+                    var total=Number(this.state.ticketDetail.grand_total).toFixed(2)
+                    var ticketid = this.state.ticketDetail.ticket_code;
+                    console.log(printerName);
+                    var data = [];
 
 
 
-                var bodydata = []
+                    var bodydata = []
 
-                print_data.forEach((ser,index)=>{
-                    bodydata.push([
-                        {
-                            type: "text", 
-                            value: "<div style='display:flex;flex-direction:column;'><div style='text-align:left;'>"+ser["quantity"]+"&nbsp;&nbsp;&nbsp;&nbsp;"+ser["name"]+"</div>"+
-                            ((ser["tax"] === "") ? "":ser["tax"])+
-                            ((ser["discount"] === "") ? "":ser["discount"]), 
-                            css: {  "font-size": "12px" },
-                        },
-                        {
-                            type: "text", 
-                            value: "<div style='display:flex;flex-direction:column;'><div >"+"$"+Number(ser["total"]).toFixed(2)+"</div>"+ser["ratedetails"],
-                            css: {  "font-weight": "500","font-size": "14px" },
-                        },
-                        // {
-                        //     type: "text", 
-                        //     value:  "$"+ser["total"],
-                        //     style: `text-align:left;`,
-                        //     css: {  "font-weight": "500","font-size": "14px" },
-                        // },
-                    ]
-                    );  
-                    
-                })
-            
-            
-                data.push({
-                    type: "text", 
-                    value: this.state.businessdetail.name,//"TOP PAYMENT SOLUTIONS - Main",
-                    style: `text-align:center;`,
-                    css: {  "font-weight": "700", "font-size": "16px" },
-                    }); 
+                    print_data.forEach((ser,index)=>{
+                        bodydata.push([
+                            {
+                                type: "text", 
+                                value: "<div style='display:flex;flex-direction:column;'><div style='text-align:left;'>"+ser["quantity"]+"&nbsp;&nbsp;&nbsp;&nbsp;"+ser["name"]+"</div>"+
+                                ((ser["tax"] === "") ? "":ser["tax"])+
+                                ((ser["discount"] === "") ? "":ser["discount"]), 
+                                css: {  "font-size": "12px" },
+                            },
+                            {
+                                type: "text", 
+                                value: "<div style='display:flex;flex-direction:column;'><div  style='text-align:right;padding-right:10px;'>$"+Number(ser["total"]).toFixed(2)+"</div>"+ser["ratedetails"],
+                                css: {  "font-weight": "500","font-size": "12px" },
+                            },
+                            // {
+                            //     type: "text", 
+                            //     value:  "$"+ser["total"],
+                            //     style: `text-align:left;`,
+                            //     css: {  "font-weight": "500","font-size": "14px" },
+                            // },
+                        ]
+                        );  
+                        
+                    })
                 
-                data.push({
-                    type: "text", 
-                    value: this.state.businessdetail.address1+"<br/>"+ this.state.businessdetail.address2+"<br/>"+this.state.businessdetail.city+"<br/>" +this.state.businessdetail.state+ this.state.businessdetail.zipcode+"<br/>"+ this.state.businessdetail.businessphone, //"3675 CRESTWOOD PKWY STE <br> DULUTH, GA  300965045 <br> 7706804075",
-                    style: `text-align:center;`,
-                    css: { "font-size": "12px","margin-top": 2 },
-                    }); 
-                data.push({
-                    type: "text", 
-                    value: "",//"http://toppaymentsolutions.com",
-                    style: `text-align:center;`,
-                    css: { "font-size": "10px","margin-top": 2 },
-                    }); 
-
-                data.push({
-                    type: "text", 
-                    value: "ORDER: "+JSON.parse(window.localStorage.getItem('businessdetail')).name+" - Ticket "+ ticketid,
-                    style: `text-align:center;`,
-                    css: { "font-weight": "700", "font-size": "18px","margin-top": 10 },
-                    }); 
-                data.push({
-                    type: "text", 
-                    value: "Cashier: "+JSON.parse(window.localStorage.getItem('employeedetail')).firstName,
-                    style: `text-align:left;`,
-                    css: {  "font-size": "12px","margin-top": 5 },
-                    });
-                data.push({
-                    type: "text", 
-                    value:  Moment(new Date()).format('MM-DD-YYYY hh:mm A'),
-                    style: `text-align:left;`,
-                    css: {  "font-size": "12px","margin-top": 5 },
-                    });
                 
-                data.push({
-                    type: 'table',
-                    // style: 'border: 0px solid #ddd',
-                    css: {"margin-left": 10,"margin-top": 10,"margin-bottom": 10},
-                    tableBody: bodydata,
-                    tableBodyStyle: 'border: 0.0px solid #ddd',
-                    tableSeperatorStyle: 'border: 0.0px solid #ddd'
-                })
-                data.push({
-                    type: "text", 
-                    value:  "<div style='display: flex; justify-content: space-between;'><p >Discount</p> <p>$"+(this.state.ticketDetail.discount_totalamt !== null && this.state.ticketDetail.discount_totalamt !== undefined ? Number(this.state.ticketDetail.discount_totalamt).toFixed(2) : '$0.00')+"</p> </div>",
-                    style: `text-align:left;`,
-                    css: { "font-weight": "700", "font-size": "14px","margin-top": -10 },
-                })
-                data.push({
-                    type: "text", 
-                    value:  "<div style='display: flex; justify-content: space-between;'><p >Total</p> <p>$"+Number(total).toFixed(2)+"</p> </div>",
-                    style: `text-align:left;`,
-                    css: { "font-weight": "700", "font-size": "14px","margin-top": -10 },
-                }); 
-                if(this.state.value === 1){
                     data.push({
                         type: "text", 
-                        value: "<div style='display: flex; justify-content: space-between;'><p style='text-transform:uppercase;'>"+this.state.ticketDetail.pay_mode+" SALE</p> <p>$"+Number(total).toFixed(2)+"</p> </div>",
+                        value: this.state.businessdetail.name,//"TOP PAYMENT SOLUTIONS - Main",
+                        style: `text-align:center;`,
+                        css: {  "font-weight": "700", "font-size": "16px" },
+                        }); 
+                    
+                    data.push({
+                        type: "text", 
+                        value: this.state.businessdetail.address1+"<br/>"+ this.state.businessdetail.address2+"<br/>"+this.state.businessdetail.city+"<br/>" +this.state.businessdetail.state+ this.state.businessdetail.zipcode+"<br/>"+ this.state.businessdetail.businessphone, //"3675 CRESTWOOD PKWY STE <br> DULUTH, GA  300965045 <br> 7706804075",
+                        style: `text-align:center;`,
+                        css: { "font-size": "12px","margin-top": 2 },
+                        }); 
+                    data.push({
+                        type: "text", 
+                        value: "",//"http://toppaymentsolutions.com",
+                        style: `text-align:center;`,
+                        css: { "font-size": "10px","margin-top": 2 },
+                        }); 
+
+                    data.push({
+                        type: "text", 
+                        value: "ORDER: "+JSON.parse(window.localStorage.getItem('businessdetail')).name+" - Ticket "+ ticketid,
+                        style: `text-align:center;`,
+                        css: { "font-weight": "700", "font-size": "18px","margin-top": 10 },
+                        }); 
+                    data.push({
+                        type: "text", 
+                        value: "Cashier: "+JSON.parse(window.localStorage.getItem('employeedetail')).firstName,
                         style: `text-align:left;`,
-                        css: {  "font-size": "14px","margin-top": -25 },
+                        css: {  "font-size": "12px","margin-top": 5 },
+                        });
+                    data.push({
+                        type: "text", 
+                        value:  Moment(new Date()).format('MM-DD-YYYY hh:mm A'),
+                        style: `text-align:left;`,
+                        css: {  "font-size": "12px","margin-top": 5 },
+                        });
+                    
+                    data.push({
+                        type: 'table',
+                        // style: 'border: 0px solid #ddd',
+                        css: {"margin-left": 10,"margin-top": 10,"margin-bottom": 10},
+                        tableBody: bodydata,
+                        tableBodyStyle: 'border: 0.0px solid #ddd',
+                        tableSeperatorStyle: 'border: 0.0px solid #ddd'
+                    })
+                    data.push({
+                        type: "text", 
+                        value:  "<div style='display: flex;width:100%; justify-content: space-between;'><p >Discount</p> <p style='text-align:right;'>$"+(this.state.ticketDetail.discount_totalamt !== null && this.state.ticketDetail.discount_totalamt !== undefined ? Number(this.state.ticketDetail.discount_totalamt).toFixed(2) : '$0.00')+"</p> </div>",
+                        style: `text-align:left;`,
+                        css: { "font-weight": "700", "font-size": "14px","margin-top": -10 },
+                    })
+
+                    data.push({
+                        type: "text", 
+                        value:  "<div style='display: flex; justify-content: space-between;'><p >Tips</p> <p style='text-align:right;'>$"+Number(this.state.ticketDetail.tips_totalamt).toFixed(2)+"</p> </div>",
+                        style: `text-align:left;`,
+                        css: { "font-weight": "700", "font-size": "14px","margin-top": -25 },
+                    });  
+
+                    data.push({
+                        type: "text", 
+                        value:  "<div style='display: flex; justify-content: space-between;'><p >Total</p> <p style='text-align:right;'>$"+Number(total).toFixed(2)+"</p> </div>",
+                        style: `text-align:left;`,
+                        css: { "font-weight": "700", "font-size": "14px","margin-top": -10 },
+                    }); 
+                    if(this.state.printtype === 'receipt' && this.state.value === 1){
+                        data.push({
+                            type: "text", 
+                            value: "<div style='display: flex; justify-content: space-between;'><p style='text-transform:uppercase;'>"+this.state.ticketDetail.pay_mode+" SALE</p> <p style='text-align:right;'>$"+Number(total).toFixed(2)+"</p> </div>",
+                            style: `text-align:left;`,
+                            css: {  "font-size": "14px","margin-top": -25 },
+                        });
+                        if(this.state.ticketDetail.pay_mode.toLowerCase() === 'cash'){
+                            data.push({
+                                type: "text", 
+                                value:  "<div style='display: flex; justify-content: space-between;'><p >Cash tendered</p> <p style='text-align:right;'>$"+Number(total).toFixed(2)+"</p> </div>",
+                                style: `text-align:left;`,
+                                css: { "font-size": "14px","margin-top": -25 },
+                            }); 
+                        }
+                        else{
+                            data.push({
+                                type: "text", 
+                                value:  "<div style='display: flex; justify-content: space-between;'><p style='text-transform:uppercase;'>"+this.state.ticketDetail.card_type+"&nbsp;&nbsp;"+this.state.ticketDetail.payment_notes+"</p> <p style='text-align:right;'>$"+Number(total).toFixed(2)+"</p> </div>",
+                                style: `text-align:left;`,
+                                css: { "font-size": "14px","margin-top": -25 },
+                            }); 
+                        }
+                    }
+                    data.push({
+                        type: "text", 
+                        value:  "Enjoy!",
+                        style: `text-align:left;`,
+                        css: { "font-size": "14px","margin-top": 0 },
                     });
-                    if(this.state.ticketDetail.pay_mode.toLowerCase() === 'cash'){
-                        data.push({
-                            type: "text", 
-                            value:  "<div style='display: flex; justify-content: space-between;'><p >Cash tendered</p> <p>$"+Number(total).toFixed(2)+"</p> </div>",
-                            style: `text-align:left;`,
-                            css: { "font-size": "14px","margin-top": -25 },
-                        }); 
-                    }
-                    else{
-                        data.push({
-                            type: "text", 
-                            value:  "<div style='display: flex; justify-content: space-between;'><p style='text-transform:uppercase;'>"+this.state.ticketDetail.card_type+"&nbsp;&nbsp;"+this.state.ticketDetail.payment_notes+"</p> <p>$"+Number(total).toFixed(2)+"</p> </div>",
-                            style: `text-align:left;`,
-                            css: { "font-size": "14px","margin-top": -25 },
-                        }); 
-                    }
-                }
-                data.push({
-                    type: "text", 
-                    value:  "Enjoy!",
-                    style: `text-align:left;`,
-                    css: { "font-size": "14px","margin-top": 0 },
-                });
 
-                window.api.printdata({printername: printerName, data: data}).then(res=>{ 
-                    console.log(res); 
+                    window.api.printdata({printername: printerName, data: data}).then(res=>{ 
+                        console.log(res); 
+                    })
+
+
                 })
-
-
-            })
+            }
         }
         else{
-        alert("No printer selected"); 
+            alert("No printer selected"); 
         }
 
 
@@ -884,8 +906,8 @@ processPrintDetails() {
         })
 
         tax_data.forEach((tax) => {
-            tax_detail = (tax_detail.length>0 ? tax_detail  : tax_detail)+"<div style='display:flex;width:100%;justify-content:space-between;'><div>"+tax["tax_name"]+"</div></div>"
-            tax_rate += "<div> $"+tax["tax_percentage"]+"</div>"
+            tax_detail = (tax_detail.length>0 ? tax_detail  : tax_detail)+"<div style='display:flex;width:100%;justify-content:space-between;'><div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+tax["tax_name"]+"</div></div>"
+            tax_rate += "<div style='text-align:right;padding-right:10px;'> $"+tax["tax_percentage"]+"</div>"
         })
 
         
@@ -901,8 +923,8 @@ processPrintDetails() {
 
         discount_data.forEach   ((tax) => {
             console.log(tax)
-            discount_detail = (discount_detail.length>0 ? discount_detail : discount_detail)+"<div style='display:flex;width:100%;justify-content:space-between;'><div>"+tax["discount_name"]+"</div></div>"
-            tax_rate += "<div> ($"+tax["discount_price"]+")</div>"
+            discount_detail = (discount_detail.length>0 ? discount_detail : discount_detail)+"<div style='display:flex;width:100%;justify-content:space-between;'><div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+tax["discount_name"]+"</div></div>"
+            tax_rate += "<div style='text-align:right;padding-right:10px;'> ($"+Number(tax["discount_price"]).toFixed(2)+")</div>"
         }) 
         console.log(ser)
         service_data.push({
@@ -921,6 +943,168 @@ processPrintDetails() {
     })
 
 return service_data
+
+    
+}
+
+
+getEmployeeName(id){ 
+    var empname = '';
+    for(var i=0;i<this.state.staff_list.length;i++){ 
+        var obj = this.state.staff_list[i];
+        if(obj["id"] === id){
+            empname = obj['firstName']+" "+obj['lastName']; 
+        } 
+    }
+    return empname;
+}
+
+printEmployeeReceipt(){
+    var emps = []
+    var thisobj = this;
+    this.state.services_taken.forEach((e, i)=>{
+        if(emps.indexOf(e.employee_id) === -1){
+            emps.push(e.employee_id)
+        }
+        if(i=== thisobj.state.services_taken.length-1){
+            console.log("PRINT EMP RECEIPT")
+            var printerName = window.localStorage.getItem('defaultprinter')
+            if(printerName !== null &&printerName != undefined && printerName != ''){
+                thisobj.printEmployeeReceiptIndividual(0, emps, printerName);
+            }
+            else{
+                thisobj.setState({printtalert:true})
+            }
+
+        }
+    });
+}
+
+printEmployeeReceiptIndividual(idx, emps, printerName){
+    if(idx < emps.length){
+            var emp = emps[idx];
+            var response = this.processEmployeePrintDetails(emp);
+            var print_data = response.data;
+            var total = response.total;
+            var tipstotal = response.tipstotal;
+            var data = [];
+                data.push({
+                    type: "text", 
+                    value: this.state.businessdetail.name+"<br/>Employee Receipt",//"TOP PAYMENT SOLUTIONS - Main",
+                    style: `text-align:center;`,
+                    css: {  "font-weight": "700", "font-size": "16px" },
+                    }); 
+                
+                data.push({
+                    type: "text", 
+                    value: this.state.businessdetail.address1+"<br/>"+ this.state.businessdetail.address2+"<br/>"+this.state.businessdetail.city+"<br/>" +this.state.businessdetail.state+ this.state.businessdetail.zipcode+"<br/>"+ this.state.businessdetail.businessphone, //"3675 CRESTWOOD PKWY STE <br> DULUTH, GA  300965045 <br> 7706804075",
+                    style: `text-align:center;`,
+                    css: { "font-size": "12px","margin-top": 2 },
+                    }); 
+                data.push({
+                    type: "text", 
+                    value: "",//"http://toppaymentsolutions.com",
+                    style: `text-align:center;`,
+                    css: { "font-size": "10px","margin-top": 2 },
+                    });  
+
+                data.push({
+                    type: "text", 
+                    value: "<div style='display: flex; justify-content: space-between;'><p >Employee: "+this.getEmployeeName(emp)+"</p><p>Ticket:"+this.state.ticketCode+"</p>",
+                    style: `text-align:left;`,
+                    css: {  "font-size": "12px","margin-top": 5 },
+                    }); 
+                
+                data.push({
+                    type: 'table',
+                    // style: 'border: 0px solid #ddd',
+                    css: {"margin-left": 10,"margin-top": 10,"margin-bottom": 10},
+                
+                    tableBody: print_data.map((ser,index)=>{
+                    
+                        return [
+                            {
+                                type: "text", 
+                                value: ser["quantity"]+"&nbsp;&nbsp;&nbsp;&nbsp;"+ser["name"] ,
+                                style: `text-align:left;`,
+                                css: {  "font-size": "12px" },
+                            },
+                            {
+                                type: "text", 
+                                value: "$"+Number(ser["price"]).toFixed(2),
+                                style: `text-align:left;`,
+                                css: {  "font-weight": "500","font-size": "14px" },
+                            },
+                            {
+                                type: "text", 
+                                value:  "$"+ser["total"],
+                                style: `text-align:left;`,
+                                css: {  "font-weight": "500","font-size": "14px" },
+                            },
+                        ]
+
+                    }),
+                
+                    tableBodyStyle: 'border: 0.0px solid #ddd',
+                    tableSeperatorStyle: 'border: 0.0px solid #ddd'
+                
+                }) 
+                
+
+                data.push({
+                    type: "text", 
+                    value:  "<div style='display: flex; justify-content: space-between;'><p >Tips</p> <p>$"+Number(tipstotal).toFixed(2)+"</p> </div>",
+                    style: `text-align:left;`,
+                    css: { "font-weight": "700", "font-size": "14px","margin-top": -25 },
+                });  
+                data.push({
+                    type: "text", 
+                    value:  "<div style='display: flex; justify-content: space-between;'><p >Total</p> <p>$"+Number(total).toFixed(2)+"</p> </div>",
+                    style: `text-align:left;`,
+                    css: { "font-weight": "700", "font-size": "14px","margin-top": -10 },
+                });  
+
+                data.push({
+                    type: "text", 
+                    value:  this.state.businessdetail.name+" - Printed: "+Moment(new Date()).format('MM-DD-YYYY hh:mm A'),
+                    style: `text-align:center;border-bottom:1px dotted #000;margin-top:40px;padding-top:30px;padding-bottom:20px;`,
+                    css: {  "font-size": "14px","margin-top":10, "border-bottom":"1px dotted #000"},
+                });
+
+                window.api.printdata({printername: printerName, data: data}).then(res=>{ 
+                    console.log(res);
+                    this.printEmployeeReceiptIndividual(idx+1, emps, printerName)
+                })
+    }
+    else{
+
+        // this.setState({closedticketprint: false});
+        console.log("ARRAY COMPLETED")
+    }
+}
+
+
+
+processEmployeePrintDetails(empid) {
+
+    var service_data = []
+    var total = 0;
+    var tipstotal = 0;
+    this.state.services_taken.forEach(( ser,index) => {
+        if(ser.employee_id === empid){
+            total +=  ser.subtotal;
+            tipstotal += ser.tips_amount !== undefined ? ser.tips_amount : 0;
+
+            service_data.push({
+                "name" : ser.servicedetail.name,
+                "price":  ser.perunit_cost,
+                "total": ser.subtotal, 
+                "quantity": ser.qty,
+            })
+        } 
+    })
+
+   return {data: service_data, total:total, tipstotal:tipstotal}
 
     
 }
@@ -1574,7 +1758,7 @@ render()  {
                            }
 
                             {(this.state.value ==1) && <div style={{position:'relative', height:'100%'}}>
-                                    <div style={{display:'flex', alignItems:'right', justifyContent:'flex-end', marginRight: 10, position:'absolute', right:0, zIndex:99999}}> 
+                                    <div style={{display:'flex', alignItems:'right', justifyContent:'flex-end', marginRight: 10, position:'absolute', right:0, zIndex:999}}> 
                                         <IconButton onClick={()=>{
                                             this.setState({showDatePopup: true})
                                         }}><CalendarMonthOutlined/></IconButton>
@@ -1655,7 +1839,7 @@ render()  {
                     {/* Clockin out modal ends */}
 
                     {/* CreateTicketModal modal starts */}
-                      <CreateTicketModal open={this.state.showPage === 'createTicket'} saveTicket={(data, ticketid)=>{
+                      <CreateTicketModal style={{zIndex:999999}} open={this.state.showPage === 'createTicket'} saveTicket={(data, ticketid)=>{
                           console.log("data from dashboard", data, ticketid);
                           this.props.saveTicket(data,ticketid);
                       }} afterFinished={(pagename)=>{
@@ -1766,6 +1950,49 @@ render()  {
                         </DialogActions>
             </Dialog>
         
+            {this.state.closedticketprint && <div>
+        <div style={{border:'1px solid',right:0, bottom:0,top:'0',left:'0',position:'absolute'}}>
+            <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
+            </div>
+            <div style={{background:'#fff', height:'350px', width:'400px', margin:'calc(25% - 175px) auto 0', position:'relative', borderRadius: 10}}>
+            <Grid container spacing={2}>
+                    <Grid item xs={2}></Grid>
+                <Grid item xs={8} style={{display:'flex', flexDirection:'column', alignItems:'center',marginTop:10}}>
+                    <Grid item xs={12} style={{margin:'1rem 0', width:'100%', textAlign:'center', cursor:'pointer'}}>
+                        <Button  onClick={()=>{
+                        this.setState({printtype:'bill'}, ()=>{
+                            this.printTicket()
+                        })
+                    }} color="secondary" style={{textTransform:'capitalize', width:'100%', height:'75px'}} variant="contained">Print Bill</Button>
+                        {/* <Typography id="modal-modal-title" variant="h6" component="h2" align="left" style={{marginLeft:20, "color":'#134163', border:'1px solid #f0f0f0', padding:'8px', display:'flex', alignItems:'center', justifyContent:'flex-start'}}>Print Bill</Typography> */}
+                    </Grid>  
+                    <Grid item xs={12} style={{margin:'1rem 0',width:'100%', textAlign:'center', cursor:'pointer'}}>
+                    <Button  onClick={()=>{
+                        this.setState({printtype:'receipt'}, ()=>{
+                            this.printTicket()
+                        })
+                    }} color="secondary" style={{textTransform:'capitalize', width:'100%', height:'75px'}} variant="contained">Print Receipt</Button>
+                    {/* <Typography id="modal-modal-title" variant="h6" component="h2" align="left" style={{marginLeft:20, "color":'#134163', border:'1px solid #f0f0f0', padding:'8px', display:'flex', alignItems:'center', justifyContent:'flex-start'}}>Print Receipt</Typography> */}
+                    </Grid>  
+                    <Grid item xs={12} style={{margin:'1rem 0',width:'100%', textAlign:'center', cursor:'pointer'}}>
+                        <Button  onClick={()=>{
+                        this.setState({printtype:'employee'}, ()=>{
+                            this.printTicket()
+                        })
+                    }} color="secondary" style={{textTransform:'capitalize', width:'100%', height:'75px'}} variant="contained">Print Employee Receipt</Button>
+                        </Grid>  
+                </Grid> 
+                <Grid item xs={2}>
+                    <Typography variant="subtitle2" align="center" style={{cursor:'pointer'}} onClick={()=>this.setState({closedticketprint:false, printtype:''})}> <CloseIcon fontSize="small" style={{"color":'#134163'}}/></Typography>
+                </Grid> 
+            </Grid>
+
+            </div>
+
+        </div>
+    </div>
+    }
+
         </div> 
   }
 

@@ -34,6 +34,7 @@ import PaymentModal from './TicketPayment';
 import TextField from '@mui/material/TextField'; 
 import config  from '../../../config/config';
 import TicketController from '../../../controller/TicketController';
+import Print from '@mui/icons-material/PrintOutlined';
 
 const cusDetail ={
     margin:'5px'
@@ -143,7 +144,8 @@ export default class CreateTicket extends React.Component {
             tipsdiscountEnabled: true,
             ticketrequestAlert_Open: false,
             transferAlert: false,
-            
+            closedticketprint:false,
+            printtype:'',
             open_tickets:[],
             selectedservice: {},
             transferpopup:false,
@@ -1097,11 +1099,11 @@ export default class CreateTicket extends React.Component {
                     if(tipsInput["tips_type"] !== undefined){ 
                         this.setState({services_taken:tipsInput["service_selected"],
                         tips_type:tipsInput["tips_type"], tips_totalamt:tipsInput["tips_amount"], tips_percent: tipsInput["tips_percent"], addTips_popup:false}, function(){
-                        
+                            console.log("TIPS SAEV paid:::::")
+                            console.log(this.state.services_taken);
                     //console.log(this.state.services_taken);
                             this.calculateTotal();
-                            setTimeout(()=>{
-
+                            setTimeout(()=>{ 
                                 //////console.log("to be saved")
                                 this.saveTicket('no')
                             },200)
@@ -1117,8 +1119,8 @@ export default class CreateTicket extends React.Component {
                     if(tipsInput["tips_type"] !== undefined){ 
                         this.setState({services_taken:tipsInput["service_selected"],
                         tips_type:tipsInput["tips_type"], tips_totalamt:tipsInput["tips_amount"], tips_percent: tipsInput["tips_percent"], addTips_popup:false}, function(){
-                            
-                            //console.log(this.state.services_taken);
+                            console.log("TIPS SAEV:::::")
+                            console.log(this.state.services_taken);
                             this.calculateTotal(); 
 
                         }); 
@@ -1388,7 +1390,8 @@ export default class CreateTicket extends React.Component {
         if(option === 'savepay'){
             var payment_input = {
                 id: ticketid,
-                ticketref_id: this.state.ticketref_id,
+                sync_id:ticketid,
+                ticketref_id: ticketid,
                 ticket_code : this.state.ticketCode,
                 technician_id: this.state.technician_id,
                 customer_id : this.state.customer_detail.id,
@@ -3280,142 +3283,157 @@ printTicket() {
     var print_data = this.processPrintDetails()
     //////console.log("service_data", service_data)
         var printerName = window.localStorage.getItem('defaultprinter')
-        if(printerName != undefined && printerName != ''){
+        if(printerName !== null &&printerName !== undefined && printerName !== ''){
             this.setState({print_data: print_data}, function() {
-                // this.setState({printpopup: true})
-                var subTotal=Number(this.state.totalamount).toFixed(2)
-                var discount=Number(this.state.total_discount).toFixed(2)
-                var tax=Number(this.state.totaltax).toFixed(2)
-                var tips=Number(this.state.tips_totalamt).toFixed(2)
-                var total=Number(this.state.grandTotal).toFixed(2)
-                var ticketid = this.state.ticketCode;
-                ////console.log(printerName);
-                var data = [];
-                data.push({
-                    type: "text", 
-                    value: this.state.businessdetail.name,//"TOP PAYMENT SOLUTIONS - Main",
-                    style: `text-align:center;`,
-                    css: {  "font-weight": "700", "font-size": "16px" },
-                    }); 
-                
-                data.push({
-                    type: "text", 
-                    value: this.state.businessdetail.address1+"<br/>"+ this.state.businessdetail.address2+"<br/>"+this.state.businessdetail.city+"<br/>" +this.state.businessdetail.state+ this.state.businessdetail.zipcode+"<br/>"+ this.state.businessdetail.businessphone, //"3675 CRESTWOOD PKWY STE <br> DULUTH, GA  300965045 <br> 7706804075",
-                    style: `text-align:center;`,
-                    css: { "font-size": "12px","margin-top": 2 },
-                    }); 
-                data.push({
-                    type: "text", 
-                    value: "",//"http://toppaymentsolutions.com",
-                    style: `text-align:center;`,
-                    css: { "font-size": "10px","margin-top": 2 },
-                    }); 
+                if(this.state.printtype === 'employee'){
+                    this.printEmployeeReceipt();
+                }
+                else{
+                    // this.setState({printpopup: true})
+                    var subTotal=Number(this.state.totalamount).toFixed(2)
+                    var discount=Number(this.state.total_discount).toFixed(2)
+                    var tax=Number(this.state.totaltax).toFixed(2)
+                    var tips=Number(this.state.tips_totalamt).toFixed(2)
+                    var total=Number(this.state.grandTotal).toFixed(2)
+                    var ticketid = this.state.ticketCode;
+                    ////console.log(printerName);
 
+                    var bodydata = []
 
-                data.push({
-                    type: "text", 
-                    value: "ORDER: "+JSON.parse(window.localStorage.getItem('businessdetail')).name+" - Ticket "+ ticketid,
-                    style: `text-align:center;`,
-                    css: { "font-weight": "700", "font-size": "18px","margin-top": 10 },
-                    }); 
-                data.push({
-                    type: "text", 
-                    value: "Cashier: "+JSON.parse(window.localStorage.getItem('employeedetail')).firstName,
-                    style: `text-align:left;`,
-                    css: {  "font-size": "12px","margin-top": 5 },
-                    });
-                data.push({
-                    type: "text", 
-                    value:  Moment(new Date()).format('MM-DD-YYYY hh:mm A'),
-                    style: `text-align:left;`,
-                    css: {  "font-size": "12px","margin-top": 5 },
-                    });
-                
-                data.push({
-                    type: 'table',
-                    // style: 'border: 0px solid #ddd',
-                    css: {"margin-left": 10,"margin-top": 10,"margin-bottom": 10},
-                
-                    tableBody: print_data.map((ser,index)=>{
-                    
-                        return [
+                    print_data.forEach((ser,index)=>{
+                        bodydata.push([
                             {
                                 type: "text", 
-                                value: ser["quantity"]+"&nbsp;&nbsp;&nbsp;&nbsp;"+ser["name"]+"<br>"+
-                                ((ser["tax"] === "") ? "":ser["tax"]) +"\n<br>"+
-                                ((ser["discount"] === "") ? "":ser["discount"]),
-                                style: `text-align:left;`,
+                                value: "<div style='display:flex;flex-direction:column;'><div style='text-align:left;'>"+ser["quantity"]+"&nbsp;&nbsp;&nbsp;&nbsp;"+ser["name"]+"</div>"+
+                                ((ser["tax"] === "") ? "":ser["tax"])+
+                                ((ser["discount"] === "") ? "":ser["discount"]), 
                                 css: {  "font-size": "12px" },
                             },
                             {
                                 type: "text", 
-                                value: "$"+ser["price"],
-                                style: `text-align:left;`,
-                                css: {  "font-weight": "500","font-size": "14px" },
+                                value: "<div style='display:flex;flex-direction:column;'><div style='text-align:right;padding-right:10px;'>$"+Number(ser["total"]).toFixed(2)+"</div>"+ser["ratedetails"],
+                                css: {  "font-weight": "500","font-size": "12px" },
                             },
-                            {
-                                type: "text", 
-                                value:  "$"+ser["total"],
-                                style: `text-align:left;`,
-                                css: {  "font-weight": "500","font-size": "14px" },
-                            },
+                            // {
+                            //     type: "text", 
+                            //     value:  "$"+ser["total"],
+                            //     style: `text-align:left;`,
+                            //     css: {  "font-weight": "500","font-size": "14px" },
+                            // },
                         ]
-
-                    }),
+                        );  
+                        
+                    })
                 
-                    tableBodyStyle: 'border: 0.0px solid #ddd',
-                    tableSeperatorStyle: 'border: 0.0px solid #ddd'
-                
-                })
 
-                data.push({
-                    type: "text", 
-                    value:  "<div style='display: flex; justify-content: space-between;'><p >Discount</p> <p>$"+(this.state.ticketSelected.discount_totalamt !== null && this.state.ticketSelected.discount_totalamt !== undefined ? Number(this.state.ticketSelected.discount_totalamt).toFixed(2) : '$0.00')+"</p> </div>",
-                    style: `text-align:left;`,
-                    css: { "font-weight": "700", "font-size": "14px","margin-top": -10 },
-                })
-
-                data.push({
-                    type: "text", 
-                    value:  "<div style='display: flex; justify-content: space-between;'><p >Total</p> <p>$"+total+"</p> </div>",
-                    style: `text-align:left;`,
-                    css: { "font-weight": "700", "font-size": "14px","margin-top": -10 },
-                });
-                if(this.state.ticketSelected.paid_status === 'paid'){
+                    var data = [];
                     data.push({
                         type: "text", 
-                        value: "<div style='display: flex; justify-content: space-between;'><p >CASH SALE</p> <p>$"+total+"</p> </div>",
-                        style: `text-align:left;`,
-                        css: {  "font-size": "14px","margin-top": -25 },
-                    });
+                        value: this.state.businessdetail.name,//"TOP PAYMENT SOLUTIONS - Main",
+                        style: `text-align:center;`,
+                        css: {  "font-weight": "700", "font-size": "16px" },
+                        }); 
+                    
+                    data.push({
+                        type: "text", 
+                        value: this.state.businessdetail.address1+"<br/>"+ this.state.businessdetail.address2+"<br/>"+this.state.businessdetail.city+"<br/>" +this.state.businessdetail.state+ this.state.businessdetail.zipcode+"<br/>"+ this.state.businessdetail.businessphone, //"3675 CRESTWOOD PKWY STE <br> DULUTH, GA  300965045 <br> 7706804075",
+                        style: `text-align:center;`,
+                        css: { "font-size": "12px","margin-top": 2 },
+                        }); 
+                    data.push({
+                        type: "text", 
+                        value: "",//"http://toppaymentsolutions.com",
+                        style: `text-align:center;`,
+                        css: { "font-size": "10px","margin-top": 2 },
+                        }); 
+
 
                     data.push({
                         type: "text", 
-                        value:  "<div style='display: flex; justify-content: space-between;'><p >Cash tendered</p> <p>$"+total+"</p> </div>",
+                        value: "ORDER: "+JSON.parse(window.localStorage.getItem('businessdetail')).name+" - Ticket "+ ticketid,
+                        style: `text-align:center;`,
+                        css: { "font-weight": "700", "font-size": "18px","margin-top": 10 },
+                        }); 
+                    data.push({
+                        type: "text", 
+                        value: "Cashier: "+JSON.parse(window.localStorage.getItem('employeedetail')).firstName,
                         style: `text-align:left;`,
-                        css: { "font-size": "14px","margin-top": -25 },
+                        css: {  "font-size": "12px","margin-top": 5 },
+                        });
+                    data.push({
+                        type: "text", 
+                        value:  Moment(new Date()).format('MM-DD-YYYY hh:mm A'),
+                        style: `text-align:left;`,
+                        css: {  "font-size": "12px","margin-top": 5 },
+                        });
+                    
+                    data.push({
+                        type: 'table',
+                        // style: 'border: 0px solid #ddd',
+                        css: {"margin-left": 10,"margin-top": 10,"margin-bottom": 10},
+                        tableBody: bodydata,
+                    
+                        tableBodyStyle: 'border: 0.0px solid #ddd',
+                        tableSeperatorStyle: 'border: 0.0px solid #ddd'
+                    
+                    })
+
+                    data.push({
+                        type: "text", 
+                        value:  "<div style='display: flex; justify-content: space-between;'><p >Discount</p> <p>$"+(this.state.ticketSelected.discount_totalamt !== null && this.state.ticketSelected.discount_totalamt !== undefined ? Number(this.state.ticketSelected.discount_totalamt).toFixed(2) : '$0.00')+"</p> </div>",
+                        style: `text-align:left;`,
+                        css: { "font-weight": "700", "font-size": "14px","margin-top": -10 },
+                    })
+
+                    data.push({
+                        type: "text", 
+                        value:  "<div style='display: flex; justify-content: space-between;'><p >Tips</p> <p>$"+Number(this.state.tips_totalamt).toFixed(2)+"</p> </div>",
+                        style: `text-align:left;`,
+                        css: { "font-weight": "700", "font-size": "14px","margin-top": -25 },
+                    });  
+
+                    data.push({
+                        type: "text", 
+                        value:  "<div style='display: flex; justify-content: space-between;'><p >Total</p> <p>$"+total+"</p> </div>",
+                        style: `text-align:left;`,
+                        css: { "font-weight": "700", "font-size": "14px","margin-top": -25 },
                     });
-                }
+                    if(this.state.printtype === 'receipt' || this.state.printtype === 'employee'){//this.state.ticketSelected.paid_status === 'paid'){
+                        data.push({
+                            type: "text", 
+                            value: "<div style='display: flex; justify-content: space-between;'><p >CASH SALE</p> <p>$"+total+"</p> </div>",
+                            style: `text-align:left;`,
+                            css: {  "font-size": "14px","margin-top": -25 },
+                        });
 
-                data.push({
-                    type: "text", 
-                    value:  "Enjoy!",
-                    style: `text-align:left;`,
-                    css: { "font-size": "14px","margin-top": 0 },
-                });
-
-                window.api.printdata({printername: printerName, data: data}).then(res=>{ 
-                    ////console.log(res);
-                    if(!this.state.isPaidOnOpen){
-                        this.printEmployeeReceipt()
+                        data.push({
+                            type: "text", 
+                            value:  "<div style='display: flex; justify-content: space-between;'><p >Cash tendered</p> <p>$"+total+"</p> </div>",
+                            style: `text-align:left;`,
+                            css: { "font-size": "14px","margin-top": -25 },
+                        });
                     }
-                })
 
+                    data.push({
+                        type: "text", 
+                        value:  "Enjoy!",
+                        style: `text-align:left;`,
+                        css: { "font-size": "14px","margin-top": 0 },
+                    });
+
+                    window.api.printdata({printername: printerName, data: data}).then(res=>{ 
+                        ////console.log(res);
+                        if(this.state.isPaidOnOpen && this.state.printtype === 'employee'){
+                            this.printEmployeeReceipt()
+                        }
+                        // this.setState({closedticketprint: false});
+                    })
+                }
 
             })
         }
         else{
-            this.setState({printalert:true})
+            this.setState({closedticketprint:false, printalert:true})
         }
 
 
@@ -3431,7 +3449,7 @@ printEmployeeReceipt(){
         if(i=== thisobj.state.services_taken.length-1){
             console.log("PRINT EMP RECEIPT")
             var printerName = window.localStorage.getItem('defaultprinter')
-            if(printerName != undefined && printerName != ''){
+            if(printerName !== null &&printerName !== undefined && printerName !== ''){
                 thisobj.printEmployeeReceiptIndividual(0, emps, printerName);
             }
             else{
@@ -3448,6 +3466,7 @@ printEmployeeReceiptIndividual(idx, emps, printerName){
             var response = this.processEmployeePrintDetails(emp);
             var print_data = response.data;
             var total = response.total;
+            var tipstotal = response.tipstotal;
             var data = [];
                 data.push({
                     type: "text", 
@@ -3492,7 +3511,7 @@ printEmployeeReceiptIndividual(idx, emps, printerName){
                             },
                             {
                                 type: "text", 
-                                value: "$"+ser["price"],
+                                value: "$"+Number(ser["price"]).toFixed(2),
                                 style: `text-align:left;`,
                                 css: {  "font-weight": "500","font-size": "14px" },
                             },
@@ -3513,9 +3532,15 @@ printEmployeeReceiptIndividual(idx, emps, printerName){
                 
                 data.push({
                     type: "text", 
-                    value:  "<div style='display: flex; justify-content: space-between;'><p >Total</p> <p>$"+total+"</p> </div>",
+                    value:  "<div style='display: flex; justify-content: space-between;'><p >Total</p> <p>$"+Number(total).toFixed(2)+"</p> </div>",
                     style: `text-align:left;`,
                     css: { "font-weight": "700", "font-size": "14px","margin-top": -10 },
+                });  
+                data.push({
+                    type: "text", 
+                    value:  "<div style='display: flex; justify-content: space-between;'><p >Tips</p> <p>$"+Number(tipstotal).toFixed(2)+"</p> </div>",
+                    style: `text-align:left;`,
+                    css: { "font-weight": "700", "font-size": "14px","margin-top": -25 },
                 });  
 
                 data.push({
@@ -3531,6 +3556,8 @@ printEmployeeReceiptIndividual(idx, emps, printerName){
                 })
     }
     else{
+
+        // this.setState({closedticketprint: false});
         console.log("ARRAY COMPLETED")
     }
 }
@@ -3541,19 +3568,22 @@ processEmployeePrintDetails(empid) {
 
     var service_data = []
     var total = 0;
+    var tipstotal = 0;
     this.state.services_taken.forEach(( ser,index) => {
         if(ser.employee_id === empid){
             total +=  ser.subtotal;
+            tipstotal += ser.tips_amount !== undefined ? Number(ser.tips_amount) : 0;
+
             service_data.push({
                 "name" : ser.servicedetail.name,
                 "price":  ser.perunit_cost,
                 "total": ser.subtotal, 
-                "quantity": ser.qty
+                "quantity": ser.qty,
             })
         } 
     })
 
-   return {data: service_data, total:total}
+   return {data: service_data, total:total, tipstotal:tipstotal}
 
     
 }
@@ -3566,7 +3596,9 @@ processPrintDetails() {
         var tax_detail = ""
         var discount_detail = ""
         var tax_data = []
+        var tax_rate = ""
         var discount_data=[]
+        console.log(ser.taxes);
         ser.taxes.forEach( (tax) => {
             tax_data.push({ 
                 "tax_name": tax.tax_name+"("+(tax.tax_type === 'percentage' ? '%' : '$')+tax.tax_value+")",
@@ -3575,12 +3607,14 @@ processPrintDetails() {
         })
 
         tax_data.forEach((tax) => {
-            tax_detail = (tax_detail.length>0 ? tax_detail+"<br>" : tax_detail)+tax["tax_name"]+" - $"+tax["tax_percentage"]
+            tax_detail = (tax_detail.length>0 ? tax_detail  : tax_detail)+"<div style='display:flex;width:100%;justify-content:space-between;'><div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+tax["tax_name"]+"</div></div>"
+            tax_rate += "<div  style='text-align:right;padding-right:10px;'> $"+tax["tax_percentage"]+"</div>"
         })
 
         
 
         if( ser.discount.discount_id !== undefined && ser.discount.discount_id !== 0 ) {
+            console.log(ser.discount)
             discount_data.push({ 
                 "discount_name": ser.discount.discount_name+"("+(ser.discount.discount_type === 'percentage'? ser.discount.discount_value+'%' : '$'+ser.discount.discount_value)+")",
                 "discount_price":ser.discount.total_discount_amount ,
@@ -3589,24 +3623,80 @@ processPrintDetails() {
         }
 
         discount_data.forEach   ((tax) => {
-            discount_detail = (discount_detail.length>0 ? discount_detail+"<br>" : discount_detail)+tax["discount_name"]+" - $"+tax["discount_price"]+""
+            console.log(tax)
+            discount_detail = (discount_detail.length>0 ? discount_detail : discount_detail)+"<div style='display:flex;width:100%;justify-content:space-between;'><div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+tax["discount_name"]+"</div></div>"
+            tax_rate += "<div  style='text-align:right;padding-right:10px;'> ($"+Number(tax["discount_price"]).toFixed(2)+")</div>"
         }) 
+        console.log(ser)
         service_data.push({
             "name" : ser.servicedetail.name,
             "price":  ser.perunit_cost,
             "total": ser.subtotal,
             "tax": tax_detail,
+            taxes:tax_data,
+            discounts: discount_data,
+            ratedetails: tax_rate,
             "discount":discount_detail,
-            "quantity": ser.qty
+            "quantity": ser.servicedetail.service_quantity
         })
-       
+    
 
     })
 
-   return service_data
+    return service_data
 
     
 }
+
+// processPrintDetails() {
+
+//     var service_data = []
+    
+//     this.state.services_taken.forEach(( ser,index) => {
+//         var tax_detail = ""
+//         var discount_detail = ""
+//         var tax_data = []
+//         var discount_data=[]
+//         ser.taxes.forEach( (tax) => {
+//             tax_data.push({ 
+//                 "tax_name": tax.tax_name+"("+(tax.tax_type === 'percentage' ? '%' : '$')+tax.tax_value+")",
+//                 "tax_percentage": tax.tax_calculated
+//             })
+//         })
+
+//         tax_data.forEach((tax) => {
+//             tax_detail = (tax_detail.length>0 ? tax_detail+"<br>" : tax_detail)+tax["tax_name"]+" - $"+tax["tax_percentage"]
+//         })
+
+        
+
+//         if( ser.discount.discount_id !== undefined && ser.discount.discount_id !== 0 ) {
+//             discount_data.push({ 
+//                 "discount_name": ser.discount.discount_name+"("+(ser.discount.discount_type === 'percentage'? ser.discount.discount_value+'%' : '$'+ser.discount.discount_value)+")",
+//                 "discount_price":ser.discount.total_discount_amount ,
+//                 "price_with_discount":ser.discount.price_with_discount
+//             })
+//         }
+
+//         discount_data.forEach   ((tax) => {
+//             discount_detail = (discount_detail.length>0 ? discount_detail+"<br>" : discount_detail)+tax["discount_name"]+" - $"+tax["discount_price"]+""
+//         }) 
+//         service_data.push({
+//             "name" : ser.servicedetail.name,
+//             "price":  ser.perunit_cost,
+//             "total": ser.subtotal,
+//             "tax": tax_detail,
+//             "discount":discount_detail,
+//             "quantity": ser.qty
+//         })
+       
+
+//     })
+
+//    return service_data
+
+    
+// }
 
 handleClosePrint() {
     this.setState({printpopup: false})
@@ -3622,7 +3712,7 @@ handleChangePrinter(e) {
 renderButtons(isDisabled) {
     var defaultprinter = window.localStorage.getItem('defaultprinter') || ''
     return(
-        <div style={{ marginLeft: 0}}>
+        <div style={{ marginLeft: 0, zIndex:9999999}}>
             {!this.state.isEdit && <div>
                             <Grid item xs={12} style={{display:'flex'}}>
                                 <Grid item xs={5} className="footerbtn">
@@ -3634,7 +3724,7 @@ renderButtons(isDisabled) {
                                         <Grid xs={4}><Button style={{borderRadius: 0}} onClick={()=>this.addTips()} fullWidth variant="outlined" disabled={this.state.tipsdiscountEnabled || this.state.services_taken.length == 0}>Tips</Button> </Grid>
                                     </Grid>
                                     <Grid item xs={12} style={{display:'flex'}}>
-                                        <Grid xs={3}><Button onClick={()=>this.printTicket()} disabled={ this.state.services_taken.length == 0} fullWidth variant="outlined">Print</Button> </Grid>
+                                        <Grid xs={3}><Button onClick={()=>{if(this.state.ticketSelected.paid_status === 'paid'){this.setState({closedticketprint:true})} else{this.setState({printtype:'bill'},()=>{this.printTicket()});}}} disabled={ this.state.services_taken.length == 0} fullWidth variant="outlined">Print</Button> </Grid>
                                         <Grid xs={5}><Button onClick={()=>this.addDiscounts()} fullWidth variant="outlined"  disabled={this.state.tipsdiscountEnabled || this.state.services_taken.length == 0}>Discount</Button> </Grid> 
                                         <Grid xs={4}><Button disabled={isDisabled || this.state.services_taken.length == 0} onClick={()=>this.addNotes()} fullWidth variant="outlined" >Notes</Button> </Grid>
                                     </Grid>
@@ -3664,7 +3754,7 @@ renderButtons(isDisabled) {
                             <Grid xs={4}><Button disabled={this.state.isDisable || this.state.services_taken.length == 0} fullWidth variant="outlined" onClick={()=>this.handleTicketPayment()} >Close</Button> </Grid>
                         </Grid>
                         <Grid item xs={12} style={{display:'flex'}}>
-                            <Grid xs={3}><Button onClick={()=>this.printTicket()} disabled={  this.state.services_taken.length == 0} fullWidth variant="outlined">Print</Button> </Grid>
+                            <Grid xs={3}><Button onClick={()=>{if(this.state.ticketSelected.paid_status === 'paid'){this.setState({closedticketprint:true})} else{this.setState({printtype:'bill'},()=>{this.printTicket()});}}} disabled={  this.state.services_taken.length === 0} fullWidth variant="outlined">Print</Button> </Grid>
                             <Grid xs={5}><Button onClick={()=>this.addDiscounts()} fullWidth variant="outlined" disabled={this.state.isDisable  || this.state.services_taken.length == 0 ? true: (this.state.tipsdiscountEnabled) ? true: false}
                             >Discount</Button> </Grid>
                             <Grid xs={4}><Button onClick={()=>this.addNotes()} fullWidth variant="outlined" disabled={this.state.isDisable  || this.state.services_taken.length == 0}>Notes</Button> </Grid>
@@ -4993,7 +5083,49 @@ render() {
         }
 
         {/* /*** Transfer single service */ }
+{this.state.closedticketprint && <div>
+        <div style={{border:'1px solid',right:0, bottom:0,top:'0',left:'0',position:'absolute'}}>
+            <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
+            </div>
+            <div style={{background:'#fff', height:'350px', width:'400px', margin:'calc(25% - 175px) auto 0', position:'relative', borderRadius: 10}}>
+            <Grid container spacing={2}>
+                    <Grid item xs={2}></Grid>
+                <Grid item xs={8} style={{display:'flex', flexDirection:'column', alignItems:'center',marginTop:10}}>
+                    <Grid item xs={12} style={{margin:'1rem 0', width:'100%', textAlign:'center', cursor:'pointer'}}>
+                        <Button  onClick={()=>{
+                        this.setState({printtype:'bill'}, ()=>{
+                            this.printTicket()
+                        })
+                    }} color="secondary" style={{textTransform:'capitalize', width:'100%', height:'75px'}} variant="contained">Print Bill</Button>
+                        {/* <Typography id="modal-modal-title" variant="h6" component="h2" align="left" style={{marginLeft:20, "color":'#134163', border:'1px solid #f0f0f0', padding:'8px', display:'flex', alignItems:'center', justifyContent:'flex-start'}}>Print Bill</Typography> */}
+                    </Grid>  
+                    <Grid item xs={12} style={{margin:'1rem 0',width:'100%', textAlign:'center', cursor:'pointer'}}>
+                    <Button  onClick={()=>{
+                        this.setState({printtype:'receipt'}, ()=>{
+                            this.printTicket()
+                        })
+                    }} color="secondary" style={{textTransform:'capitalize', width:'100%', height:'75px'}} variant="contained">Print Receipt</Button>
+                    {/* <Typography id="modal-modal-title" variant="h6" component="h2" align="left" style={{marginLeft:20, "color":'#134163', border:'1px solid #f0f0f0', padding:'8px', display:'flex', alignItems:'center', justifyContent:'flex-start'}}>Print Receipt</Typography> */}
+                    </Grid>  
+                    <Grid item xs={12} style={{margin:'1rem 0',width:'100%', textAlign:'center', cursor:'pointer'}}>
+                        <Button  onClick={()=>{
+                        this.setState({printtype:'employee'}, ()=>{
+                            this.printTicket()
+                        })
+                    }} color="secondary" style={{textTransform:'capitalize', width:'100%', height:'75px'}} variant="contained">Print Employee Receipt</Button>
+                        {/* <Typography id="modal-modal-title" variant="h6" component="h2" align="left" style={{marginLeft:20, "color":'#134163', border:'1px solid #f0f0f0', padding:'8px', display:'flex', alignItems:'center', justifyContent:'flex-start'}}>Print Employee Receipt</Typography> */}
+                    </Grid>  
+                </Grid> 
+                <Grid item xs={2}>
+                    <Typography variant="subtitle2" align="center" style={{cursor:'pointer'}} onClick={()=>this.setState({closedticketprint:false, printtype:''})}> <CloseIcon fontSize="small" style={{"color":'#134163'}}/></Typography>
+                </Grid> 
+            </Grid>
 
+            </div>
+
+        </div>
+    </div>
+    }
         {this.state.transferAlert && <div>
                 <div style={{border:'1px solid',right:0, bottom:0,top:'0',left:'0',position:'absolute'}}>
                     <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>

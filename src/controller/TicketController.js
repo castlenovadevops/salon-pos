@@ -270,12 +270,14 @@ export default class TicketController {
         window.api.invoke('evantcall', 'saveTicketService save called ' + idx).then(r => {
 
         })
-        // console.log("SAVE TICKET SERTIC#E: idx ", idx, services_taken, stateinput.isPaidOnOpen)
             if( stateinput.isPaidOnOpen){ 
-                var obj = services_taken[idx];
-                this.updateData({table_name:'ticket_services', data:{tips_amount: (obj.tips_amount !== undefined ? obj.tips_amount : (obj.servicedetail.tips_amount !== undefined ? obj.servicedetail.tips_amount : 0))}, query_field:'sync_id', query_value:obj.servicedetail.uniquId}).then(r=>{
-                    this.saveTaxes(ticketid, obj.servicedetail.uniquId, obj, 0, idx, ticketDetail, services_taken, userdetail,stateinput)
-                })
+                if (idx < services_taken.length){
+                    console.log("SAVE TICKET SERTIC#E: idx ", idx, services_taken, stateinput.isPaidOnOpen)
+                    var obj = services_taken[idx];
+                    this.updateData({table_name:'ticket_services', data:{tips_amount: (obj.tips_amount !== undefined ? obj.tips_amount : (obj.servicedetail.tips_amount !== undefined ? obj.servicedetail.tips_amount : 0))}, query_field:'sync_id', query_value:obj.servicedetail.uniquId}).then(r=>{
+                        this.saveTaxes(ticketid, obj.servicedetail.uniquId, obj, 0, idx, ticketDetail, services_taken, userdetail,stateinput)
+                    })
+                } 
             }
             else{
                 if (idx < services_taken.length && !stateinput.isPaidOnOpen) {

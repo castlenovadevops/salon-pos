@@ -70,7 +70,7 @@ export default class App extends React.Component {
 
   printData(txn){
     var printerName = window.localStorage.getItem('defaultprinter')
-        if(printerName != undefined && printerName != ''){ 
+        if(printerName !== null && printerName != undefined && printerName != ''){ 
                 // this.setState({printpopup: true})  
                 var data = []; 
                 var bodydata = [] 

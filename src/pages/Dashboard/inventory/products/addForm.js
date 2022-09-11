@@ -237,11 +237,11 @@ export default class ProductForm extends React.Component {
             formIsValid = false;
             this.setState({ isDisable: true });
         }
-        else if(fields.tax_type === 'custom' && fields.taxes.length === 0){
-            console.log("tax custom")
-            formIsValid = false;
-            this.setState({ isDisable: true });
-        }
+        // else if(fields.tax_type === 'custom' && fields.taxes.length === 0){
+        //     console.log("tax custom")
+        //     formIsValid = false;
+        //     this.setState({ isDisable: true });
+        // }
         else {
             this.setState({ isDisable: false });
         }

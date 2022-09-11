@@ -113,7 +113,7 @@ export default class TableContent extends React.Component {
   requestSearch(searchValue) {
     this.setState({ searchText: searchValue });
     const searchRegex = new RegExp(escapeRegExp(searchValue), 'i');
-    const filteredRows = this.state.rows.filter((row) => {
+    const filteredRows = this.props.data.filter((row) => {
       return Object.keys(row).some((field) => {
         const textvalue =
           row[field] !== null && row[field] !== undefined ? row[field].toString() : '';

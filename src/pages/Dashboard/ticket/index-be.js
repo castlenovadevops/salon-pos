@@ -333,7 +333,7 @@ handleTicketPrint(row){
     console.log("handleTicketPrint",row.id)
 
     var printerName = window.localStorage.getItem('defaultprinter')
-        if(printerName != undefined && printerName != ''){
+        if(printerName !== null &&printerName != undefined && printerName != ''){
 
         this.setState({ticketDetail:row, services_taken:[]}, ()=>{
         var ticket_id = this.state.ticketDetail.id;
@@ -462,7 +462,7 @@ printTicket() {
     var print_data = this.processPrintDetails()
     //console.log("service_data", service_data)
         var printerName = window.localStorage.getItem('defaultprinter')
-        if(printerName != undefined && printerName != ''){
+        if(printerName !== null &&printerName != undefined && printerName != ''){
             this.setState({print_data: print_data}, function() {
                 // this.setState({printpopup: true}) 
                 var total=Number(this.state.ticketDetail.grand_total).toFixed(2)
@@ -1217,7 +1217,7 @@ render()  {
                                             <div style={{display: 'flex', marginTop: 10, flexWrap:'wrap',padding:'0 0.75rem' }}>
                                                 {this.state.staff_list.map((staff,i)=>{
                                                     let value;
-                                                    if(staff.clocked_status === null ||  staff.clocked_status. toLowerCase() !== 'Clock-in'. toLowerCase() && staff.staff_role !== 'SA' ){ 
+                                                    if(staff.clocked_status === null ||  staff.clocked_status.toLowerCase() !== 'Clock-in'.toLowerCase() && staff.staff_role !== 'SA' ){ 
                                                         value = 
                                                         <Grid className='techbtn'  item xs={4} style={{background:"",paddingRight: 2,paddingLeft: 2, paddingTop:2,paddingBottom:2,minWidth:(this.state.hide)?'90%':'33.33%', cursor:'pointer'}}> 
                                                         <div style={{background: '#F2F2F2',height:65,borderBottom: '0px solid #bee1f7', display: 'table',borderRadius: 10,display:'flex',alignItems:'center', justifyContent:'center',marginTop:10,marginBottom:5 }} 
