@@ -1,22 +1,21 @@
 import React from 'react';
 import Container from '@material-ui/core/Container'; 
 import Grid from '@material-ui/core/Grid';
-import { TextField} from '@mui/material'; 
-import axios from 'axios'; 
+import { TextField} from '@mui/material';  
 import GenerateRandomCode from 'react-random-code-generator';
 
-import TextFieldContent from '../../../components/formComponents/TextField';
-import ButtonContent from '../../../components/formComponents/Button';
-import PhoneNumberContent from '../../../components/formComponents/PhoneNumber';
-import AutoCompleteContent from '../../../components/formComponents/AutoComplete';
+import TextFieldContent from '../../../../components/formComponents/TextField';
+import ButtonContent from '../../../../components/formComponents/Button';
+import PhoneNumberContent from '../../../../components/formComponents/PhoneNumber';
+import AutoCompleteContent from '../../../../components/formComponents/AutoComplete';
 import Moment from 'moment';
 
 import DesktopDatePicker from '@mui/lab/DesktopDatePicker';
 import LocalizationProvider from '@mui/lab/LocalizationProvider';
 import AdapterDateFns from '@mui/lab/AdapterDateFns';
 
-import config from '../../../config/config';
-import TicketController from '../../../controller/TicketController';
+import config from '../../../../config/config';
+import TicketController from '../../../../controller/TicketController';
 
 export default class AddCustomer extends React.Component {
     ticketController = new TicketController();
@@ -98,7 +97,7 @@ export default class AddCustomer extends React.Component {
     }
     handlechange(e){ 
         // console.log("handlechange", e.target.name)
-        if(e.target.name == "loyality_point") {
+        if(e.target.name === "loyality_point") {
             if((e.target.value.match( "^.{"+config.inputprice+","+config.inputprice+"}$")===null)) {
                 this.setState({ [e.target.name]: e.target.value });
                 this.handleValidation();

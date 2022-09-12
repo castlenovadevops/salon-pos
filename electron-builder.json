@@ -1,6 +1,6 @@
 {
-    "appId": "com.fmt.salon",
-    "productName": "Astro POS",
+    "appId": "com.fmt.astrapos",
+    "productName": "Astra POS",
     "copyright": "FMT",
     "directories": {
         "app": ".",
@@ -9,6 +9,7 @@
     },
     "extraResources": [
         "dist/public",
+        "node_modules",
         {
             "from":"./db/",
             "to":"db/",
@@ -20,37 +21,9 @@
         "build/**/*",
         "app/**/*",
         "node_modules"
-    ],
-    "dmg": { 
-        "backgroundColor": "#ffffff",
-        "icon": "icon.png",
-        "window": {
-            "width": "400",
-            "height": "300"
-        },
-        "contents": [
-            {
-                "x": 100,
-                "y": 100
-            },
-            {
-                "x": 300,
-                "y": 100,
-                "type": "link",
-                "path": "/Applications"
-            }
-        ]
-    },
-    "mac": {
-        "target": "dmg",
-        "category": "public.app-category.utilities"
-      },
+    ], 
     "win": {
         "target": "nsis"
-    },
-    "linux": {
-        "target": "AppImage",
-        "category": "Utility"
-    },
+    }, 
     "extends":null
 }

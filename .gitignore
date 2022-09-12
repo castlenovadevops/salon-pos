@@ -94,6 +94,7 @@ __macosx
 # App Build
 dist
 App/desktop1
+node_modules
 build
 userdata
 out

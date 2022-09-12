@@ -1,19 +1,13 @@
-import React from 'react'; 
-import axios from 'axios'; 
-import config from '../../../config/config'; 
+import React from 'react';  
 import AddCustomer from './addCustomer'; 
-import ButtonContent from '../../../components/formComponents/Button';
+import ButtonContent from '../../../../components/formComponents/Button';
 import {  Stack, Container, Typography } from '@mui/material';
 import { Icon } from '@iconify/react';
 import plusFill from '@iconify/icons-eva/plus-fill'; 
-import ModalTitleBar from '../../../components/Modal/Titlebar';
-import LoadingModal from '../../../components/Modal/loadingmodal';
-import TableContent from '../../../components/formComponents/DataGrid';
-import AppBar from '@material-ui/core/AppBar';
-import Toolbar from '@material-ui/core/Toolbar'; 
-import IconButton from '@material-ui/core/IconButton';
-import CloseIcon from '@mui/icons-material/Close'; 
-import DataManager from '../../../controller/datacontroller'
+import ModalTitleBar from '../../../../components/Modal/Titlebar';
+import LoadingModal from '../../../../components/Modal/loadingmodal';
+import TableContent from '../../../../components/formComponents/DataGrid'; 
+import DataManager from '../../../../controller/datacontroller'
 
 
 
@@ -144,7 +138,7 @@ export default class SelectCustomer extends React.Component {
             // })
 
             const dataManager = new DataManager()
-            dataManager.getData("select sync_id as id, member_id, name, email, dob, first_visit, last_visit, visit_count, total_spent, loyality_point,address1, address2, city,state, zipcode, created_at, created_by, updated_at, updated_by, status, phone, businessId, sync_status, sync_id  from customers").then(response =>{
+            dataManager.getData("select sync_id as id, member_id, name, email, dob, first_visit, last_visit, visit_count, total_spent, loyality_point,address1, address2, city,state, zipcode, created_at, created_by, updated_at, updated_by, status, phone, businessId, sync_status, sync_id  from customers where businessId="+businessdetail["id"]).then(response =>{
                 if (response instanceof Array) {
                     this.setState({customers: response, origincustomers: response, isLoading: false}, function(){
                         // console.log(this.state.customerlist)
@@ -194,29 +188,7 @@ export default class SelectCustomer extends React.Component {
                 <Container maxWidth="xl" style={{width: "100%", height: '80%'}}>
 
                 {!this.state.isAddCustomerOpen && 
-                    <div style={{height: '100%', background: 'transparent'}}>
-                        {/* <ModalTitleBar style={{marginLeft: -40 }}onClose={()=>this.props.handleCloseCustomer()} title="Select Customer"/> */}
-
-                        <AppBar  color="primary" style={{ position: 'relative',background: 'transparent', boxShadow: 'none',width:'100%',marginLeft: -20,marginRight: 40 }}>
-                            <Toolbar>
-                                <Typography variant="h6" component="div" style={{color:'#134163'}}>
-                                Select Customer
-                                </Typography>
-
-                                <div style={{marginLeft: "auto", marginRight: -60}}>
-                                
-                                <IconButton
-                                edge="start"
-                                onClick={()=>this.props.handleCloseCustomer()}
-                                aria-label="close"
-                                style={{"color":'#134163'}}
-                                >
-                                <CloseIcon />
-                                </IconButton>
-                                </div>
-
-                            </Toolbar>
-                            </AppBar>
+                    <div style={{height: '100%', background: 'transparent'}}> 
 
                         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
                             <Typography variant="h4" gutterBottom>

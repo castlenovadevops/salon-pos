@@ -20,10 +20,12 @@ import ButtonContent from './components/formComponents/Button';
 import LoadingModal from './components/Modal/loadingmodal'; 
 import TicketController from './controller/TicketController';
 
+import TicketDataController from './controller/TicketDataController';
+
 // const { ipcRenderer, remote } = require('electron');
 
 export default class App extends React.Component {
-
+  ticketDataController = new TicketDataController();
   idleTimer;
   ticketController = new TicketController();
 
@@ -45,7 +47,7 @@ export default class App extends React.Component {
       alert_msg: '',
       isLoading: false,
       dataManager: new DataManager(), 
-      isAutoSyncing: false
+      isAutoSyncing: false, 
     };
     this.onAfterSubmit = this.onAfterSubmit.bind(this); 
     this.dataManager = new DataManager();     
@@ -78,7 +80,7 @@ export default class App extends React.Component {
   componentDidMount(){ 
     this.ticketController =   new TicketController();
     window.localStorage.removeItem('isSyncing') 
-    document.title = "Astro POS"   
+    document.title = "Astro POS (Development)"   
     this.syncData();
   }   
 
@@ -89,12 +91,13 @@ export default class App extends React.Component {
       var employeedetail = window.localStorage.getItem('employeedetail');
       if(businessdetail !== undefined && businessdetail !== '' &&  employeedetail !== undefined && employeedetail !== '' && this.state.isSyncing === false){
         console.log("syncing")
-        this.setState({isAutoSyncing: true})
+        // 
+        // this.setState({isAutoSyncing: true})
       }
       else{
         console.log("already runnning")
       }
-      this.syncData();
+        this.syncData();
     }, this.state.timeDelay);
   }
   
@@ -110,9 +113,9 @@ export default class App extends React.Component {
   }
   
 
-  saveTicket(data, ticketid){
-
-    this.ticketController.saveTicket(data, ticketid);
+  saveTicket(data){ 
+    this.ticketDataController.saveTicket(data);
+    // this.ticketController.saveTicket(data, ticketid);
   }
 
   onAfterSubmit(){ 

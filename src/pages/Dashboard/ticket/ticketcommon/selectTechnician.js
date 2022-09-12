@@ -1,7 +1,7 @@
 import React from 'react'; 
 import { Container, Typography } from '@mui/material';  
-import LoadingModal from '../../../components/Modal/loadingmodal';
-import TableContent from '../../../components/formComponents/DataGrid';
+import LoadingModal from '../../../../components/Modal/loadingmodal';
+import TableContent from '../../../../components/formComponents/DataGrid';
   
 
 
@@ -91,6 +91,7 @@ export default class SelectTechnician extends React.Component {
     
     
     onSelectTech(row) {
+        console.log(row);
         this.props.onSelectTech(row); 
     }
         
@@ -103,7 +104,7 @@ export default class SelectTechnician extends React.Component {
                 <Container maxWidth="xl" style={{width: "100%", height: '100%'}}> 
                 
                 {this.state.tech.length>0 &&
-                    <div style={{marginTop:30, height: '70%'}}>
+                    <div style={{marginTop:30, height: '85%'}}>
                     <TableContent style={{height: '100%'}} onRowClick={(params)=> this.onSelectTech(params.row)} pageSize={5} data={this.state.tech} columns={this.state.columns} />
                     </div>
                 

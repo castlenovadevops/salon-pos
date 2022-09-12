@@ -1,34 +1,8 @@
 import React from 'react';
 import { Grid, Typography, Button,Box, FormControl,InputAdornment} from '@material-ui/core/';
 import {TextField, Select, MenuItem} from '@mui/material';
-import LoadingModal from '../../../../components/Modal/loadingmodal';
-import axios from 'axios';
-import config from '../../../../config/config';
-import TextFieldContent from '../../../../components/formComponents/TextField';
-import DataManager from '../../../../controller/datacontroller';
-import NumberFormat from "react-number-format";
-function NumberFormatCustom(props) {
-  const { inputRef, onChange, ...other } = props;
-
-  return (
-    <NumberFormat
-      {...other}
-      getInputRef={inputRef}
-      maxLength="4" 
-      onValueChange={values => {
-        onChange({
-          target: {
-            name: props.name,
-            value: values.value
-          }
-        });
-      }}
-      thousandSeparator
-      // isNumericString
-    />
-  );
-}
-
+import LoadingModal from '../../../../components/Modal/loadingmodal'; 
+import DataManager from '../../../../controller/datacontroller'; 
 
 class SplitService extends React.Component  {
 
@@ -50,7 +24,7 @@ class SplitService extends React.Component  {
     }
     componentDidMount(){ 
         this.getClockinEmployee()
-        if(this.state.splittedservice.length == 0) {
+        if(this.state.splittedservice.length === 0) {
             this.setState({isDisabled:true});
         }
        
@@ -59,10 +33,10 @@ class SplitService extends React.Component  {
     getClockinEmployee() {
         this.setState({isLoading: true}) 
         this.state.dataManager.getData("select u.firstName, u.lastName, u.staff_role, u.id as id,  b.clockin_out as clocked_status from users as u left join staff_clockLog as b on u.id = b.staff_id and b.isActive=1").then(response =>{ 
-                var clockin_emp = response.filter(item => item.clocked_status !== null &&  item.clocked_status.toLowerCase() === 'clock-in' && item.staff_role !== 'SA'); 
-                this.setState({users : clockin_emp[0], isLoading:false}, function(){
-                    this.getServices();
-                }); 
+            var clockin_emp = response.filter(item => item.clocked_status !== null &&  item.clocked_status.toLowerCase() === 'clock-in' && item.staff_role !== 'SA'); 
+            this.setState({users : clockin_emp[0], isLoading:false}, function(){
+                this.getServices();
+            }); 
         })
     } 
 
@@ -73,18 +47,10 @@ class SplitService extends React.Component  {
             input = Object.assign({},this.props.service_selected)
             input.process = "Splitted"; 
             service.push(input);   
-            this.setState({service_selected :Object.assign({}, this.props.service_selected), users: this.props.employee_list,splittedservice:service}, function() { 
-                if(this.props.employee_list.length == 1) {
+            this.setState({service_selected:Object.assign({}, this.props.service_selected), users: this.props.employee_list,splittedservice:service}, function() { 
+                if(this.props.employee_list.length === 1) {
                     this.setState({canaddSplit: false,  isDisabledSelect: true })
-                }   
-
-                // var dummy = []
-                // for(var i=0;i<5;i++) {
-                //     dummy.push(this.state.splittedservice[0]);
-                //     this.setState({ splittedservice: dummy })
-                // }
-                
-
+                }  
             }); 
         }
     }
@@ -105,39 +71,37 @@ class SplitService extends React.Component  {
         return    this.state.split_type === 'manual' ? false : true;
     }
 
-    handlekeypress(e){
-       
-            // console.log("handlekeypress",e.key)
-            if(e.key == 'e'  || e.key == "+" || e.key == "-"){
-                e.preventDefault();
-            }
-            if(e.key == "." && (e.target.value=="" || e.target.value.length==0) ) {
-                e.preventDefault();
-               
-            }
-        
+    handlekeypress(e){ 
+        // console.log("handlekeypress",e.key)
+        if(e.key === 'e'  || e.key === "+" || e.key === "-"){
+            e.preventDefault();
+        }
+        if(e.key === "." && (e.target.value === "" || e.target.value.length === 0) ) {
+            e.preventDefault(); 
+        } 
     }
 
     handlechangeindividual_amt(e,idx){  
-            if(e.target.value.length <=4) {
-                var splitted = Object.assign([], this.state.splittedservice)
-                splitted[idx].perunit_cost = e.target.value;
-                this.setState({splittedservice: splitted}, function() {
-                    this.calcaulateTotal();
-                    this.checkForm()
-                });
-            }  
+        if(e.target.value.length <=5) {
+            var splitted = Object.assign([], this.state.splittedservice)
+            splitted[idx].perunit_cost = e.target.value;
+            splitted[idx].subtotal = Number(e.target.value).toFixed(2); 
+            this.setState({splittedservice: splitted}, function() {
+                this.calcaulateTotal();
+                this.checkForm()
+            });
+        }  
     }
 
 
     calcaulateTotal(){
         var total = 0;
-            this.state.splittedservice.forEach((elmt, i)=>{ 
-                total += Number(elmt.perunit_cost);
-                if(i === this.state.splittedservice.length-1){
-                    this.setState({totalcost:total });
-                }
-            })
+        this.state.splittedservice.forEach((elmt, i)=>{ 
+            total += Number(elmt.perunit_cost);
+            if(i === this.state.splittedservice.length-1){
+                this.setState({totalcost:total });
+            }
+        })
     }
 
     addNewSplit(){
@@ -145,8 +109,7 @@ class SplitService extends React.Component  {
             var synid = sync.syncid+"Split"+(this.state.splittedservice.length+1);
             var input =  {};
             input = Object.assign({},this.state.service_selected); 
-            console.log(this.state.service_selected)
-            input.servicedetail["uniquId"]=undefined;
+            console.log(this.state.service_selected) 
             input.process = "Splitted";
             input.employee_id = 0;
             input.servicedetail.sync_id = synid;
@@ -156,14 +119,13 @@ class SplitService extends React.Component  {
             if(this.state.split_type === 'equal'){ 
                 cost = Number(this.state.service_selected.perunit_cost)/splitted.length;
             } 
-            var items =[]; 
-
+            var items =[];  
             if(cost <= 0.05 || splitted.length === this.state.users.length){
                 this.setState({canaddSplit: false})
-            }
-
+            } 
             splitted.forEach((elmt,i) =>{
                 elmt.perunit_cost = Number(cost).toFixed(2); 
+                elmt.subtotal = Number(cost).toFixed(2); 
                 items.push(elmt);
                 if(i === splitted.length-1){
                     this.setState({splittedservice:items}, function(){
@@ -175,17 +137,11 @@ class SplitService extends React.Component  {
     }
 
 
-    checkForm(){
-       
-      
+    checkForm(){ 
         this.setState({isDisabled:false});
-       
-       
         this.state.splittedservice.forEach((m, i)=>{
             if(m.employee_id === null || m.employee_id === undefined || m.employee_id === 0 || m.employee_id === 'undefined'){ 
-                this.setState({isDisabled:true}, function() {
-                    
-                });
+                this.setState({isDisabled:true}, function() {});
             } 
         })  
     }
@@ -199,7 +155,7 @@ class SplitService extends React.Component  {
         var services = this.state.splittedservice.filter((e, i)=>i !== index);
         var emps = services.map(e=>e.employee_id);
         var selectableusers = this.state.users.filter(e=> this.state.splittedservice[index].employee_id === e.id ||  emps.indexOf(e.id) === -1); 
-        selectableusers.map((v,i)=>{ 
+        selectableusers.forEach((v,i)=>{ 
             menuitems.push(<MenuItem value={v.id} key={i}>{v.firstName+' '+v.lastName}</MenuItem>) 
         })
         return menuitems;
@@ -224,13 +180,13 @@ class SplitService extends React.Component  {
                 <Button style={{height:'100%'}}  
                 onClick={()=>{this.setState({'split_type':'equal'})}}  fullWidth variant="outlined">  evenly </Button>
             </Grid> } 
-            {this.state.split_type == 'equal' && <Grid item xs={6} style={{padding:'10px'}}>
+            {this.state.split_type === 'equal' && <Grid item xs={6} style={{padding:'10px'}}>
                 <Button style={{height:'100%' }}  onClick={()=>{
 
                     this.setState({'split_type':'manual'}) 
                 }}  fullWidth variant="outlined">  Manual </Button>
             </Grid>}
-            {this.state.split_type == 'manual' &&<Grid item xs={6} style={{padding:'10px'}}>
+            {this.state.split_type === 'manual' &&<Grid item xs={6} style={{padding:'10px'}}>
                 <Button style={{height:'100%' }}  onClick={()=>{
                     this.setState({'split_type':'manual'})
                 }}  fullWidth variant="contained">  Manual </Button>
@@ -275,7 +231,7 @@ class SplitService extends React.Component  {
                                                 //console.log(services);
                                                 this.setState({splittedservice:services}, function(){
                                                     this.checkForm();
-                                                    if(this.state.splittedservice.length == 0) {
+                                                    if(this.state.splittedservice.length === 0) {
                                                         this.setState({isDisabled:true});
                                                     }
                                                   
@@ -326,7 +282,7 @@ class SplitService extends React.Component  {
             <Grid item xs={12} style={{display:'flex', position: 'absolute',height: 60,width: '100%', background: '', marginBottom: 0 }}>
                     <Grid item xs={4}></Grid>
                     <Grid item xs={4} style={{display:'flex'}}>
-                        <Button style={{marginRight: 10}} color="secondary" disabled={this.state.splittedservice.length==1 ? true : (this.state.isDisabled)} onClick={()=>{  this.saveSplit()}} fullWidth variant="contained">Save</Button>
+                        <Button style={{marginRight: 10}} color="secondary" disabled={this.state.splittedservice.length===1 ? true : (this.state.isDisabled)} onClick={()=>{  this.saveSplit()}} fullWidth variant="contained">Save</Button>
                         <Button color="secondary" fullWidth variant="outlined" onClick={() => this.props.closeSplit()} >Cancel</Button>
                     </Grid>
                     <Grid item xs={4}></Grid>

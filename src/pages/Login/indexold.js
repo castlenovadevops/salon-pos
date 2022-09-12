@@ -202,7 +202,7 @@ componentDidMount(){
     if(detail !== undefined && (detail !== 'undefined' || detail === "")){
         businessdetail = JSON.parse(detail);
         this.setState({businessdetail:businessdetail}, function(){
-            document.title = this.state.businessdetail.name+ ' - The Finest Salon Management Platform';
+            document.title = this.state.businessdetail.name+ ' - The Finest Salon Management Platform (Development)';
         })
     }
 }

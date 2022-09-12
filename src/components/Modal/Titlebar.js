@@ -19,7 +19,7 @@ export default function ModalAppBar(
   <AppBar  color="primary" style={{ position: 'relative',background: 'transparent', boxShadow: 'none' }}>
   <Toolbar>
       
-      <Typography variant="h6" component="div" style={{color:'#134163'}}>
+      <Typography variant="h6" component="div" style={{color:'#134163', height:'36px', overflow:'hidden', textOverflow:'ellipsis'}}>
       {title}
       </Typography>
 

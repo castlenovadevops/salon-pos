@@ -3,24 +3,19 @@ import Typography from "@material-ui/core/Typography";
 import Button from '@material-ui/core/Button';
 import Grid from '@material-ui/core/Grid';
 import Card from '@material-ui/core/Card';
-import CardContent from '@material-ui/core/CardContent';
-import Tabs from '@material-ui/core/Tabs'; 
-import Tab from '@material-ui/core/Tab';
+import CardContent from '@material-ui/core/CardContent'; 
 import PropTypes from 'prop-types';
 import Box from '@material-ui/core/Box'; 
-import { Snackbar, Stack, IconButton,TextField, Dialog, DialogActions, DialogContent, DialogTitle, DialogContentText } from '@mui/material';
+import {  Stack, IconButton,TextField, Dialog, DialogActions, DialogContent, DialogTitle, DialogContentText } from '@mui/material';
 import Print from '@mui/icons-material/Print';
 import Slide from '@material-ui/core/Slide';
 import AlertModal from '../../../components/Modal/alertModal';
 import axios from 'axios';
 import {CalendarMonthOutlined} from '@mui/icons-material';
-import CloseIcon from '@mui/icons-material/Close';
 import DesktopDatePicker from '@mui/lab/DesktopDatePicker';
 import LocalizationProvider from '@mui/lab/LocalizationProvider';
 import AdapterDateFns from '@mui/lab/AdapterDateFns'; 
 import ModalHeader from '../../../components/Modal/Titlebar';
-
-
 import CreateTicket from './createTicket';
 
 import Modal from '@material-ui/core/Modal'; 
@@ -34,8 +29,7 @@ import CommonModal from '../../../components/Modal/commonmodal';
 import DrawerContent from '../../Drawer';
 import AppBarContent from '../../TopBar'; 
 import ClockInOutModal from '../../ClockInOut';
-import CreateTicketModal from './modal';
-import EditTicketModal from './editTicket';
+// import CreateTicketModal from './modal'; 
 import PaymentModal from './TicketPayment'; 
 import TicketController  from '../../../controller/TicketController';
 
@@ -64,21 +58,14 @@ TabPanel.propTypes = {
   children: PropTypes.node,
   index: PropTypes.number.isRequired,
   value: PropTypes.number.isRequired,
-};
-
-function a11yProps(index) {
-  return {
-    id: `simple-tab-${index}`,
-    'aria-controls': `simple-tabpanel-${index}`,
-  };
-}
-
+}; 
 
 export default class TicketDashboard extends React.Component {
     
   Transition = React.forwardRef(function Transition(props, ref) {
     return <Slide direction="up" />;
   });
+
 interval;
 ticketController = new TicketController();
 constructor(props){
@@ -86,6 +73,8 @@ constructor(props){
     this.state={
         businessdetail:{},
         openD : false,
+        dateerror: false,
+        isTicketEdit: false,
         isOnline: false,
         open: false,
         age: '',
@@ -490,8 +479,6 @@ constructor(props){
         from_date:new Date(),
         to_date:new Date(),
         showDatePopup: false, 
-        closedticketprint:false,
-        printtype:'',
     }
     this.handlePageEvent = this.handlePageEvent.bind(this);
     this.handleOpen = this.handleOpen.bind(this)
@@ -545,6 +532,7 @@ constructor(props){
     this.handlechangeFromDate = this.handlechangeFromDate.bind(this);
     this.handlechangeToDate = this.handlechangeToDate.bind(this);
     this.getClosedTicketsByDate = this.getClosedTicketsByDate.bind(this);
+    this.reloadTicket = this.reloadTicket.bind(this)
 }
 
 handlechangeFromDate(e){
@@ -580,9 +568,9 @@ getClosedTicketsByDate(){
                     let selected_ticket = response.filter(item => item.paid_status !== "paid")
                     let selected_paid_ticket = response.filter(item => item.paid_status === "paid")
                     this.setState({ticket_list: response,isLoading: false, unpaid_ticket_list:selected_ticket,paid_ticket_list: selected_paid_ticket, showDatePopup: false}, function() { 
-                        this.state.unpaid_ticket_list.map((data)=>{
-                            this.getTicketService(data.id)
-                        })
+                        // this.state.unpaid_ticket_list.map((data)=>{
+                        //     this.getTicketService(data.id)
+                        // })
                     })
                 }
                 
@@ -599,37 +587,36 @@ handleTicketPrint(row){
     console.log("handleTicketPrint",row.id)
 
     var printerName = window.localStorage.getItem('defaultprinter')
-        if(printerName !== null &&printerName !== undefined && printerName !== ''){
-            
-                console.log(row);
-                    this.setState({ticketDetail:row, services_taken:[]}, ()=>{
-                    var ticket_id = this.state.ticketDetail.id;
-                    this.setState({isLoading: true})
-                    const sql = "select ts.*,s.*,ts.sync_id as uniquId, rn.id as notesid, rn.notes as requestNotes, d.name as discount_name from ticket_services as ts INNER JOIN services as s ON ts.service_id = s.sync_id left join ticketservice_requestnotes as rn on rn.ticket_id=ts.ticket_id and rn.service_id=ts.service_id and rn.isActive=1 left join discounts as d on d.id = ts.discount_id where ts.ticketref_id =  '"+ticket_id+"'  and ts.isActive=1" 
+        if(printerName !== undefined && printerName !== ''){
 
-                    console.log("handleTicketPrint, handleTicketPrint",sql)
-                    this.state.dataManager.getData(sql).then(response =>{ 
-                        if (response instanceof Array) { 
-                            console.log("handleTicketPrint",response.length)
-                            for (var i=0;i < response.length; i++){ 
-                                this.addServices(response[i], i, response)  
-                                if(i === response.length-1){
-                                    this.setState({isLoading: false})
-                                }
-                            }
-                            if(response.length ===0){
+        this.setState({ticketDetail:row, services_taken:[]}, ()=>{
+        var ticket_id = this.state.ticketDetail.id;
+        this.setState({isLoading: true})
+        const sql = "select ts.*,s.*,ts.sync_id as uniquId, rn.id as notesid, rn.notes as requestNotes, d.name as discount_name from ticket_services as ts INNER JOIN services as s ON ts.service_id = s.sync_id left join ticketservice_requestnotes as rn on rn.ticket_id=ts.ticket_id and rn.service_id=ts.service_id and rn.isActive=1 left join discounts as d on d.id = ts.discount_id where ts.ticketref_id =  '"+ticket_id+"'  and ts.isActive=1" 
 
-                                this.setState({isLoading: false})
-                            }
-                        }
-                    })
-                
-                
-                }) 
-        }
-        else{
-            this.setState({closedticketprint:false, printalert:true})
-        }
+        console.log("handleTicketPrint, handleTicketPrint",sql)
+        this.state.dataManager.getData(sql).then(response =>{ 
+            if (response instanceof Array) { 
+                console.log("handleTicketPrint",response.length)
+                for (var i=0;i < response.length; i++){ 
+                    this.addServices(response[i], i, response)  
+                    if(i === response.length-1){
+                        this.setState({isLoading: false})
+                    }
+                }
+                if(response.length ===0){
+
+                    this.setState({isLoading: false})
+                }
+            }
+        })
+    
+    
+    })
+}
+else{
+    this.setState({printalert:true})
+}
 
 
 } 
@@ -691,7 +678,7 @@ addServices = (servicein, i, response) => new Promise((resolve, reject) => {
         taxes:[],
         subtotal: Number(servicein.perunit_cost)*Number(servicein.service_quantity),
         taxamount:0,
-        discountamount: servicein.total_discount_amount != undefined ?  servicein.total_discount_amount :0,
+        discountamount: servicein.total_discount_amount !== undefined ?  servicein.total_discount_amount :0,
         qty:1,
         perunit_cost:servicein.perunit_cost,
         employee_id: servicein.employee_id,
@@ -719,12 +706,7 @@ addServices = (servicein, i, response) => new Promise((resolve, reject) => {
         console.log("addServices", obj)
         this.setState({services_taken: services}, ()=>{
             if(i === response.length -1){ 
-                if(this.state.value === 1){
-                    this.setState({closedticketprint: true});
-                }
-                else{
-                    setTimeout(this.printTicket(), 1000);
-                }
+                setTimeout(this.printTicket(), 1000);
             }
         })
     });
@@ -735,156 +717,143 @@ printTicket() {
     //console.log("service_data", service_data)
         // var businessdetail = this.state.businessdetail;
         var printerName = window.localStorage.getItem('defaultprinter')
-        if(printerName !== null &&printerName !== undefined && printerName !== ''){
-            if(this.state.printtype === 'employee'){
-                this.printEmployeeReceipt();
-            }
-            else{
-                this.setState({print_data: print_data}, function() {
-                    // this.setState({printpopup: true}) 
-                    var total=Number(this.state.ticketDetail.grand_total).toFixed(2)
-                    var ticketid = this.state.ticketDetail.ticket_code;
-                    console.log(printerName);
-                    var data = [];
+        if(printerName !== undefined && printerName !== ''){
+            this.setState({print_data: print_data}, function() {
+                // this.setState({printpopup: true}) 
+                var total=Number(this.state.ticketDetail.grand_total).toFixed(2)
+                var ticketid = this.state.ticketDetail.ticket_code;
+                console.log(printerName);
+                var data = [];
 
 
 
-                    var bodydata = []
+                var bodydata = []
 
-                    print_data.forEach((ser,index)=>{
-                        bodydata.push([
-                            {
-                                type: "text", 
-                                value: "<div style='display:flex;flex-direction:column;'><div style='text-align:left;'>"+ser["quantity"]+"&nbsp;&nbsp;&nbsp;&nbsp;"+ser["name"]+"</div>"+
-                                ((ser["tax"] === "") ? "":ser["tax"])+
-                                ((ser["discount"] === "") ? "":ser["discount"]), 
-                                css: {  "font-size": "12px" },
-                            },
-                            {
-                                type: "text", 
-                                value: "<div style='display:flex;flex-direction:column;'><div  style='text-align:right;padding-right:10px;'>$"+Number(ser["total"]).toFixed(2)+"</div>"+ser["ratedetails"],
-                                css: {  "font-weight": "500","font-size": "12px" },
-                            },
-                            // {
-                            //     type: "text", 
-                            //     value:  "$"+ser["total"],
-                            //     style: `text-align:left;`,
-                            //     css: {  "font-weight": "500","font-size": "14px" },
-                            // },
-                        ]
-                        );  
-                        
-                    })
-                
-                
-                    data.push({
-                        type: "text", 
-                        value: this.state.businessdetail.name,//"TOP PAYMENT SOLUTIONS - Main",
-                        style: `text-align:center;`,
-                        css: {  "font-weight": "700", "font-size": "16px" },
-                        }); 
+                print_data.forEach((ser,index)=>{
+                    bodydata.push([
+                        {
+                            type: "text", 
+                            value: "<div style='display:flex;flex-direction:column;'><div style='text-align:left;'>"+ser["quantity"]+"&nbsp;&nbsp;&nbsp;&nbsp;"+ser["name"]+"</div>"+
+                            ((ser["tax"] === "") ? "":ser["tax"])+
+                            ((ser["discount"] === "") ? "":ser["discount"]), 
+                            css: {  "font-size": "12px" },
+                        },
+                        {
+                            type: "text", 
+                            value: "<div style='display:flex;flex-direction:column;'><div >$"+Number(ser["total"]).toFixed(2)+"</div>"+ser["ratedetails"],
+                            css: {  "font-weight": "500","font-size": "14px" },
+                        },
+                        // {
+                        //     type: "text", 
+                        //     value:  "$"+ser["total"],
+                        //     style: `text-align:left;`,
+                        //     css: {  "font-weight": "500","font-size": "14px" },
+                        // },
+                    ]
+                    );  
                     
-                    data.push({
-                        type: "text", 
-                        value: this.state.businessdetail.address1+"<br/>"+ this.state.businessdetail.address2+"<br/>"+this.state.businessdetail.city+"<br/>" +this.state.businessdetail.state+ this.state.businessdetail.zipcode+"<br/>"+ this.state.businessdetail.businessphone, //"3675 CRESTWOOD PKWY STE <br> DULUTH, GA  300965045 <br> 7706804075",
-                        style: `text-align:center;`,
-                        css: { "font-size": "12px","margin-top": 2 },
-                        }); 
-                    data.push({
-                        type: "text", 
-                        value: "",//"http://toppaymentsolutions.com",
-                        style: `text-align:center;`,
-                        css: { "font-size": "10px","margin-top": 2 },
-                        }); 
-
-                    data.push({
-                        type: "text", 
-                        value: "ORDER: "+JSON.parse(window.localStorage.getItem('businessdetail')).name+" - Ticket "+ ticketid,
-                        style: `text-align:center;`,
-                        css: { "font-weight": "700", "font-size": "18px","margin-top": 10 },
-                        }); 
-                    data.push({
-                        type: "text", 
-                        value: "Cashier: "+JSON.parse(window.localStorage.getItem('employeedetail')).firstName,
-                        style: `text-align:left;`,
-                        css: {  "font-size": "12px","margin-top": 5 },
-                        });
-                    data.push({
-                        type: "text", 
-                        value:  Moment(new Date()).format('MM-DD-YYYY hh:mm A'),
-                        style: `text-align:left;`,
-                        css: {  "font-size": "12px","margin-top": 5 },
-                        });
-                    
-                    data.push({
-                        type: 'table',
-                        // style: 'border: 0px solid #ddd',
-                        css: {"margin-left": 10,"margin-top": 10,"margin-bottom": 10},
-                        tableBody: bodydata,
-                        tableBodyStyle: 'border: 0.0px solid #ddd',
-                        tableSeperatorStyle: 'border: 0.0px solid #ddd'
-                    })
-                    data.push({
-                        type: "text", 
-                        value:  "<div style='display: flex;width:100%; justify-content: space-between;'><p >Discount</p> <p style='text-align:right;'>$"+(this.state.ticketDetail.discount_totalamt !== null && this.state.ticketDetail.discount_totalamt !== undefined ? Number(this.state.ticketDetail.discount_totalamt).toFixed(2) : '$0.00')+"</p> </div>",
-                        style: `text-align:left;`,
-                        css: { "font-weight": "700", "font-size": "14px","margin-top": -10 },
-                    })
-
-                    data.push({
-                        type: "text", 
-                        value:  "<div style='display: flex; justify-content: space-between;'><p >Tips</p> <p style='text-align:right;'>$"+Number(this.state.ticketDetail.tips_totalamt).toFixed(2)+"</p> </div>",
-                        style: `text-align:left;`,
-                        css: { "font-weight": "700", "font-size": "14px","margin-top": -25 },
-                    });  
-
-                    data.push({
-                        type: "text", 
-                        value:  "<div style='display: flex; justify-content: space-between;'><p >Total</p> <p style='text-align:right;'>$"+Number(total).toFixed(2)+"</p> </div>",
-                        style: `text-align:left;`,
-                        css: { "font-weight": "700", "font-size": "14px","margin-top": -10 },
+                })
+            
+            
+                data.push({
+                    type: "text", 
+                    value: this.state.businessdetail.name,//"TOP PAYMENT SOLUTIONS - Main",
+                    style: `text-align:center;`,
+                    css: {  "font-weight": "700", "font-size": "16px" },
                     }); 
-                    if(this.state.printtype === 'receipt' && this.state.value === 1){
+                
+                data.push({
+                    type: "text", 
+                    value: this.state.businessdetail.address1+"<br/>"+ this.state.businessdetail.address2+"<br/>"+this.state.businessdetail.city+"<br/>" +this.state.businessdetail.state+ this.state.businessdetail.zipcode+"<br/>"+ this.state.businessdetail.businessphone, //"3675 CRESTWOOD PKWY STE <br> DULUTH, GA  300965045 <br> 7706804075",
+                    style: `text-align:center;`,
+                    css: { "font-size": "12px","margin-top": 2 },
+                    }); 
+                data.push({
+                    type: "text", 
+                    value: "",//"http://toppaymentsolutions.com",
+                    style: `text-align:center;`,
+                    css: { "font-size": "10px","margin-top": 2 },
+                    }); 
+
+                data.push({
+                    type: "text", 
+                    value: "ORDER: "+JSON.parse(window.localStorage.getItem('businessdetail')).name+" - Ticket "+ ticketid,
+                    style: `text-align:center;`,
+                    css: { "font-weight": "700", "font-size": "18px","margin-top": 10 },
+                    }); 
+                data.push({
+                    type: "text", 
+                    value: "Cashier: "+JSON.parse(window.localStorage.getItem('employeedetail')).firstName,
+                    style: `text-align:left;`,
+                    css: {  "font-size": "12px","margin-top": 5 },
+                    });
+                data.push({
+                    type: "text", 
+                    value:  Moment(new Date()).format('MM-DD-YYYY hh:mm A'),
+                    style: `text-align:left;`,
+                    css: {  "font-size": "12px","margin-top": 5 },
+                    });
+                
+                data.push({
+                    type: 'table',
+                    // style: 'border: 0px solid #ddd',
+                    css: {"margin-left": 10,"margin-top": 10,"margin-bottom": 10},
+                    tableBody: bodydata,
+                    tableBodyStyle: 'border: 0.0px solid #ddd',
+                    tableSeperatorStyle: 'border: 0.0px solid #ddd'
+                })
+                data.push({
+                    type: "text", 
+                    value:  "<div style='display: flex; justify-content: space-between;'><p >Discount</p> <p>$"+(this.state.ticketDetail.discount_totalamt !== null && this.state.ticketDetail.discount_totalamt !== undefined ? Number(this.state.ticketDetail.discount_totalamt).toFixed(2) : '$0.00')+"</p> </div>",
+                    style: `text-align:left;`,
+                    css: { "font-weight": "700", "font-size": "14px","margin-top": -10 },
+                })
+                data.push({
+                    type: "text", 
+                    value:  "<div style='display: flex; justify-content: space-between;'><p >Total</p> <p>$"+Number(total).toFixed(2)+"</p> </div>",
+                    style: `text-align:left;`,
+                    css: { "font-weight": "700", "font-size": "14px","margin-top": -10 },
+                }); 
+                if(this.state.value === 1){
+                    data.push({
+                        type: "text", 
+                        value: "<div style='display: flex; justify-content: space-between;'><p style='text-transform:uppercase;'>"+this.state.ticketDetail.pay_mode+" SALE</p> <p>$"+Number(total).toFixed(2)+"</p> </div>",
+                        style: `text-align:left;`,
+                        css: {  "font-size": "14px","margin-top": -25 },
+                    });
+                    if(this.state.ticketDetail.pay_mode.toLowerCase() === 'cash'){
                         data.push({
                             type: "text", 
-                            value: "<div style='display: flex; justify-content: space-between;'><p style='text-transform:uppercase;'>"+this.state.ticketDetail.pay_mode+" SALE</p> <p style='text-align:right;'>$"+Number(total).toFixed(2)+"</p> </div>",
+                            value:  "<div style='display: flex; justify-content: space-between;'><p >Cash tendered</p> <p>$"+Number(total).toFixed(2)+"</p> </div>",
                             style: `text-align:left;`,
-                            css: {  "font-size": "14px","margin-top": -25 },
-                        });
-                        if(this.state.ticketDetail.pay_mode.toLowerCase() === 'cash'){
-                            data.push({
-                                type: "text", 
-                                value:  "<div style='display: flex; justify-content: space-between;'><p >Cash tendered</p> <p style='text-align:right;'>$"+Number(total).toFixed(2)+"</p> </div>",
-                                style: `text-align:left;`,
-                                css: { "font-size": "14px","margin-top": -25 },
-                            }); 
-                        }
-                        else{
-                            data.push({
-                                type: "text", 
-                                value:  "<div style='display: flex; justify-content: space-between;'><p style='text-transform:uppercase;'>"+this.state.ticketDetail.card_type+"&nbsp;&nbsp;"+this.state.ticketDetail.payment_notes+"</p> <p style='text-align:right;'>$"+Number(total).toFixed(2)+"</p> </div>",
-                                style: `text-align:left;`,
-                                css: { "font-size": "14px","margin-top": -25 },
-                            }); 
-                        }
+                            css: { "font-size": "14px","margin-top": -25 },
+                        }); 
                     }
-                    data.push({
-                        type: "text", 
-                        value:  "Enjoy!",
-                        style: `text-align:left;`,
-                        css: { "font-size": "14px","margin-top": 0 },
-                    });
+                    else{
+                        data.push({
+                            type: "text", 
+                            value:  "<div style='display: flex; justify-content: space-between;'><p style='text-transform:uppercase;'>"+this.state.ticketDetail.card_type+"&nbsp;&nbsp;"+this.state.ticketDetail.payment_notes+"</p> <p>$"+Number(total).toFixed(2)+"</p> </div>",
+                            style: `text-align:left;`,
+                            css: { "font-size": "14px","margin-top": -25 },
+                        }); 
+                    }
+                }
+                data.push({
+                    type: "text", 
+                    value:  "Enjoy!",
+                    style: `text-align:left;`,
+                    css: { "font-size": "14px","margin-top": 0 },
+                });
 
-                    window.api.printdata({printername: printerName, data: data}).then(res=>{ 
-                        console.log(res); 
-                    })
-
-
+                window.api.printdata({printername: printerName, data: data}).then(res=>{ 
+                    console.log(res); 
                 })
-            }
+
+
+            })
         }
         else{
-            alert("No printer selected"); 
+        alert("No printer selected"); 
         }
 
 
@@ -909,8 +878,8 @@ processPrintDetails() {
         })
 
         tax_data.forEach((tax) => {
-            tax_detail = (tax_detail.length>0 ? tax_detail  : tax_detail)+"<div style='display:flex;width:100%;justify-content:space-between;'><div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+tax["tax_name"]+"</div></div>"
-            tax_rate += "<div style='text-align:right;padding-right:10px;'> $"+tax["tax_percentage"]+"</div>"
+            tax_detail = (tax_detail.length>0 ? tax_detail  : tax_detail)+"<div style='display:flex;width:100%;justify-content:space-between;'><div>"+tax["tax_name"]+"</div></div>"
+            tax_rate += "<div> $"+tax["tax_percentage"]+"</div>"
         })
 
         
@@ -926,8 +895,8 @@ processPrintDetails() {
 
         discount_data.forEach   ((tax) => {
             console.log(tax)
-            discount_detail = (discount_detail.length>0 ? discount_detail : discount_detail)+"<div style='display:flex;width:100%;justify-content:space-between;'><div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+tax["discount_name"]+"</div></div>"
-            tax_rate += "<div style='text-align:right;padding-right:10px;'> ($"+Number(tax["discount_price"]).toFixed(2)+")</div>"
+            discount_detail = (discount_detail.length>0 ? discount_detail : discount_detail)+"<div style='display:flex;width:100%;justify-content:space-between;'><div>"+tax["discount_name"]+"</div></div>"
+            tax_rate += "<div> ($"+tax["discount_price"]+")</div>"
         }) 
         console.log(ser)
         service_data.push({
@@ -950,168 +919,6 @@ return service_data
     
 }
 
-
-getEmployeeName(id){ 
-    var empname = '';
-    for(var i=0;i<this.state.staff_list.length;i++){ 
-        var obj = this.state.staff_list[i];
-        if(obj["id"] === id){
-            empname = obj['firstName']+" "+obj['lastName']; 
-        } 
-    }
-    return empname;
-}
-
-printEmployeeReceipt(){
-    var emps = []
-    var thisobj = this;
-    this.state.services_taken.forEach((e, i)=>{
-        if(emps.indexOf(e.employee_id) === -1){
-            emps.push(e.employee_id)
-        }
-        if(i=== thisobj.state.services_taken.length-1){
-            console.log("PRINT EMP RECEIPT")
-            var printerName = window.localStorage.getItem('defaultprinter')
-            if(printerName !== null &&printerName != undefined && printerName != ''){
-                thisobj.printEmployeeReceiptIndividual(0, emps, printerName);
-            }
-            else{
-                thisobj.setState({printtalert:true})
-            }
-
-        }
-    });
-}
-
-printEmployeeReceiptIndividual(idx, emps, printerName){
-    if(idx < emps.length){
-            var emp = emps[idx];
-            var response = this.processEmployeePrintDetails(emp);
-            var print_data = response.data;
-            var total = response.total;
-            var tipstotal = response.tipstotal;
-            var data = [];
-                data.push({
-                    type: "text", 
-                    value: this.state.businessdetail.name+"<br/>Employee Receipt",//"TOP PAYMENT SOLUTIONS - Main",
-                    style: `text-align:center;`,
-                    css: {  "font-weight": "700", "font-size": "16px" },
-                    }); 
-                
-                data.push({
-                    type: "text", 
-                    value: this.state.businessdetail.address1+"<br/>"+ this.state.businessdetail.address2+"<br/>"+this.state.businessdetail.city+"<br/>" +this.state.businessdetail.state+ this.state.businessdetail.zipcode+"<br/>"+ this.state.businessdetail.businessphone, //"3675 CRESTWOOD PKWY STE <br> DULUTH, GA  300965045 <br> 7706804075",
-                    style: `text-align:center;`,
-                    css: { "font-size": "12px","margin-top": 2 },
-                    }); 
-                data.push({
-                    type: "text", 
-                    value: "",//"http://toppaymentsolutions.com",
-                    style: `text-align:center;`,
-                    css: { "font-size": "10px","margin-top": 2 },
-                    });  
-
-                data.push({
-                    type: "text", 
-                    value: "<div style='display: flex; justify-content: space-between;'><p >Employee: "+this.getEmployeeName(emp)+"</p><p>Ticket:"+this.state.ticketCode+"</p>",
-                    style: `text-align:left;`,
-                    css: {  "font-size": "12px","margin-top": 5 },
-                    }); 
-                
-                data.push({
-                    type: 'table',
-                    // style: 'border: 0px solid #ddd',
-                    css: {"margin-left": 10,"margin-top": 10,"margin-bottom": 10},
-                
-                    tableBody: print_data.map((ser,index)=>{
-                    
-                        return [
-                            {
-                                type: "text", 
-                                value: ser["quantity"]+"&nbsp;&nbsp;&nbsp;&nbsp;"+ser["name"] ,
-                                style: `text-align:left;`,
-                                css: {  "font-size": "12px" },
-                            },
-                            {
-                                type: "text", 
-                                value: "$"+Number(ser["price"]).toFixed(2),
-                                style: `text-align:left;`,
-                                css: {  "font-weight": "500","font-size": "14px" },
-                            },
-                            {
-                                type: "text", 
-                                value:  "$"+ser["total"],
-                                style: `text-align:left;`,
-                                css: {  "font-weight": "500","font-size": "14px" },
-                            },
-                        ]
-
-                    }),
-                
-                    tableBodyStyle: 'border: 0.0px solid #ddd',
-                    tableSeperatorStyle: 'border: 0.0px solid #ddd'
-                
-                }) 
-                
-
-                data.push({
-                    type: "text", 
-                    value:  "<div style='display: flex; justify-content: space-between;'><p >Tips</p> <p>$"+Number(tipstotal).toFixed(2)+"</p> </div>",
-                    style: `text-align:left;`,
-                    css: { "font-weight": "700", "font-size": "14px","margin-top": -25 },
-                });  
-                data.push({
-                    type: "text", 
-                    value:  "<div style='display: flex; justify-content: space-between;'><p >Total</p> <p>$"+Number(total).toFixed(2)+"</p> </div>",
-                    style: `text-align:left;`,
-                    css: { "font-weight": "700", "font-size": "14px","margin-top": -10 },
-                });  
-
-                data.push({
-                    type: "text", 
-                    value:  this.state.businessdetail.name+" - Printed: "+Moment(new Date()).format('MM-DD-YYYY hh:mm A'),
-                    style: `text-align:center;border-bottom:1px dotted #000;margin-top:40px;padding-top:30px;padding-bottom:20px;`,
-                    css: {  "font-size": "14px","margin-top":10, "border-bottom":"1px dotted #000"},
-                });
-
-                window.api.printdata({printername: printerName, data: data}).then(res=>{ 
-                    console.log(res);
-                    this.printEmployeeReceiptIndividual(idx+1, emps, printerName)
-                })
-    }
-    else{
-
-        // this.setState({closedticketprint: false});
-        console.log("ARRAY COMPLETED")
-    }
-}
-
-
-
-processEmployeePrintDetails(empid) {
-
-    var service_data = []
-    var total = 0;
-    var tipstotal = 0;
-    this.state.services_taken.forEach(( ser,index) => {
-        if(ser.employee_id === empid){
-            total +=  ser.subtotal;
-            tipstotal += ser.tips_amount !== undefined ? ser.tips_amount : 0;
-
-            service_data.push({
-                "name" : ser.servicedetail.name,
-                "price":  ser.perunit_cost,
-                "total": ser.subtotal, 
-                "quantity": ser.qty,
-            })
-        } 
-    })
-
-   return {data: service_data, total:total, tipstotal:tipstotal}
-
-    
-}
-
 handlePageEvent(pagename){ 
   this.props.onChangePage(pagename);
 }
@@ -1123,11 +930,7 @@ syncApi() {
    this.state.ticketManager.syncTicket().then(res=>{
     this.setState({isSyncing:false})
     })
-}
-
-componentWillUnmount() {
-    clearInterval(this.interval);
-}
+} 
 
 componentDidMount() {
     // this.checkTime(this)
@@ -1136,7 +939,7 @@ componentDidMount() {
     this.resize();
 
     var condition = navigator.onLine ? 'online' : 'offline';
-    this.setState({isOnline: (condition=="online") ? true: false}, function() {
+    this.setState({isOnline: (condition==="online") ? true: false}, function() {
         // console.log("componentDidMount",this.state.isOnline)
         this.getStaffList();
     })
@@ -1157,6 +960,7 @@ resize() {
 }
 
 componentWillUnmount() {
+    clearInterval(this.interval);
     window.removeEventListener("resize", this.resize.bind(this));
 }
 
@@ -1199,18 +1003,18 @@ checkTime(that) {
 }
   
 editTicket(row){ 
-    // this.setState({selectedTicket: row}, function(){
-    //     this.setState({showPage: 'editTicket'})
-    // })
     this.setState({showPage: 'dashboard'})
     var ticketowner = this.state.staff_list.filter(t=>{ return t.id.toString() === row.technician_id});
-    console.log(row.tips_type)
     this.setState({selectedTicket: row, isTicketEdit: true, ticketowner: ticketowner.length > 0 ? ticketowner[0] : this.state.ticketowner, dateerror: false}, function(){  
         console.log(this.state.dateerror)
         window.api.invoke('log', "Edit Ticket clicked - Ticket code : "+row.ticket_code ).then(r=>{
             this.setState({showPage: 'editTicket'})
         })
     })
+}
+
+reloadTicket(ticket){
+    this.editTicket(ticket);
 }
 handleCloseErrorDialog(){
     // //console.log()
@@ -1223,20 +1027,20 @@ getStaffList(){
     if(detail !== undefined && detail !== 'undefined'){
         businessdetail = JSON.parse(detail);
         this.setState({businessdetail:businessdetail}, function(){
-            document.title = this.state.businessdetail.name + ' - The Finest Salon Management Platform';
+            document.title = this.state.businessdetail.name + ' - The Finest Salon Management Platform (Development)';
         })
-        if(this.state.isOnline) {
-            axios.get(config.root+"employee/"+businessdetail["id"]).then(res=>{
-                var status = res.data["status"];
-                var data = res.data["data"];
+        // if(this.state.isOnline) {
+        //     axios.get(config.root+"employee/"+businessdetail["id"]).then(res=>{
+        //         // var status = res.data["status"];
+        //         var data = res.data["data"];
                 
-                console.log("getStaffListserve", data)
-            })
-        }
-        else {
-            // this.getStaffListLocal()
-            // this.getTicketList(true);
-        }
+        //         console.log("getStaffListserve", data)
+        //     })
+        // }
+        // else {
+        //     // this.getStaffListLocal()
+        //     // this.getTicketList(true);
+        // }
 
         this.getStaffListLocal()
         this.getTicketList(true);
@@ -1287,7 +1091,7 @@ handleCloseTicketAlert(){
 
 
 handleCloseDialog(msg){
-    this.setState({addDialog:false,editDialog: false}, function(){
+    this.setState({addDialog:false,editDialog: false, showPage:'dashboard'}, function(){
         this.getTicketList(false);
         
       })
@@ -1484,24 +1288,24 @@ handleChange(uvalue) {
 
 handleOpenTicket(){
     window.api.getTicketCode().then(res=>{ 
-        console.log(res)
-        if(res.ticketid !== ''){
-            var ticket_code = String(res.ticketid).padStart(4, '0');
-            var ticketDetail = {
-                ticket_code : ticket_code
-            }
-            this.setState({selectedTicket:ticketDetail, dateerror: false, isTicketEdit: false}, ()=>{
-                 window.api.invoke('log', "Create Ticket clicked - Ticket code : "+ticket_code ).then(r=>{
-                     this.setState({showPage:'createTicket'})
-                 })
-            });
-        }
-        else{
-            this.setState({dateerror: true, isTicketEdit: false}, ()=>{
-                 this.setState({showPage:'createTicket'})
-            })
-        }
-})
+           console.log(res)
+           if(res.ticketid !== ''){
+               var ticket_code = String(res.ticketid).padStart(4, '0');
+               var ticketDetail = {
+                   ticket_code : ticket_code
+               }
+               this.setState({selectedTicket:ticketDetail, dateerror: false, isTicketEdit: false}, ()=>{
+                    window.api.invoke('log', "Create Ticket clicked - Ticket code : "+ticket_code ).then(r=>{
+                        this.setState({showPage:'createTicket'})
+                    })
+               });
+           }
+           else{
+               this.setState({dateerror: true, isTicketEdit: false}, ()=>{
+                    this.setState({showPage:'createTicket'})
+               })
+           }
+   })
 }
 
 openCreateTicket() {
@@ -1523,7 +1327,7 @@ getTicketList(loading){
     }
     var detail = window.localStorage.getItem('businessdetail');
     var businessdetail = JSON.parse(detail);
-    var todayDate = Moment(new Date()).format('YYYY-MM-DD');
+    // var todayDate = Moment(new Date()).format('YYYY-MM-DD');
 
 
     let from_date = Moment(this.state.from_date).format('YYYY-MM-DD');
@@ -1548,10 +1352,10 @@ getTicketList(loading){
                 if (response instanceof Array) { 
                     let selected_ticket = response.filter(item => item.paid_status !== "paid")
                     let selected_paid_ticket = response.filter(item => item.paid_status === "paid" && item.paid_at !== null && item.paid_at !== undefined  )
-                    this.setState({ticket_list: response,isLoading: false, unpaid_ticket_list:selected_ticket,paid_ticket_list: selected_paid_ticket, isLoading: false}, function() { 
-                        this.state.unpaid_ticket_list.map((data)=>{
-                            this.getTicketService(data.id)
-                        })
+                    this.setState({ticket_list: response, unpaid_ticket_list:selected_ticket,paid_ticket_list: selected_paid_ticket, isLoading: false}, function() { 
+                        // this.state.unpaid_ticket_list.forEach((data)=>{
+                        //     this.getTicketService(data.id)
+                        // })
                     })
                 }
                 
@@ -1571,7 +1375,7 @@ getTicketService(ticket_id){
   
        if (response instanceof Array) {
         if(response.length>0) {
-            response.map(data=>{
+            response.forEach(data=>{
                 process.push(data.process)
             })
            
@@ -1710,10 +1514,10 @@ render()  {
                                             <div style={{display: 'flex', marginTop: 10, flexWrap:'wrap',padding:'0 0.75rem', height:'calc(100% - 60px)', overflow:'auto', alignContent:'baseline'}}>
                                                 {this.state.staff_list.map((staff,i)=>{
                                                     let value;
-                                                    if(staff.clocked_status === null ||  staff.clocked_status.toLowerCase() !== 'Clock-in'.toLowerCase() && staff.staff_role !== 'SA' ){ 
+                                                    if((staff.clocked_status === null ||  staff.clocked_status.toLowerCase() !== 'Clock-in'.toLowerCase() )&& staff.staff_role !== 'SA' ){ 
                                                         value = 
                                                         <Grid className='techbtn'  item xs={4} style={{background:"",paddingRight: 2,paddingLeft: 2, paddingTop:2,paddingBottom:2,minWidth:(this.state.hide)?'90%':'33.33%', cursor:'pointer'}}> 
-                                                        <div style={{background: '#F2F2F2',height:65,borderBottom: '0px solid #bee1f7', display: 'table',borderRadius: 10,display:'flex',alignItems:'center', justifyContent:'center', }} 
+                                                        <div style={{background: '#F2F2F2',height:65,borderBottom: '0px solid #bee1f7', borderRadius: 10,display:'flex',alignItems:'center', justifyContent:'center', }} 
                                                         onDoubleClick={()=>{
                                                                  this.setState({ticketowner:staff})
                                                                  this.handleOpenClockin()
@@ -1771,7 +1575,7 @@ render()  {
                             </div>
 
 
-                            {(this.state.value ==0 && this.state.hide) && 
+                            {(this.state.value ===0 && this.state.hide) && 
                             <TableContent style={{ marginBottom: 10}}
                             data={this.state.unpaid_ticket_list} 
                             columns={this.state.reponsiveColumns}
@@ -1779,7 +1583,7 @@ render()  {
                             />
                             }
 
-                            {(this.state.value ==0 && this.state.hide==false) && 
+                            {(this.state.value ===0 && this.state.hide===false) && 
                            <TableContent style={{ marginBottom: 10}}
                            data={this.state.unpaid_ticket_list} 
                            columns={this.state.columns}
@@ -1787,8 +1591,8 @@ render()  {
                            />
                            }
 
-                            {(this.state.value ==1) && <div style={{position:'relative', height:'100%'}}>
-                                    <div style={{display:'flex', alignItems:'right', justifyContent:'flex-end', marginRight: 10, position:'absolute', right:0, zIndex:999}}> 
+                            {(this.state.value ===1) && <div style={{position:'relative', height:'100%'}}>
+                                    <div style={{display:'flex', alignItems:'right', justifyContent:'flex-end', marginRight: 10, position:'absolute', right:0, zIndex:99999}}> 
                                         <IconButton onClick={()=>{
                                             this.setState({showDatePopup: true})
                                         }}><CalendarMonthOutlined/></IconButton>
@@ -1802,7 +1606,7 @@ render()  {
                                     }
 
 
-                                    {(this.state.value ==1 &&  this.state.hide==false) && 
+                                    {(this.state.value ===1 &&  this.state.hide===false) && 
                                         <TableContent style={{  marginBottom: 10}}
                                         data={this.state.paid_ticket_list} 
                                         columns={this.state.closedticket_columns}
@@ -1868,11 +1672,22 @@ render()  {
                          selectedTechi={this.state.ticketowner}/>
                     {/* Clockin out modal ends */}
 
-                    
-
                     {/* CreateTicketModal modal starts */}
-                    <Modal fullScreen open={this.state.showPage === 'createTicket' || this.state.showPage === 'editTicket' } onClose={()=>{this.handleCloseDialog("success")}}>  
- 
+                    
+    <Modal fullScreen open={this.state.showPage === 'createTicket' || this.state.showPage === 'editTicket' } onClose={()=>{this.handleCloseDialog("success")}}>  
+        {/* <CreateTicket saveTicket={(data, ticketid)=>{
+                          console.log("data from dashboard", data, ticketid);
+                          this.props.saveTicket(data,ticketid);
+                      }} afterFinished={(pagename)=>{
+                          console.log("pagename", pagename)
+                          this.setState({showPage:'dashboard'},function(){ 
+                            this.getTicketList(false)
+                             this.handlePageEvent(pagename)
+                            })} }  
+                             handleCloseDialog={()=>this.handleCloseDialog("success") } owner={this.state.ticketowner}  ticketDetail={this.state.selectedTicket} 
+                             dateerror={this.state.dateerror}
+                             isTicketEdit={this.state.isTicketEdit} />  */}
+
                     <CreateTicket reloadTicket={this.reloadTicket} saveTicket={(data, option)=>{ 
                         console.log(data.ticketDetail);
                         if(data.ticketDetail.grand_total > 0){
@@ -1915,7 +1730,8 @@ render()  {
                              
     </Modal> 
     
-                      {/* <CreateTicketModal style={{zIndex:999999}} open={this.state.showPage === 'createTicket'} saveTicket={(data, ticketid)=>{
+
+                      {/* <CreateTicketModal open={this.state.showPage === 'createTicket' || this.state.showPage === 'editTicket' } saveTicket={(data, ticketid)=>{
                           console.log("data from dashboard", data, ticketid);
                           this.props.saveTicket(data,ticketid);
                       }} afterFinished={(pagename)=>{
@@ -1924,7 +1740,9 @@ render()  {
                             this.getTicketList(false)
                              this.handlePageEvent(pagename)
                             })} }  
-                             handleCloseDialog={()=>this.handleCloseDialog("success") } ticketowner={this.state.ticketowner}  /> */}
+                             handleCloseDialog={()=>this.handleCloseDialog("success") } ticketowner={this.state.ticketowner}  ticketDetail={this.state.selectedTicket} 
+                             dateerror={this.state.dateerror}
+                             isTicketEdit={this.state.isTicketEdit} /> */}
                              
                           
                          
@@ -2026,49 +1844,6 @@ render()  {
                         </DialogActions>
             </Dialog>
         
-            {this.state.closedticketprint && <div>
-        <div style={{border:'1px solid',right:0, bottom:0,top:'0',left:'0',position:'absolute'}}>
-            <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
-            </div>
-            <div style={{background:'#fff', height:'350px', width:'400px', margin:'calc(25% - 175px) auto 0', position:'relative', borderRadius: 10}}>
-            <Grid container spacing={2}>
-                    <Grid item xs={2}></Grid>
-                <Grid item xs={8} style={{display:'flex', flexDirection:'column', alignItems:'center',marginTop:10}}>
-                    <Grid item xs={12} style={{margin:'1rem 0', width:'100%', textAlign:'center', cursor:'pointer'}}>
-                        <Button  onClick={()=>{
-                        this.setState({printtype:'bill'}, ()=>{
-                            this.printTicket()
-                        })
-                    }} color="secondary" style={{textTransform:'capitalize', width:'100%', height:'75px'}} variant="contained">Print Bill</Button>
-                        {/* <Typography id="modal-modal-title" variant="h6" component="h2" align="left" style={{marginLeft:20, "color":'#134163', border:'1px solid #f0f0f0', padding:'8px', display:'flex', alignItems:'center', justifyContent:'flex-start'}}>Print Bill</Typography> */}
-                    </Grid>  
-                    <Grid item xs={12} style={{margin:'1rem 0',width:'100%', textAlign:'center', cursor:'pointer'}}>
-                    <Button  onClick={()=>{
-                        this.setState({printtype:'receipt'}, ()=>{
-                            this.printTicket()
-                        })
-                    }} color="secondary" style={{textTransform:'capitalize', width:'100%', height:'75px'}} variant="contained">Print Receipt</Button>
-                    {/* <Typography id="modal-modal-title" variant="h6" component="h2" align="left" style={{marginLeft:20, "color":'#134163', border:'1px solid #f0f0f0', padding:'8px', display:'flex', alignItems:'center', justifyContent:'flex-start'}}>Print Receipt</Typography> */}
-                    </Grid>  
-                    <Grid item xs={12} style={{margin:'1rem 0',width:'100%', textAlign:'center', cursor:'pointer'}}>
-                        <Button  onClick={()=>{
-                        this.setState({printtype:'employee'}, ()=>{
-                            this.printTicket()
-                        })
-                    }} color="secondary" style={{textTransform:'capitalize', width:'100%', height:'75px'}} variant="contained">Print Employee Receipt</Button>
-                        </Grid>  
-                </Grid> 
-                <Grid item xs={2}>
-                    <Typography variant="subtitle2" align="center" style={{cursor:'pointer'}} onClick={()=>this.setState({closedticketprint:false, printtype:''})}> <CloseIcon fontSize="small" style={{"color":'#134163'}}/></Typography>
-                </Grid> 
-            </Grid>
-
-            </div>
-
-        </div>
-    </div>
-    }
-
         </div> 
   }
 
