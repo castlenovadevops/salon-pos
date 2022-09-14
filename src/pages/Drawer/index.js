@@ -8,8 +8,8 @@ import Collapse from '@mui/material/Collapse';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import {Tag, Home, Receipt,People, DynamicFeed, Label, AttachMoney, MoneyOff, Tune, Sync, Group, Loyalty,  ExitToApp, Dashboard, Assessment, Settings, Print  } from '@mui/icons-material';
-import { ListItemIcon } from '@mui/material';
-
+import { ListItemIcon, Typography } from '@mui/material';
+import DataManager from '../../controller/datacontroller';
 
 export default function DrawerContent(
 { 
@@ -23,6 +23,8 @@ export default function DrawerContent(
         onhandlePageevent
 }) 
 {
+
+    var datacontroller = new DataManager();
     
   return (
     
@@ -100,6 +102,8 @@ export default function DrawerContent(
          <ListItem button onClick={onlogout}>
                     <ListItemIcon><ExitToApp /></ListItemIcon> <ListItemText primary="Logout" /></ListItem>
     </List>
+
+    <Typography component="div" style={{ position:'absolute', bottom:0, left:0, right:0, display:'flex', alignItems:'center', color:'#999', fontSize:'12px', justifyContent:'center'}}>{datacontroller.getAppVersion()}</Typography>
 </Drawer>
 
   );

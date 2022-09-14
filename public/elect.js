@@ -159,28 +159,21 @@ ipcMain.handle('getData',async (event, sql) => {
 ipcMain.handle('saveData', async(event, sql)=>{ 
   return new Promise((resolve, reject) => {    
       var stmt = db.prepare(sql);
-      console.log(sql);
+      log.info("SQL:::: "+sql);
       stmt.run();
       stmt.finalize();
       if(sql.toLowerCase().indexOf("insert")==0){
-          db.all("SELECT last_insert_rowid() as id", (err, rows) => { 
-            // console.log("####");
-            // console.log(rows); 
-            // console.log("####");
+          db.all("SELECT last_insert_rowid() as id", (err, rows) => {  
             resolve((err && err.message) || rows);
           });
       }
-      else{
-        // console.log("$$$$");
-        // console.log("Saved successfully"); 
-        // console.log("$$$$");
+      else{ 
         resolve({msg:"Saved successfully"});
       }
   });
 })
 
-ipcMain.handle('getprinters', async(event)=>{
-console.log("get printers called")
+ipcMain.handle('getprinters', async(event)=>{ 
   return new Promise((resolve, reject) => {  
     let webContents = mainWindow.webContents;
     let printers = webContents.getPrinters() 
@@ -189,7 +182,6 @@ console.log("get printers called")
 })
 
 ipcMain.handle('printData', async(event, input)=>{
-  console.log(input);   
   var printerName = input.printername
   const data = input.data;
   return new Promise((resolve, reject) => {  
@@ -221,27 +213,22 @@ ipcMain.handle('printData', async(event, input)=>{
 })
 
 
-ipcMain.handle('getTicketCode', async(event)=>{
-  console.log("Date now :::: ","SELECT *  from ticket where Date(created_at) = Date('"+moment().format('YYYY-MM-DD HH:mm:ss')+"') order by ticket_code desc");
+ipcMain.handle('getTicketCode', async(event)=>{ 
   return new Promise((resolve, reject) => {     
     db.all("select * from ticket where Date(created_at) > Date('"+moment().format('YYYY-MM-DD HH:mm:ss')+"')", (err, daterows) => {
-      if(daterows.length > 0){
-
+      if(daterows.length > 0){ 
         resolve({ticketid: '',error:'System date mismatch. Please set correct date and time.', res:daterows});
       }
       else{
         db.all("SELECT *  from ticket where Date(created_at) = Date('"+moment().format('YYYY-MM-DD HH:mm:ss')+"') order by ticket_code desc", (err, rows) => {
-            if(rows.length > 0){
-              console.log(rows[0].ticket_code)
+            if(rows.length > 0){ 
               var ticketcode = rows[0].ticket_code != '' && rows[0].ticket_code !== undefined &&rows[0].ticket_code!==null ? rows[0].ticket_code : 0;
-              var count = Number(ticketcode)+1;
-              console.log(count);
+              var count = Number(ticketcode)+1; 
               resolve({ticketid: String(count).padStart(4, '0'), res:rows});
             }
             else{
               var count = 1;
-              resolve({ticketid: String(count).padStart(4, '0'), res:rows});
-              // resolve((err && err.message) || rows);
+              resolve({ticketid: String(count).padStart(4, '0'), res:rows}); 
             }
         })
       }

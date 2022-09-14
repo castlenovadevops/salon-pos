@@ -40,14 +40,12 @@ export default class TransferServiceComponent extends React.Component{
     handleTransferAlert(){
         if(this.state.tickettoTransfer.id !== undefined){ 
             if(this.props.data.ticketDetail.id === undefined){
-                console.log("IF CONDITION")
-                // this.ticketdataController.saveCurrentEmptyTicket({ticketDetail: this.props.data.ticketDetail, ticketowner: this.props.data.ticketowner, isDelete:1}).then(r=>{
-                //     this.calculateTotal();
-                // })
+                this.ticketdataController.saveCurrentEmptyTicket({ticketDetail: this.props.data.ticketDetail, ticketowner: this.props.data.ticketowner, isDelete:1}).then(r=>{
+                    this.calculateTotal();
+                })
             }
             else{
-                console.log("IF ELSE CONDITION")
-                // this.calculateTotal()
+                this.calculateTotal()
             }
         }
         else{
@@ -105,12 +103,11 @@ export default class TransferServiceComponent extends React.Component{
         else{ 
             input.isDelete =0
         }
-        console.log("CREATECURRENT TICKET CONDITION")
-        // this.ticketdataController.saveEmptyTicket(input).then(res=>{
-        //     this.setState({tickettoTransfer: res}, ()=>{
-        //         this.calculateTotal()
-        //     });
-        // });
+        this.ticketdataController.saveEmptyTicket(input).then(res=>{
+            this.setState({tickettoTransfer: res}, ()=>{
+                this.calculateTotal()
+            });
+        });
     }
 
     handleCloseTransferAlert(){

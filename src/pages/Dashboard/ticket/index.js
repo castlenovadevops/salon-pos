@@ -1204,8 +1204,9 @@ editTicket(row){
     // })
     this.setState({showPage: 'dashboard'})
     var ticketowner = this.state.staff_list.filter(t=>{ return t.id.toString() === row.technician_id});
-    console.log(row.tips_type)
-    this.setState({selectedTicket: row, isTicketEdit: true, ticketowner: ticketowner.length > 0 ? ticketowner[0] : this.state.ticketowner, dateerror: false}, function(){  
+    var ticketdetail = Object.assign({}, row);
+    ticketdetail["isDraft"] = 0;
+    this.setState({selectedTicket: ticketdetail, isTicketEdit: true, ticketowner: ticketowner.length > 0 ? ticketowner[0] : this.state.ticketowner, dateerror: false}, function(){  
         console.log(this.state.dateerror)
         window.api.invoke('log', "Edit Ticket clicked - Ticket code : "+row.ticket_code ).then(r=>{
             this.setState({showPage: 'editTicket'})
@@ -1288,8 +1289,10 @@ handleCloseTicketAlert(){
 
 handleCloseDialog(msg){
     this.setState({addDialog:false,editDialog: false}, function(){
+       
         this.getTicketList(false);
-        
+        this.setState({selectedTicket: {}, isTicketEdit: false, dateerror: false});
+        this.handlePageEvent('dashboard')
       })
 }
 
@@ -1487,14 +1490,22 @@ handleOpenTicket(){
         console.log(res)
         if(res.ticketid !== ''){
             var ticket_code = String(res.ticketid).padStart(4, '0');
-            var ticketDetail = {
-                ticket_code : ticket_code
-            }
-            this.setState({selectedTicket:ticketDetail, dateerror: false, isTicketEdit: false}, ()=>{
-                 window.api.invoke('log', "Create Ticket clicked - Ticket code : "+ticket_code ).then(r=>{
-                     this.setState({showPage:'createTicket'})
-                 })
-            });
+            window.api.getSyncUniqueId().then(sync=>{
+                var syncid = sync.syncid;
+                
+                var ticketDetail = {
+                    ticket_code : ticket_code,
+                    sync_id: syncid,
+                    sync_status:0,
+                    isDraft: 0,
+                    notes:''
+                }
+                this.setState({selectedTicket:ticketDetail, dateerror: false, isTicketEdit: false}, ()=>{
+                    window.api.invoke('log', "Create Ticket clicked - Ticket code : "+ticket_code ).then(r=>{
+                        this.setState({showPage:'createTicket'})
+                    })
+                });
+            })
         }
         else{
             this.setState({dateerror: true, isTicketEdit: false}, ()=>{
@@ -1504,11 +1515,9 @@ handleOpenTicket(){
 })
 }
 
-openCreateTicket() {
-    //console.log("openCreateTicket")
+openCreateTicket() { 
     this.setState({createTicketOption: false}, function() {
-        this.setState({addDialog:true})
-      
+        this.setState({addDialog:true}) 
     })
 }
 
@@ -1522,10 +1531,7 @@ getTicketList(loading){
         this.setState({isLoading: true})
     }
     var detail = window.localStorage.getItem('businessdetail');
-    var businessdetail = JSON.parse(detail);
-    var todayDate = Moment(new Date()).format('YYYY-MM-DD');
-
-
+    var businessdetail = JSON.parse(detail);   
     let from_date = Moment(this.state.from_date).format('YYYY-MM-DD');
     let to_date = Moment(this.state.to_date).format('YYYY-MM-DD');
 
@@ -1873,7 +1879,7 @@ render()  {
                     {/* CreateTicketModal modal starts */}
                     <Modal fullScreen open={this.state.showPage === 'createTicket' || this.state.showPage === 'editTicket' } onClose={()=>{this.handleCloseDialog("success")}}>  
  
-                    <CreateTicket reloadTicket={this.reloadTicket} saveTicket={(data, option)=>{ 
+                        <CreateTicket reloadTicket={this.reloadTicket} saveTicket={(data, option)=>{ 
                         console.log(data.ticketDetail);
                         if(data.ticketDetail.grand_total > 0){
                             this.props.saveTicket(data);
@@ -1900,7 +1906,10 @@ render()  {
                                 this.handlePageEvent('dashboard')
                             })
 
-                       }} handleCloseDialog={()=>this.handleCloseDialog("success") } owner={this.state.ticketowner}  ticketDetail={this.state.selectedTicket} 
+                       }} handleCloseDialog={()=>{
+                        this.setState({selectedTicket: {}, isTicketEdit: false, dateerror: false});
+                        this.handlePageEvent('dashboard');
+                        this.handleCloseDialog("success")} } owner={this.state.ticketowner}  ticketDetail={this.state.selectedTicket} 
                              dateerror={this.state.dateerror}
                              isTicketEdit={this.state.isTicketEdit}
                              closeTicket={()=>{
@@ -1909,11 +1918,9 @@ render()  {
                                     this.setState({selectedTicket: {}, isTicketEdit: false, dateerror: false});
                                     this.handlePageEvent('dashboard')
                                 })
-                             }} /> 
-
+                             }} />  
                              
-                             
-    </Modal> 
+                    </Modal> 
     
                       {/* <CreateTicketModal style={{zIndex:999999}} open={this.state.showPage === 'createTicket'} saveTicket={(data, ticketid)=>{
                           console.log("data from dashboard", data, ticketid);

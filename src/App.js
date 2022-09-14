@@ -20,12 +20,12 @@ import ButtonContent from './components/formComponents/Button';
 import LoadingModal from './components/Modal/loadingmodal'; 
 import TicketController from './controller/TicketController';
 
-import TicketDataController from './controller/TicketDataController';
+import TicketServiceController from './controller/TicketServiceController';
 
 // const { ipcRenderer, remote } = require('electron');
 
 export default class App extends React.Component {
-  ticketDataController = new TicketDataController();
+  ticketServiceController = new TicketServiceController();
   idleTimer;
   ticketController = new TicketController();
 
@@ -77,8 +77,7 @@ export default class App extends React.Component {
     }
   } 
 
-  componentDidMount(){ 
-    this.ticketController =   new TicketController();
+  componentDidMount(){  
     window.localStorage.removeItem('isSyncing') 
     document.title = "Astro POS (Development)"   
     this.syncData();
@@ -105,8 +104,7 @@ export default class App extends React.Component {
     window.localStorage.removeItem("isSynced")
     window.localStorage.removeItem("employeedetail")
     setTimeout(()=>{
-      this.setState({isSyncing: false}, function() {
-      
+      this.setState({isSyncing: false}, function() { 
         window.location.reload();
       })
     },100) 
@@ -114,8 +112,9 @@ export default class App extends React.Component {
   
 
   saveTicket(data){ 
-    this.ticketDataController.saveTicket(data);
-    // this.ticketController.saveTicket(data, ticketid);
+    var ticketdata = Object.assign({}, data);
+    ticketdata.ticketref_id = data.ticketDetail.sync_id;
+    this.ticketServiceController.saveTicketServices(ticketdata); 
   }
 
   onAfterSubmit(){ 

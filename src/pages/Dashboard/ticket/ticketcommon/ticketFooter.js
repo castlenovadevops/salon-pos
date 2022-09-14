@@ -7,8 +7,13 @@ import TicketTipsModal from '../TicketTips';
 import PaymentModal from '../TicketPayment';
 import NotesModal from '../notes';
 
+import AlertModal from '../../../../components/Modal/alertModal';
+import TicketServiceController from '../../../../controller/TicketServiceController';
+
 export default class TicketFooterComponent extends React.Component{
     ticketDataController = new TicketDataController();
+    ticketServiceController = new TicketServiceController();
+    
     constructor(props){
         super(props);  
         this.state = {
@@ -16,7 +21,10 @@ export default class TicketFooterComponent extends React.Component{
             addTips_popup: false,
             addNotes_popup : false,
             notes:'',
-            notesupdate: false
+            notesupdate: false,
+            alertMsg:'',
+            alertPopup: false,
+            alertTitle:''
         }
 
         this.voidTicket = this.voidTicket.bind(this);
@@ -28,6 +36,7 @@ export default class TicketFooterComponent extends React.Component{
         this.addNotes = this.addNotes.bind(this);
         this.handleCloseAddNotes = this.handleCloseAddNotes.bind(this);
         this.saveNotes= this.saveNotes.bind(this);
+        this.saveTicket = this.saveTicket.bind(this);
     }    
 
     componentDidMount(){
@@ -110,8 +119,8 @@ export default class TicketFooterComponent extends React.Component{
            var detail = Object.assign({}, this.props.data.ticketDetail);
            detail["ticketref_id"] = detail.sync_id;
            this.props.data.saveTicket()  
-                this.setState({openPayment:true,ticketDetail:detail})
-                this.props.data.setLoader(false);
+            this.setState({openPayment:true,ticketDetail:detail})
+            this.props.data.setLoader(false);
              
        }
        else{
@@ -128,6 +137,24 @@ export default class TicketFooterComponent extends React.Component{
         }
         else{
             this.setState({openPayment: false})
+        }
+    }
+
+    saveTicket(){
+        var thisobj = this;
+        var prices = this.props.data.services_taken.map(s=>Number(s.perunit_cost));
+        if(prices.indexOf(0) !== -1){
+            thisobj.setState({alertPopup:true, alertMsg:"Service Price should not be empty or zero. Please try again.", alertTitle:"Error"})
+        }
+        else{ 
+            this.ticketServiceController.saveTicket(this.props.data).then(response=>{
+                if(response.status === 200){
+                    thisobj.props.data.saveTicket('close');
+                }
+                else{
+                    thisobj.setState({alertPopup:true, alertMsg:"Error in saving Ticket. Please try again later.", alertTitle:"Error"})
+                }
+            });
         }
     }
 
@@ -180,8 +207,8 @@ export default class TicketFooterComponent extends React.Component{
                             
                             <Grid item xs={12} style={{display:'flex',height:'100%'}}> 
                                 <Grid xs={6}>
-                                    <Button style={{background:'#134163'}} className="ticketfooterbtn" onClick={()=>this.props.data.saveTicket('close')} disabled={this.props.data.isDisabled || this.props.data.services_taken.length === 0} color="secondary" fullWidth variant="contained"> 
-                                        {this.props.data.isTicketEditEdit ? 'Update' : 'Save' } 
+                                    <Button style={{background:'#134163'}} className="ticketfooterbtn" onClick={()=>this.saveTicket()} disabled={this.props.data.isDisabled || this.props.data.services_taken.length === 0} color="secondary" fullWidth variant="contained"> 
+                                        {this.props.data.isTicketEdit ? 'Update' : 'Save' } 
                                     </Button>
                                 </Grid>
                                 <Grid xs={6}>
@@ -222,7 +249,7 @@ export default class TicketFooterComponent extends React.Component{
                                     </Grid>
                                 
                                     <Grid xs={4}>
-                                        <Button style={{height:'100%', borderRadius:0}} onClick={()=>this.props.data.saveTicket('close')} disabled={this.props.data.isDisabled || this.props.data.services_taken.length === 0} color="secondary" fullWidth variant="contained"> Save </Button>
+                                        <Button style={{height:'100%', borderRadius:0}} onClick={()=>this.saveTicket()} disabled={this.props.data.isDisabled || this.props.data.services_taken.length === 0} color="secondary" fullWidth variant="contained"> Save </Button>
                                     </Grid>
                                     <Grid xs={4}>
                                         <Button style={{height:'100%', borderRadius:0}} onClick={()=>this.handleTicketPayment()} disabled={this.props.data.isDisabled  || this.props.data.services_taken.length === 0} fullWidth variant="outlined">Pay</Button> 
@@ -256,6 +283,8 @@ export default class TicketFooterComponent extends React.Component{
             {this.state.addNotes_popup &&
                 <NotesModal handleCloseAddNotes={()=>this.handleCloseAddNotes()} notes={this.state.notes} handlechangeNotes={(e)=>this.handlechangeNotes(e)} saveNotes={()=>this.saveNotes()}/>
             }
+
+            {this.state.alertPopup &&  <AlertModal title={this.state.alertTitle} msg={this.state.alertMsg} handleCloseAlert={()=>this.setState({alertPopup:false})}/>}
 
         </>
     }
