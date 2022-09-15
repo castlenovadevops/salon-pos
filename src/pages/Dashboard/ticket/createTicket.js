@@ -85,7 +85,7 @@ export default class CreateTicket extends React.Component {
                 discount_id:'',
                 discount_type:'',
                 discount_value:'',
-                discount_amt: 0
+                discount_totalamt: 0
             },
             showError: false,
             errormsg:'',
@@ -123,6 +123,7 @@ export default class CreateTicket extends React.Component {
         this.printTicket = this.printTicket.bind(this)
         this.handleClosePrint = this.handleClosePrint.bind(this)
         this.handleChangePrinter = this.handleChangePrinter.bind(this)
+        this.discountUpdated = this.discountUpdated.bind(this)
     }
 
     
@@ -140,6 +141,30 @@ export default class CreateTicket extends React.Component {
         this.props.reloadTicket(ticket)
     }
 
+    discountUpdated(msg, discount, opt){ 
+        if(opt === 'apply'){
+            var obj = {
+                discount_id: discount.dis_selected.id||'',
+                discount_type: discount.dis_selected.discount_type||'',
+                discount_value: discount.dis_selected.discount_value||0,
+                discount_totalamt: discount.discount_value||0
+            }
+            this.setState({ 
+                total_discount:  discount.discount_value,
+                grandTotal: discount.ticket_with_discount,
+                discount_id: discount.dis_selected.id,
+                discount_type: discount.dis_selected.discount_type,
+                discount_value: discount.dis_selected.discount_value,
+                discount_totalamt: discount.discount_value,
+                ticketDiscount:obj
+                }, ()=>{
+                console.log("discountUpdated",msg,discount, this.state.ticketDiscount)
+                    ////console.log(this.state.ticket_discount_selected)
+                    this.calculateTotal();
+                }); 
+        }
+        console.log("CREAET TICKET ", discount, opt)
+    }
     static getDerivedStateFromProps(nextProps, prevState){
         if(nextProps.owner!==prevState.ticketowner && !prevState.isChanged){
             return { ticketowner: nextProps.owner};
@@ -191,6 +216,17 @@ export default class CreateTicket extends React.Component {
                 if(res.length > 0)
                     this.setState({customer_detail: res[0]})
             })
+        }
+
+        if(this.state.ticketDetail.discount_id !== '' && this.state.ticketDetail.discount_id !== undefined){
+            
+            var obj = {
+                discount_id: this.state.ticketDetail.discount_id||'',
+                discount_type: this.state.ticketDetail.discount_type||'',
+                discount_value: this.state.ticketDetail.discount_value||0,
+                discount_totalamt:this.state.ticketDetail.discount_totalamt||0
+            }
+            this.setState({ticketDiscount: obj})
         }
 
         this.queryManager.getTicketServices(this.state.ticketDetail.sync_id).then(tres=>{  
@@ -368,7 +404,7 @@ export default class CreateTicket extends React.Component {
             subTotal: 0,
             taxAmount: 0,
             grandTotal: 0,
-            tipsAmount: 0
+            tipsAmount: 0, 
         };
         this.calculateTotalindividual(0, price)
     }
@@ -410,7 +446,12 @@ export default class CreateTicket extends React.Component {
             ticketdetails.grand_total = grandTotal;
             ticketdetails.subtotal = subTotal;
             ticketdetails.total_tax = taxamount;
+            ticketdetails.tips_totalamt = tipsAmount;
+            ticketdetails.discount_totalamt = this.state.ticketDiscount.discount_totalamt || 0
             
+            if(this.state.ticketDiscount.discount_id !== '' && this.state.ticketDiscount.discount_id !== undefined){
+                grandTotal = Number(grandTotal) - Number(this.state.ticketDiscount.discount_totalamt);
+            }
             this.setState({
                 retailPrice: retailPrice,
                 servicePrice: servicePrice,
@@ -483,42 +524,48 @@ export default class CreateTicket extends React.Component {
         }
 
         else {  
-            const input={ 
-                isDisabled: this.state.isPaidOnOpen,
-                isTicketEdit: this.props.isTicketEdit,
-                services_taken: this.state.services_taken,
-                ticketowner: this.state.ticketowner,
-                ticketDetail: this.state.ticketDetail,
-                employee_list: this.state.employeeList, 
-                customer_detail: this.state.customer_detail, 
-                price:{
-                    retailPrice: this.state.retailPrice,
-                    servicePrice:  this.state.servicePrice,
-                    subTotal:  this.state.subTotal,
-                    taxAmount:  this.state.taxAmount,
-                    discountAmount:  this.state.discountAmount,
-                    tipsAmount:  this.state.tipsAmount,
-                    grandTotal:  this.state.grandTotal,
-                    ticketDiscount: this.state.ticketDiscount,
-                    tipsType:this.state.tipsType,
-                    tipsPercent: this.state.tipsPercent,
-                },
+            if(this.state.services_taken.length > 0){
+                const input={ 
+                    isDisabled: this.state.isPaidOnOpen,
+                    isTicketEdit: this.props.isTicketEdit,
+                    services_taken: this.state.services_taken,
+                    ticketowner: this.state.ticketowner,
+                    ticketDetail: this.state.ticketDetail,
+                    employee_list: this.state.employeeList, 
+                    customer_detail: this.state.customer_detail, 
+                    price:{
+                        retailPrice: this.state.retailPrice,
+                        servicePrice:  this.state.servicePrice,
+                        subTotal:  this.state.subTotal,
+                        taxAmount:  this.state.taxAmount,
+                        discountAmount:  this.state.discountAmount,
+                        tipsAmount:  this.state.tipsAmount,
+                        grandTotal:  this.state.grandTotal,
+                        ticketDiscount: this.state.ticketDiscount,
+                        tipsType:this.state.tipsType,
+                        tipsPercent: this.state.tipsPercent,
+                    },
+                }
+                
+                const prices = this.state.services_taken.map(s=>Number(s.perunit_cost));
+                if(prices.indexOf(0) !== -1){
+                    thisobj.setState({alertPopup:true, alertMsg:"Service Price should not be empty or zero. Please try again.", alertTitle:"Error"})
+                }
+                else{ 
+                    this.ticketServiceController.saveTicket(input).then(response=>{ 
+                        if(response.status === 200){
+                            thisobj.saveTicket('close'); 
+                        }
+                        else{
+                            thisobj.setState({alertPopup:true, alertMsg:"Error in saving Ticket. Please try again later.", alertTitle:"Error"})
+                        }
+                    });
+                }
             }
-            
-            const prices = this.state.services_taken.map(s=>Number(s.perunit_cost));
-            if(prices.indexOf(0) !== -1){
-                thisobj.setState({alertPopup:true, alertMsg:"Service Price should not be empty or zero. Please try again.", alertTitle:"Error"})
+            else{
+                this.props.closeTicket()
             }
-            else{ 
-                this.ticketServiceController.saveTicket(input).then(response=>{ 
-                    if(response.status === 200){
-                        thisobj.saveTicket('close'); 
-                    }
-                    else{
-                        thisobj.setState({alertPopup:true, alertMsg:"Error in saving Ticket. Please try again later.", alertTitle:"Error"})
-                    }
-                });
-            }
+
         }
     }
 
@@ -1159,8 +1206,9 @@ handleChangePrinter(e) {
 }
 
 handleCloseTips(msg, tipsInput){ 
+    var thisobj = this;
         //////console.log(tipsInput);
-        if(this.props.isTicketEdit !== undefined) {
+        if(this.props.isTicketEdit) {
             //////console.log("iffffff")
             if(this.props.ticketDetail.paid_status === "paid") { 
                 if(tipsInput !== undefined){
@@ -1168,12 +1216,36 @@ handleCloseTips(msg, tipsInput){
                         this.setState({services_taken:tipsInput["service_selected"],
                         tips_type:tipsInput["tips_type"], tips_totalamt:tipsInput["tips_amount"], tips_percent: tipsInput["tips_percent"] }, function(){
                             console.log("TIPS SAEV paid:::::")
-                            console.log(this.state.services_taken);
-                    //console.log(this.state.services_taken);
+                            console.log(this.state.services_taken); 
                             this.calculateTotal();
-                            setTimeout(()=>{ 
-                                //////console.log("to be saved")
-                                this.saveTicket('')
+                            setTimeout(()=>{  
+                                var  price = { 
+                                    subTotal:  Number(this.state.subTotal),
+                                    taxAmount:  Number(this.state.taxAmount),
+                                    discountAmount:  Number(this.state.discountAmount),
+                                    tipsAmount:  Number(this.state.tipsAmount),
+                                    grandTotal: Number(this.state.grandTotal),
+                                    ticketDiscount: {
+                                        discount_id: this.state.ticketDiscount.discount_id,
+                                        discount_type: this.state.ticketDiscount.discount_type,
+                                        discount_value: this.state.ticketDiscount.discount_value,
+                                        discount_amt : this.state.ticketDiscount.discount_totalamt
+                                    },
+                                    tipsType:this.state.tipsType,
+                                    tipsPercent: this.state.tipsPercent,
+                                 }
+                     
+                                 var input = {
+                                    ticketDetail: Object.assign({}, this.state.ticketDetail), 
+                                    ticketowner: this.state.ticketowner,
+                                    customer_detail: this.state.customer_detail,
+                                    price: price,
+                                    services_taken : this.state.services_taken, 
+                                } 
+
+                                thisobj.ticketServiceController.updateClosedTicket(input).then(r=>{
+                                    thisobj.saveTicket('')
+                                })
                             },200)
 
                         }); 
@@ -1187,8 +1259,7 @@ handleCloseTips(msg, tipsInput){
                         tips_type:tipsInput["tips_type"], tips_totalamt:tipsInput["tips_amount"], tips_percent: tipsInput["tips_percent"] }, function(){
                             console.log("TIPS SAEV:::::")
                             console.log(this.state.services_taken);
-                            this.calculateTotal(); 
-
+                            this.calculateTotal();  
                         }); 
                     }
                 }
@@ -1257,7 +1328,8 @@ handleCloseTips(msg, tipsInput){
                                                                                 taxAmount:  this.state.taxAmount,
                                                                                 discountAmount:  this.state.discountAmount,
                                                                                 tipsAmount:  this.state.tipsAmount,
-                                                                                grandTotal:  this.state.grandTotal
+                                                                                grandTotal:  this.state.grandTotal,
+                                                                                ticketDiscount: this.state.ticketDiscount
                                                                             }
                                                                        }} />
                                                                     </Grid>
@@ -1271,6 +1343,7 @@ handleCloseTips(msg, tipsInput){
                                                                             employee_list: this.state.employeeList, 
                                                                             customer_detail: this.state.customer_detail,
                                                                             saveTicket: this.saveTicket,
+                                                                            reloadTicket: this.reloadTicket,
                                                                             printTicket: (option)=>{
                                                                                 this.setState({printtype:option},()=>{
                                                                                     this.printTicket();
@@ -1302,7 +1375,8 @@ handleCloseTips(msg, tipsInput){
                                                                             },
                                                                             handleCloseTips:(msg, tipsInput)=>{
                                                                                 this.handleCloseTips(msg, tipsInput);
-                                                                            }
+                                                                            },
+                                                                            discountUpdated:this.discountUpdated
                                                                         }} />
                                                                     </Grid>
                                                                 </Grid>
@@ -1335,16 +1409,29 @@ handleCloseTips(msg, tipsInput){
                                                                     }} />
                                                                 } 
 
-                                                               {this.state.selectedRowServiceindex !== -1 &&  <ServiceMenuComponent selectedRowService={this.state.selectedRowService} menulist={this.state.servicemenuList} selectedMenuIndex={this.state.selectedMenuIndex} selectMenu={(index)=>{
+                                                               {this.state.selectedRowServiceindex !== -1 &&  <ServiceMenuComponent selectedRowServiceIndex={this.state.selectedrow} selectedRowService={this.state.selectedRowService} menulist={this.state.servicemenuList} selectedMenuIndex={this.state.selectedMenuIndex} selectMenu={(index)=>{
                                                                     this.setState({selectedMenuIndex: index});
                                                                }}  data={{
                                                                 ticketowner: this.state.ticketowner,
                                                                 ticketDetail: this.state.ticketDetail,
                                                                 services_taken:this.state.services_taken,
-                                                                selectedRowServiceIndex: this.state.selectedRowServiceIndex,
+                                                                selectedRowServiceIndex: this.state.selectedRowServiceindex,
                                                                 clockin_emp_list: this.state.clockin_emp_list, 
                                                                 discountslist: this.state.discountslist,
+                                                                customer_detail: this.state.customer_detail.id !== undefined ? this.state.customer_detail : {id:''},
                                                                 taxlist: this.state.taxlist,
+                                                                price:{
+                                                                    retailPrice: this.state.retailPrice,
+                                                                    servicePrice:  this.state.servicePrice,
+                                                                    subTotal:  this.state.subTotal,
+                                                                    taxAmount:  this.state.taxAmount,
+                                                                    discountAmount:  this.state.discountAmount,
+                                                                    tipsAmount:  this.state.tipsAmount,
+                                                                    grandTotal:  this.state.grandTotal,
+                                                                    ticketDiscount: this.state.ticketDiscount,
+                                                                    tipsType:this.state.tipsType,
+                                                                    tipsPercent: this.state.tipsPercent,
+                                                                },
                                                                 selectService: this.selectService,
                                                                 onChangeTechnician: this.onChangeTechnician,
                                                                 onUpdateQuantity : this.onUpdateQuantity,
@@ -1355,7 +1442,12 @@ handleCloseTips(msg, tipsInput){
                                                                 onSelectServiceDiscount : this.selectServiceDiscount,
                                                                 selectTax: this.selectTax,
                                                                 onSplitClose: this.onSplitClose,
-                                                                reloadTicket: this.reloadTicket
+                                                                reloadTicket: this.reloadTicket,
+                                                                spliceService:()=>{
+                                                                    var services = Object.assign([], this.state.services_taken);
+                                                                    services.splice(this.state.selectedRowServiceindex, 1);
+                                                                    this.setState({services_taken: services, selectedMenuIndex: 1, selectedRowService:{}, selectedRowServiceIndex:-1});
+                                                                }
                                                                }} /> }
 
                                                             </Grid>

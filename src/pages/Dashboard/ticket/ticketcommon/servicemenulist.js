@@ -19,6 +19,12 @@ export default class ServiceMenuComponent extends React.Component{
 
         }
     }   
+
+    componentDidMount(){
+        
+        console.log("MENU COMPONENT")
+        console.log(this.props)
+    }
     
     getMenuItem(index){
         var cat = this.props.menulist[index];
@@ -116,8 +122,13 @@ export default class ServiceMenuComponent extends React.Component{
                                     console.log(tickettransfered)
                                     this.props.data.reloadTicket(tickettransfered)
                                 },
+                                spliceService:()=>{
+                                    this.props.data.spliceService()
+                                },
                                 ticketowner: this.props.data.ticketowner,
                                 ticketDetail: this.props.data.ticketDetail,
+                                price: this.props.data.price,
+                                customer_detail: this.props.data.customer_detail,
                                 services_taken : this.props.data.services_taken,
                                 selectedRowService: this.props.selectedRowService,
                                 selectedRowServiceIndex: this.props.data.selectedRowServiceIndex

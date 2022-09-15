@@ -142,6 +142,7 @@ export class QueryFunctions{
 
     getTicketServices(tid){ 
         const sql = `select ts.*, (select notes from ticketservice_requestnotes where isActive=1 and serviceref_id=ts.sync_id) as requestNotes from ticket_services as ts where ts.isActive=1 and ts.ticketref_id='`+tid+`'`; 
+        console.log(sql);
         return new Promise(async (resolve) => {
             await window.api.getData(sql).then(results=>{
                 resolve(results); 
@@ -149,6 +150,14 @@ export class QueryFunctions{
         });
     }
 
+    getTicketService(sid){ 
+        const sql = `select ts.*, (select notes from ticketservice_requestnotes where isActive=1 and serviceref_id=ts.sync_id) as requestNotes from ticket_services as ts where ts.isActive=1 and ts.sync_id='`+sid+`'`; 
+        return new Promise(async (resolve) => {
+            await window.api.getData(sql).then(results=>{
+                resolve(results); 
+            });
+        });
+    }
     getserviceDetail(serviceid){
         const sql = `select  sync_id as id,name, status, description, created_at, created_by, updated_at, updated_by, price, businessId, tax_type, cost, pricetype, sku, producttype, productcode  from services where sync_id='`+serviceid+`'`; 
         return new Promise(async (resolve) => {

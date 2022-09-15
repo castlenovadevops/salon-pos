@@ -4,12 +4,11 @@ import ModalTitleBar from '../../../../components/Modal/Titlebar';
 import LoadingModal from '../../../../components/Modal/loadingmodal';
 import { QueryFunctions } from './functions';
 import OpentTicketsComponent from './opentickets';
-
-import TicketDataController from '../../../../controller/TicketDataController';
+import TicketServiceController from '../../../../controller/TicketServiceController';
 
 export default class TransferServiceComponent extends React.Component{
     queryManager = new QueryFunctions();
-    ticketdataController = new TicketDataController();
+    ticketServiceController = new TicketServiceController();
     constructor(props){
         super(props);  
         this.state = { 
@@ -22,8 +21,7 @@ export default class TransferServiceComponent extends React.Component{
         this.onTransfer = this.onTransfer.bind(this)
         this.createCurrentTicket = this.createCurrentTicket.bind(this);
         this.handleCloseTransferAlert = this.handleCloseTransferAlert.bind(this);
-        this.handleTransferAlert = this.handleTransferAlert.bind(this);
-        this.calculateTotal = this.calculateTotal.bind(this);
+        this.handleTransferAlert = this.handleTransferAlert.bind(this); 
         this.createNewTicketWithTransfer = this.createNewTicketWithTransfer.bind(this);
     }     
     
@@ -39,15 +37,11 @@ export default class TransferServiceComponent extends React.Component{
 
     handleTransferAlert(){
         if(this.state.tickettoTransfer.id !== undefined){ 
-            if(this.props.data.ticketDetail.id === undefined){
-                console.log("IF CONDITION")
-                // this.ticketdataController.saveCurrentEmptyTicket({ticketDetail: this.props.data.ticketDetail, ticketowner: this.props.data.ticketowner, isDelete:1}).then(r=>{
-                //     this.calculateTotal();
-                // })
+            if(this.props.data.ticketDetail.isDraft === 0){ 
+                this.createCurrentTicket();
             }
-            else{
-                console.log("IF ELSE CONDITION")
-                // this.calculateTotal()
+            else{  
+                this.updateExistingTickets(); 
             }
         }
         else{
@@ -56,62 +50,331 @@ export default class TransferServiceComponent extends React.Component{
         }
     }
 
-    componentDidMount(){ 
-        console.log(this.props)
-    }
-    
-    calculateTotal(){   
-        var services = [];
-        services.push(Object.assign({}, this.props.data.selectedRowService));
-        var input = {
+    updateExistingTickets(){
+        var thisobj = this;
+        if(this.state.tickettoTransfer.id !== undefined){  
+            var transferticketprice = { 
+               subTotal:  Number(this.props.data.selectedRowService.subtotal)+Number(this.state.tickettoTransfer.subtotal),
+               taxAmount:  Number(this.props.data.selectedRowService.taxamount)+Number(this.state.tickettoTransfer.total_tax),
+               discountAmount:   Number(this.props.data.selectedRowService.discountamount)+Number(this.state.tickettoTransfer.discounts),
+               tipsAmount:   Number(this.props.data.selectedRowService.tips_amount)+Number(this.state.tickettoTransfer.total_tax),
+               grandTotal:   Number(this.props.data.selectedRowService.subtotal)+Number(this.props.data.selectedRowService.taxamount)+Number(this.props.data.selectedRowService.tips_amount)+Number(this.state.tickettoTransfer.grand_total),
+               ticketDiscount: {
+                   discount_id: this.state.tickettoTransfer.discount_id,
+                   discount_type: this.state.tickettoTransfer.discount_type,
+                   discount_value: this.state.tickettoTransfer.discount_value,
+                   discount_amt : this.state.tickettoTransfer.discount_totalamt
+               },
+               tipsType:this.state.tickettoTransfer.tips_type,
+               tipsPercent: this.state.tickettoTransfer.tips_percent,
+            }
+
+            var input = {
+               ticketDetail: Object.assign({}, this.state.tickettoTransfer), 
+               ticketowner: this.props.data.ticketowner,
+               customer_detail: this.props.data.customer_detail,
+               price: transferticketprice,
+               services_taken : this.props.data.services_taken, 
+           } 
+           
+           var existticket = { 
+            ticketDetail: Object.assign({}, this.props.data.ticketDetail), 
             ticketowner: this.props.data.ticketowner,
-            ticketDetail: this.state.tickettoTransfer,
-            services_taken : services, 
-            subTotal: this.state.tickettoTransfer.subtotal,
-            taxAmount :this.state.tickettoTransfer.total_tax,
-            discountAmount:this.state.tickettoTransfer.discounts,
-            grandTotal: this.state.tickettoTransfer.grand_total
+            customer_detail: this.props.data.customer_detail,
+            price: transferticketprice, 
+           }
+
+           
+            if(this.props.data.services_taken.length === 1){
+                existticket.ticketDetail.isDelete =1
+            }
+            else{ 
+                existticket.ticketDetail.isDelete =0
+            } 
+            this.ticketServiceController.updateExistingToTransferTicket(existticket).then(r=>{
+                this.ticketServiceController.updateExistingToTransferTicket(input).then(r=>{
+                input["ticketref_id"] = thisobj.state.tickettoTransfer.sync_id;
+                
+                console.log("CHECK SERTVICE ID CONDITION", input)
+                if(thisobj.props.data.services_taken.length === 1){ 
+                    console.log("IF ELSE SERTVICE ID CONDITION")
+                    thisobj.ticketServiceController.saveTicketServices(input).then(r=>{
+                        thisobj.props.data.closeCompletionTransfer(this.state.tickettoTransfer);
+                    });
+                }
+                else{
+                    if(thisobj.props.data.ticketDetail.isDraft === 0){  
+                        var existinput = {
+                            ticketDetail: Object.assign({}, thisobj.props.data.ticketDetail), 
+                            ticketowner: this.props.data.ticketowner,
+                            customer_detail: this.props.data.customer_detail,
+                            price: transferticketprice,
+                            services_taken : [], 
+                            ticketref_id: thisobj.props.data.ticketDetail.sync_id
+                        }  
+                        this.props.data.services_taken.forEach((row, idx)=>{
+                            console.log(idx, this.props.data.selectedRowServiceIndex)
+                            if( idx !== this.props.data.selectedRowServiceIndex){
+                                existinput.services_taken.push(row)
+                            }
+                            if(idx === this.props.data.services_taken.length-1){
+                                console.log(existinput)
+                                this.ticketServiceController.saveTicketServices(existinput).then(r=>{
+                                    this.continueTransfer(input)
+                                })
+                            }
+                        })
+
+                    }
+                    else{
+                        this.continueTransfer(input);
+                    }
+                }
+                })
+            });
+        }
+        else{
+            window.api.getTicketCode().then(res=>{ 
+                console.log(res)
+                if(res.ticketid !== ''){
+                    var ticket_code = String(res.ticketid).padStart(4, '0');
+                    window.api.getSyncUniqueId().then(sync=>{
+                        var syncid = sync.syncid;
+                        
+                        var ticketDetail = Object.assign({}, thisobj.props.data.ticketDetail);
+                        ticketDetail.ticket_code = ticket_code;
+                        ticketDetail.sync_id = syncid;
+                        ticketDetail.sync_status = 0;
+                        this.setState({tickettoTransfer: ticketDetail}, ()=>{
+                                this.TransferToNewTicket();
+                        });
+                    });
+                } 
+            }); 
+        }
+    } 
+
+    createCurrentTicket(){
+        var thisobj = this;
+        var input = {
+            ticketDetail: this.props.data.ticketDetail, 
+            ticketowner: this.props.data.ticketowner,
+            customer_detail: this.props.data.customer_detail,
+            price: this.props.data.price
+        }
+        if(this.props.data.services_taken.length === 1){
+            input.ticketDetail.isDelete =1
+        }
+        else{ 
+            input.ticketDetail.isDelete =0
         } 
-        
-        input["subTotal"] = Number(input["subTotal"]) + Number(this.props.data.selectedRowService.subtotal);
-        input["taxAmount"] = Number(input["taxAmount"]) + Number(this.props.data.selectedRowService.taxamount);
-        input["discountAmount"] = Number(input["discountAmount"]) + Number(this.props.data.selectedRowService.discountamount);
-        input["grandTotal"] =  input["subTotal"] +  input["taxAmount"]  -  input["discountAmount"];
-        if(this.props.data.selectedRowService.serviceref_id !== undefined ){
-            this.ticketdataController.updateTransferedService({id: this.props.data.selectedRowService.serviceref_id}).then(r=>{ 
-                console.log(input, this.props.data.selectedRowService.serviceref_id);
-                this.ticketdataController.saveTransferUpdateTicket(input).then(r=>{
-                    this.setState({confirmtransfer: false, transferAlert: false}, ()=>{
-                        this.props.data.closeCompletionTransfer(this.state.tickettoTransfer);
+        this.ticketServiceController.saveNewVoidTransferredTicket(input).then(r=>{ 
+            if(this.state.tickettoTransfer.id !== undefined){  
+                 var transferticketprice = { 
+                    subTotal:  Number(this.props.data.selectedRowService.subtotal)+Number(this.state.tickettoTransfer.subtotal),
+                    taxAmount:  Number(this.props.data.selectedRowService.taxamount)+Number(this.state.tickettoTransfer.total_tax),
+                    discountAmount:   Number(this.props.data.selectedRowService.discountamount)+Number(this.state.tickettoTransfer.discounts),
+                    tipsAmount:   Number(this.props.data.selectedRowService.tips_amount)+Number(this.state.tickettoTransfer.total_tax),
+                    grandTotal:   Number(this.props.data.selectedRowService.subtotal)+Number(this.props.data.selectedRowService.taxamount)+Number(this.props.data.selectedRowService.tips_amount)+Number(this.state.tickettoTransfer.grand_total),
+                    ticketDiscount: {
+                        discount_id: this.state.tickettoTransfer.discount_id,
+                        discount_type: this.state.tickettoTransfer.discount_type,
+                        discount_value: this.state.tickettoTransfer.discount_value,
+                        discount_amt : this.state.tickettoTransfer.discount_totalamt
+                    },
+                    tipsType:this.state.tickettoTransfer.tips_type,
+                    tipsPercent: this.state.tickettoTransfer.tips_percent,
+                 }
+
+                 var input = {
+                    ticketDetail: Object.assign({}, this.state.tickettoTransfer), 
+                    ticketowner: this.props.data.ticketowner,
+                    customer_detail: this.props.data.customer_detail,
+                    price: transferticketprice,
+                    services_taken : this.props.data.services_taken, 
+                }  
+                 this.ticketServiceController.updateExistingToTransferTicket(input).then(r=>{
+                    input["ticketref_id"] = thisobj.state.tickettoTransfer.sync_id;
+                    
+                    console.log("CHECK SERTVICE ID CONDITION")
+                    if(thisobj.props.data.services_taken.length === 1){ 
+                        console.log("IF ELSE SERTVICE ID CONDITION")
+                        thisobj.ticketServiceController.saveTicketServices(input).then(r=>{
+                            thisobj.props.data.closeCompletionTransfer(this.state.tickettoTransfer);
+                        });
+                    }
+                    else{
+                        if(thisobj.props.data.ticketDetail.isDraft === 0){  
+                            var existinput = {
+                                ticketDetail: Object.assign({}, thisobj.props.data.ticketDetail), 
+                                ticketowner: this.props.data.ticketowner,
+                                customer_detail: this.props.data.customer_detail,
+                                price: transferticketprice,
+                                services_taken : [], 
+                                ticketref_id: thisobj.props.data.ticketDetail.sync_id
+                            }  
+                            this.props.data.services_taken.forEach((row, idx)=>{
+                                console.log(idx, this.props.data.selectedRowServiceIndex)
+                                if( idx !== this.props.data.selectedRowServiceIndex){
+                                    existinput.services_taken.push(row)
+                                }
+                                if(idx === this.props.data.services_taken.length-1){
+                                    console.log(existinput)
+                                    this.ticketServiceController.saveTicketServices(existinput).then(r=>{
+                                        this.continueTransfer(input)
+                                    })
+                                }
+                            })
+
+                        }
+                        else{
+                            this.continueTransfer(input);
+                        }
+                    }
+                 })
+            }
+            else{
+                window.api.getTicketCode().then(res=>{
+                    if(res.ticketid !== ''){
+                        var ticket_code = String(res.ticketid).padStart(4, '0');
+                        window.api.getSyncUniqueId().then(sync=>{
+                            var syncid = sync.syncid;
+                            
+                            var ticketDetail = Object.assign({}, thisobj.props.data.ticketDetail);
+                            ticketDetail.ticket_code = ticket_code;
+                            ticketDetail.sync_id = syncid;
+                            ticketDetail.id = syncid;
+                            ticketDetail.ticketref_id = syncid;
+                            ticketDetail.sync_status = 0;
+                            console.log("NEW TICKET CREATIONG ") 
+                            console.log(ticketDetail)
+                            this.setState({tickettoTransfer: ticketDetail, ticketref_id: syncid}, ()=>{ 
+                                    this.TransferToNewTicket();
+                            });
+                        });
+                    } 
+                }); 
+            }
+        }); 
+    }
+
+
+    continueTransfer(input){
+        var thisobj = this;
+        console.log("CONTINUE TRANSFER START", input);
+        if((input.ticketDetail.isDraft === 1 || input.ticketDetail.isDraft === undefined) && thisobj.props.data.selectedRowService.serviceref_id !== undefined && thisobj.props.data.selectedRowService.serviceref_id !==''){
+            thisobj.ticketServiceController.updateTicketServiceToNewTicket({
+                table_name:'ticket_services',
+                ticketref_id: input.ticketref_id,
+                query_value: thisobj.props.data.selectedRowService.serviceref_id ,
+                query_field:'sync_id',
+                data:{ticketref_id: input.ticketref_id} 
+            }).then(r=>{
+                console.log("TAX UPDATEING") 
+                thisobj.ticketServiceController.updateTicketServiceToNewTicket({
+                    table_name:'ticketservice_taxes',
+                    ticketref_id: input.ticketref_id,
+                    query_value: thisobj.props.data.selectedRowService.serviceref_id ,
+                    query_field:'serviceref_id',
+                    data:{ticketref_id: input.ticketref_id} 
+                }).then(r=>{
+                    console.log("NOTES UPDATEING") 
+                    thisobj.ticketServiceController.updateTicketServiceToNewTicket({
+                        table_name:'ticketservice_requestnotes',
+                        ticketref_id: input.ticketref_id,
+                        query_value: thisobj.props.data.selectedRowService.serviceref_id ,
+                        query_field:'serviceref_id',
+                        data:{ticketref_id: input.ticketref_id} 
+                    }).then(r=>{
+                        console.log("COMMISSIOn UPDATEING") 
+                        thisobj.ticketServiceController.updateTicketServiceCommissionToNewTicket({
+                            table_name:'employee_commission_detail',
+                            ticketref_id: input.ticketref_id,
+                            employeeId: thisobj.props.data.selectedRowService.employee_id,
+                            query_value: thisobj.props.data.selectedRowService.serviceref_id ,
+                            query_field:'ticketserviceref_id',
+                            data:{ticketref_id: input.ticketref_id} 
+                        }).then(r=>{ 
+                            thisobj.props.data.closeCompletionTransfer(thisobj.props.data.ticketDetail);
+                        })
                     })
                 })
             })
         }
-        else{
-            this.ticketdataController.saveTransferUpdateTicket(input).then(r=>{
-                this.setState({confirmtransfer: false, transferAlert: false}, ()=>{
-                    this.props.data.closeCompletionTransfer(this.state.tickettoTransfer);
-                })
+        else{ 
+            input.services_taken= []
+            input.services_taken.push(thisobj.props.data.selectedRowService)
+            console.log("CONTINUE TRANSFER", input);
+            thisobj.ticketServiceController.saveTicketServices(input).then(r=>{
+                thisobj.props.data.spliceService();
             })
         }
-
-    }   
-
-    createCurrentTicket(){
-        var input = {ticketDetail: this.props.data.ticketDetail, ticketowner: this.props.data.ticketowner}
-        if(this.props.data.services_taken.length === 1){
-            input.isDelete =1
-        }
-        else{ 
-            input.isDelete =0
-        }
-        console.log("CREATECURRENT TICKET CONDITION")
-        // this.ticketdataController.saveEmptyTicket(input).then(res=>{
-        //     this.setState({tickettoTransfer: res}, ()=>{
-        //         this.calculateTotal()
-        //     });
-        // });
     }
+
+    TransferToNewTicket(){
+        console.log("TRANSFER NEW TICKET")
+        var thisobj  = this;
+        var ticketDetail = Object.assign({}, this.state.tickettoTransfer);
+        ticketDetail.isDelete = 0 
+        var transferticketprice = { 
+            subTotal:  Number(this.props.data.selectedRowService.subtotal),
+            taxAmount:  Number(this.props.data.selectedRowService.taxamount),
+            discountAmount:   Number(this.props.data.selectedRowService.discountamount),
+            tipsAmount:   Number(this.props.data.selectedRowService.tips_amount),
+            grandTotal:   Number(this.props.data.selectedRowService.subtotal)+Number(this.props.data.selectedRowService.taxamount)+Number(this.props.data.selectedRowService.tips_amount),
+            ticketDiscount: {
+                discount_id: this.state.tickettoTransfer.discount_id || '',
+                discount_type: this.state.tickettoTransfer.discount_type||'',
+                discount_value: this.state.tickettoTransfer.discount_value||'',
+                discount_amt : this.state.tickettoTransfer.discount_totalamt||0
+            },
+            tipsType:this.state.tickettoTransfer.tips_type || '',
+            tipsPercent: this.state.tipsPercent || '',
+         }
+        var input = {
+            ticketDetail: ticketDetail, 
+            ticketowner: this.props.data.ticketowner,
+            customer_detail: this.props.data.customer_detail,
+            price: transferticketprice,
+            ticketref_id: ticketDetail.sync_id
+        } 
+        this.ticketServiceController.SaveTransferToNewTicket(input).then(r=>{ 
+
+            var serviceinput = {
+                ticketref_id: this.state.tickettoTransfer.sync_id,
+                services_taken: this.props.data.services_taken,
+                ticketDetail: this.state.tickettoTransfer
+            }
+            if(thisobj.props.data.services_taken.length === 1){ 
+                console.log("IF ELSE SERTVICE ID CONDITION")
+                this.ticketServiceController.saveTicketServices(serviceinput).then(r=>{
+                    this.props.data.closeCompletionTransfer(this.state.tickettoTransfer)
+                })
+            }
+            else{
+                var existinput = {
+                    ticketDetail: Object.assign({}, thisobj.props.data.ticketDetail), 
+                    ticketowner: this.props.data.ticketowner,
+                    customer_detail: this.props.data.customer_detail,
+                    price: transferticketprice,
+                    services_taken : [], 
+                    ticketref_id: thisobj.props.data.ticketDetail.sync_id
+                }  
+                this.props.data.services_taken.forEach((row, idx)=>{
+                    console.log(idx, this.props.data.selectedRowServiceIndex)
+                    if( idx !== this.props.data.selectedRowServiceIndex){
+                        existinput.services_taken.push(row)
+                    }
+                    if(idx === this.props.data.services_taken.length-1){
+                        console.log(existinput)
+                        this.ticketServiceController.saveTicketServices(existinput).then(r=>{
+                           this.continueTransfer(input);
+                        })
+                    }
+                })
+            }
+        })
+    } 
 
     handleCloseTransferAlert(){
         this.setState({transferAlert: false, confirmtransfer: false})

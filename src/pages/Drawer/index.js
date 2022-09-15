@@ -96,9 +96,9 @@ export default function DrawerContent(
         <ListItem button  onClick={()=>onhandlePageevent('empreport')}>
                     <ListItemIcon><Assessment /></ListItemIcon> <ListItemText primary="Report" /></ListItem>
         
-        <ListItem button sx={{ pl: 4 }} onClick={()=>onhandlePageevent('syncdata')}> 
+        {/* <ListItem button sx={{ pl: 4 }} onClick={()=>onhandlePageevent('syncdata')}> 
             <ListItemIcon><Sync /></ListItemIcon> <ListItemText primary="Sync" />
-        </ListItem>
+        </ListItem> */}
          <ListItem button onClick={onlogout}>
                     <ListItemIcon><ExitToApp /></ListItemIcon> <ListItemText primary="Logout" /></ListItem>
     </List>

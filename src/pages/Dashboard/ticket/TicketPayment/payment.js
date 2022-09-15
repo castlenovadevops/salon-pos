@@ -768,7 +768,7 @@ getEmployeeName(id){
             window.api.getSyncUniqueId().then(psync=>{
                 var syncid = psync.syncid;
                 var payment_input = {
-                    ticket_id : ticketDetail.id,
+                    ticket_id : ticketDetail.id ||  ticketDetail.sync_id,
                     pay_mode : mode,
                     payment_status : 'Sucess',
                     paid_at : Moment().format('YYYY-MM-DDTHH:mm:ss'),
@@ -840,11 +840,11 @@ getEmployeeName(id){
                                 <Grid item xs={12} style={{padding: 10, border:'1px solid #f0f0f0',height:'350px'}}>
                                     <Typography style={{margin: 10}} id="modal-modal-title" variant="subtitle2" align="left"> Pay For This Order</Typography>
 
-                                    <Typography style={{margin: 10}} id="modal-modal-title" variant="subtitle2" align="left"> Order Subtotal : ${this.state.ticketDetail.subtotal}</Typography>
-                                    <Typography style={{margin: 10}} id="modal-modal-title" variant="subtitle2" align="left"> Tips : ${this.state.ticketDetail.tips_totalamt}</Typography>
-                                    <Typography style={{margin: 10}} id="modal-modal-title" variant="subtitle2" align="left"> Discount : ${this.state.ticketDetail.discount_totalamt}</Typography>
-                                    <Typography style={{margin: 10}} id="modal-modal-title" variant="subtitle2" align="left"> Tax :  ${this.state.ticketDetail.total_tax} </Typography>
-                                    <Typography style={{margin: 10}} id="modal-modal-title" variant="subtitle2" align="left"> Total : ${this.state.ticketDetail.grand_total}</Typography>
+                                    <Typography style={{margin: 10}} id="modal-modal-title" variant="subtitle2" align="left"> Order Subtotal : ${Number(this.state.ticketDetail.subtotal).toFixed(2)}</Typography>
+                                    <Typography style={{margin: 10}} id="modal-modal-title" variant="subtitle2" align="left"> Tips : ${Number(this.state.ticketDetail.tips_totalamt).toFixed(2)}</Typography>
+                                    <Typography style={{margin: 10}} id="modal-modal-title" variant="subtitle2" align="left"> Discount : ${Number(this.state.ticketDetail.discount_totalamt).toFixed(2)}</Typography>
+                                    <Typography style={{margin: 10}} id="modal-modal-title" variant="subtitle2" align="left"> Tax :  ${Number(this.state.ticketDetail.total_tax).toFixed(2)} </Typography>
+                                    <Typography style={{margin: 10}} id="modal-modal-title" variant="subtitle2" align="left"> Total : ${Number(this.state.ticketDetail.grand_total).toFixed(2)}</Typography>
                                     {/* <Typography style={{margin: 10}} id="modal-modal-title" variant="subtitle2" align="left"> Amount Remaining</Typography> */}
                                     {/* <Typography style={{margin: 10}} id="modal-modal-title" variant="subtitle2" align="left"> Payment 1</Typography> */}
 

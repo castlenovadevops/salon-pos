@@ -6,14 +6,16 @@ import TicketDataController from '../../../../controller/TicketDataController';
 import TicketTipsModal from '../TicketTips';
 import PaymentModal from '../TicketPayment';
 import NotesModal from '../notes';
+import CombineTicket from './combineticket';
 
 import AlertModal from '../../../../components/Modal/alertModal';
 import TicketServiceController from '../../../../controller/TicketServiceController';
-
+import TicketDiscount from './ticketDiscount';
+import { QueryFunctions } from './functions';
 export default class TicketFooterComponent extends React.Component{
     ticketDataController = new TicketDataController();
     ticketServiceController = new TicketServiceController();
-    
+    queryManager = new QueryFunctions();
     constructor(props){
         super(props);  
         this.state = {
@@ -24,7 +26,10 @@ export default class TicketFooterComponent extends React.Component{
             notesupdate: false,
             alertMsg:'',
             alertPopup: false,
-            alertTitle:''
+            alertTitle:'',
+            isCombine: false,
+            discountPopup: false,
+            discountsList : []
         }
 
         this.voidTicket = this.voidTicket.bind(this);
@@ -37,12 +42,20 @@ export default class TicketFooterComponent extends React.Component{
         this.handleCloseAddNotes = this.handleCloseAddNotes.bind(this);
         this.saveNotes= this.saveNotes.bind(this);
         this.saveTicket = this.saveTicket.bind(this);
+        this.addDiscounts = this.addDiscounts.bind(this);
     }    
 
     componentDidMount(){
         if(this.props.data.ticketDetail !== undefined){
             this.setState({notes: this.props.data.ticketDetail.notes, notesupdate: false})
         }
+        this.queryManager.getAllDiscounts(this.ticketServiceController.getBusinessId()).then(list=>{
+            this.setState({discountsList: list})
+        })
+    }
+
+    addDiscounts(){
+        this.setState({discountPopup: true})
     }
 
     
@@ -115,19 +128,50 @@ export default class TicketFooterComponent extends React.Component{
 
     handleTicketPayment(){ 
         this.props.data.setLoader(true);
-       if(this.props.data.isTicketEdit){
-           var detail = Object.assign({}, this.props.data.ticketDetail);
+        var detail = Object.assign({}, this.props.data.ticketDetail);
            detail["ticketref_id"] = detail.sync_id;
-           this.props.data.saveTicket()  
-            this.setState({openPayment:true,ticketDetail:detail})
-            this.props.data.setLoader(false);
+           var input = {
+               ticketDetail: Object.assign({}, this.props.data.ticketDetail), 
+               ticketowner: this.props.data.ticketowner,
+               customer_detail: this.props.data.customer_detail,
+               price: this.props.data.price,
+               services_taken : this.props.data.services_taken, 
+               ticketDiscount: this.props.data.price.ticketDiscount,
+               ticketref_id: detail["ticketref_id"]
+           } 
+           this.ticketServiceController.saveTicket(input).then(r=>{  
+                this.ticketServiceController.saveTicketServices(input).then(r=>{ 
+                    this.setState({openPayment:true,ticketDetail:detail})
+                    this.props.data.setLoader(false);
+                })
+           })
+    //    if(this.props.data.isTicketEdit){
+    //        var detail = Object.assign({}, this.props.data.ticketDetail);
+    //        detail["ticketref_id"] = detail.sync_id;
+    //        var input = {
+    //            ticketDetail: Object.assign({}, this.props.data.ticketDetail), 
+    //            ticketowner: this.props.data.ticketowner,
+    //            customer_detail: this.props.data.customer_detail,
+    //            price: this.props.data.price,
+    //            services_taken : this.props.data.services_taken, 
+    //            ticketDiscount: this.props.data.price.ticketDiscount
+    //        } 
+    //        this.ticketServiceController.saveTicket(input).then(r=>{ 
+    //             this.ticketServiceController.saveTicketServices(input).then(r=>{ 
+    //                 this.setState({openPayment:true,ticketDetail:detail})
+    //                 this.props.data.setLoader(false);
+    //             })
+    //        })
              
-       }
-       else{
-            this.props.data.saveTicket()  
-            this.setState({openPayment:true,ticketDetail:detail})
-            this.props.data.setLoader(false); 
-       }
+    //    }
+    //    else{
+    //         this.ticketServiceController.saveTicket(input).then(r=>{ 
+    //             this.ticketServiceController.saveTicketServices(input).then(r=>{ 
+    //                 this.setState({openPayment:true,ticketDetail:detail})
+    //                 this.props.data.setLoader(false);
+    //             })
+    //         })  
+    //    }
     }
 
 
@@ -157,6 +201,13 @@ export default class TicketFooterComponent extends React.Component{
             });
         }
     }
+
+    getOpenTicketsCombine(){
+        console.log("OPEN COMBINE")
+        this.setState({isCombine: true})
+    }
+
+
 
     render(){
         return <> 
@@ -286,6 +337,35 @@ export default class TicketFooterComponent extends React.Component{
 
             {this.state.alertPopup &&  <AlertModal title={this.state.alertTitle} msg={this.state.alertMsg} handleCloseAlert={()=>this.setState({alertPopup:false})}/>}
 
+            {this.state.isCombine && <CombineTicket data={{
+                                closeCombine: ()=>{
+                                    this.setState({isCombine:false})
+                                },
+                                closeCompletionCombine:(tickettransfered)=>{
+                                    console.log("TICKET TRANSFER COMPLETION")
+                                    console.log(tickettransfered)
+                                    this.props.data.reloadTicket(tickettransfered)
+                                }, 
+                                ticketowner: this.props.data.ticketowner,
+                                ticketDetail: this.props.data.ticketDetail,
+                                price: this.props.data.price,
+                                customer_detail: this.props.data.customer_detail,
+                                services_taken : this.props.data.services_taken,
+                                selectedRowService: this.props.selectedRowService,
+                                selectedRowServiceIndex: this.props.data.selectedRowServiceIndex
+                            }}/>}
+
+            {this.state.discountPopup && <TicketDiscount data={{
+                ticketowner: this.props.data.ticketowner,
+                ticketDetail: this.props.data.ticketDetail,
+                price: this.props.data.price,
+                customer_detail: this.props.data.customer_detail,
+                discountsList: this.state.discountsList,
+                handleCloseDiscount:()=>{
+                    this.setState({discountPopup: false})
+                },
+                discountUpdated:this.props.data.discountUpdated
+            }} />}
         </>
     }
 }

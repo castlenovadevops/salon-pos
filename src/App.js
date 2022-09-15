@@ -115,7 +115,7 @@ export default class App extends React.Component {
     var ticketdata = Object.assign({}, data);
     ticketdata.ticketref_id = data.ticketDetail.sync_id;
     this.ticketServiceController.saveTicketServices(ticketdata); 
-  }
+  } 
 
   onAfterSubmit(){ 
     this.setState({isLoaded:true, isAutoSyncing: false})

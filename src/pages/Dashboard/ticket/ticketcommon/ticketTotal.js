@@ -43,7 +43,7 @@ export default class TicketTotalComponent extends React.Component{
 
                 <Grid item xs={12} style={{display:'flex'}}>
                     <Grid item xs={6} style={{border:'2px solid #f0f0f0', borderBottom:'0', borderRight:0}}><Typography style={amtDetail} id="modal-modal-title" variant="subtitle2" align="left">Discount </Typography></Grid>
-                    <Grid item xs={6} style={{border:'2px solid #f0f0f0', borderBottom:'0'}}><Typography style={disDetail} id="modal-modal-title" variant="subtitle2" align="right"> - ${Number(this.props.data.price.discountAmount).toFixed(2)}  </Typography></Grid>
+                    <Grid item xs={6} style={{border:'2px solid #f0f0f0', borderBottom:'0'}}><Typography style={disDetail} id="modal-modal-title" variant="subtitle2" align="right"> - ${Number(this.props.data.price.ticketDiscount.discount_totalamt).toFixed(2)}  </Typography></Grid>
                 </Grid>
 
                 <Grid item xs={12} style={{display:'flex'}}>

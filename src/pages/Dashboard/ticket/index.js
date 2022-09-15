@@ -545,6 +545,13 @@ constructor(props){
     this.handlechangeFromDate = this.handlechangeFromDate.bind(this);
     this.handlechangeToDate = this.handlechangeToDate.bind(this);
     this.getClosedTicketsByDate = this.getClosedTicketsByDate.bind(this);
+    this.reloadTicket = this.reloadTicket.bind(this)
+}
+
+
+
+reloadTicket(ticket){
+    this.editTicket(ticket);
 }
 
 handlechangeFromDate(e){
@@ -1205,7 +1212,7 @@ editTicket(row){
     this.setState({showPage: 'dashboard'})
     var ticketowner = this.state.staff_list.filter(t=>{ return t.id.toString() === row.technician_id});
     var ticketdetail = Object.assign({}, row);
-    ticketdetail["isDraft"] = 0;
+    ticketdetail["isDraft"] = 1;
     this.setState({selectedTicket: ticketdetail, isTicketEdit: true, ticketowner: ticketowner.length > 0 ? ticketowner[0] : this.state.ticketowner, dateerror: false}, function(){  
         console.log(this.state.dateerror)
         window.api.invoke('log', "Edit Ticket clicked - Ticket code : "+row.ticket_code ).then(r=>{
@@ -1879,7 +1886,9 @@ render()  {
                     {/* CreateTicketModal modal starts */}
                     <Modal fullScreen open={this.state.showPage === 'createTicket' || this.state.showPage === 'editTicket' } onClose={()=>{this.handleCloseDialog("success")}}>  
  
-                        <CreateTicket reloadTicket={this.reloadTicket} saveTicket={(data, option)=>{ 
+                        <CreateTicket reloadTicket={this.reloadTicket} updateClosedTicket={(data)=>{
+                            this.props.updateClosedTicket(data);
+                        }} saveTicket={(data, option)=>{ 
                         console.log(data.ticketDetail);
                         if(data.ticketDetail.grand_total > 0){
                             this.props.saveTicket(data);
