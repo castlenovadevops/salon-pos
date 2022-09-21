@@ -7,7 +7,7 @@ import ListItemText from '@material-ui/core/ListItemText';
 import Collapse from '@mui/material/Collapse'; 
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
-import {Tag, Home, Receipt,People, DynamicFeed, Label, AttachMoney, MoneyOff, Tune, Sync, Group, Loyalty,  ExitToApp, Dashboard, Assessment, Settings, Print  } from '@mui/icons-material';
+import {Tag, Home, Receipt,People, DynamicFeed, Label, AttachMoney, MoneyOff, Tune, Sync, Group, Loyalty,  ExitToApp, Dashboard, Assessment, Settings, Print, Payment  } from '@mui/icons-material';
 import { ListItemIcon, Typography } from '@mui/material';
 import DataManager from '../../controller/datacontroller';
 
@@ -40,6 +40,8 @@ export default function DrawerContent(
                     <ListItemIcon><Home /></ListItemIcon> <ListItemText primary="Home" /></ListItem>
         <ListItem button> 
                     <ListItemIcon><Receipt /></ListItemIcon> <ListItemText onClick={()=>onhandlePageevent('transactions')} primary="Transaction" /></ListItem>
+        <ListItem button> 
+                    <ListItemIcon><Payment /></ListItemIcon> <ListItemText onClick={()=>onhandlePageevent('batch')} primary="Batch Reports" /></ListItem>
         <ListItem button onClick={()=>onhandlePageevent('employees')}>
                     <ListItemIcon><People /></ListItemIcon> <ListItemText primary="Employees" onClick={()=>onhandlePageevent('employees')}/></ListItem>
         {/* <ListItem button> <ListItemText primary="Inventory" /></ListItem>

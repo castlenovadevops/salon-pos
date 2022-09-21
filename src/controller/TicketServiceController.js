@@ -440,7 +440,7 @@ export default class TicketServiceController {
             // Service Commission Calculation for Employee for ticket services - Start  
 
             this.queryManager.getDefaultCommission(this.getBusinessId()).then(comm=>{
-                var commissiondetail= comm.length > 0 ? {owner_percentage:comm[0].owner_percentage, emp_percentage: comm[0].emp_percentage } : {owner_percentage:100, employee_percentage: 0 };
+                var commissiondetail= comm.length > 0 ? {owner_percentage:comm[0].owner_percentage, emp_percentage: comm[0].emp_percentage } : {owner_percentage:100, emp_percentage: 0 };
 
                 this.queryManager.getEmployeeCommission(service.employee_id, this.getBusinessId()).then(empcomm=>{
                     if(empcomm.length > 0){

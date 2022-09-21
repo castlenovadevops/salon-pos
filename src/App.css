@@ -301,3 +301,14 @@ button{
     width:45%;
   } */
 }
+
+
+.batchmodal .MuiPaper-root{
+  color:#000;
+  width:100% !important;
+  max-width: 100% !important;
+}
+
+.batchmodal .MuiGrid-item{
+  color:#000;
+}

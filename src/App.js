@@ -8,6 +8,8 @@ import DashboardApp from './pages/Dashboard';
 import SyncData from './pages/SyncData'; 
 // import IdleTimer from 'react-idle-timer';
 
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
 import TicketManager from './controller/TicketManager'; 
 import DataManager from './controller/datacontroller'
 import NetworkManager from './utils/networkmanager'; 
@@ -19,7 +21,7 @@ import IdleTimer from 'react-idle-timer';
 import ButtonContent from './components/formComponents/Button';
 import LoadingModal from './components/Modal/loadingmodal'; 
 import TicketController from './controller/TicketController';
-
+import BatchSettleComponent from './pages/Dashboard/ticket/ticketcommon/batchSettle';
 import TicketServiceController from './controller/TicketServiceController';
 
 // const { ipcRenderer, remote } = require('electron');
@@ -48,6 +50,8 @@ export default class App extends React.Component {
       isLoading: false,
       dataManager: new DataManager(), 
       isAutoSyncing: false, 
+      batchSettle: false,
+      msgToast: false
     };
     this.onAfterSubmit = this.onAfterSubmit.bind(this); 
     this.dataManager = new DataManager();     
@@ -121,6 +125,10 @@ export default class App extends React.Component {
     this.setState({isLoaded:true, isAutoSyncing: false})
   } 
 
+  onBatchSettle(){
+      this.setState({batchSettle: true})
+  }
+
   render() { 
     return (
       <ThemeConfig> 
@@ -140,9 +148,31 @@ export default class App extends React.Component {
 
       {this.state.isAutoSyncing && <div style={{display:'none'}}><SyncData onAfterSync={()=>this.setState({isSyncing:false},()=>{this.onAfterSubmit()})}/></div>}
 
-      {isUserLogged()  && !this.state.isSyncing && <DashboardApp saveTicket ={(data, ticketid)=>{console.log("app initial dashboard app component", data);
+      {isUserLogged()  && !this.state.isSyncing && <DashboardApp onBatchSettle={()=>{
+        this.onBatchSettle();
+      }} 
+      saveTicket ={(data, ticketid)=>{console.log("app initial dashboard app component", data);
         this.saveTicket(data, ticketid)}} />} 
       
+
+      {isUserLogged() && this.state.batchSettle && <BatchSettleComponent onCompleteBatch={()=>{
+        this.setState({msgToast: true}, ()=>{
+          this.setState({batchSettle: false})
+        });
+      }}
+      closeBatchDialog={()=>{
+        this.setState({batchSettle: false})
+      }} />}
+
+        
+            
+
+      <Snackbar autoHideDuration={1000} open ={this.state.msgToast} style={{width:'50%', marginTop: 50}} anchorOrigin={{ vertical: "top", horizontal:  "center" }}  onClose={() => this.setState({isSuccess: false})}>
+        <MuiAlert elevation={6}  variant="filled" severity="success" sx={{ width: '50%' }} style={{background: '#134163', color: 'white'}}>
+        Batch settled successfully.
+        </MuiAlert>
+      </Snackbar>
+
 
     <Dialog
         open={this.state.perAlert_Open}

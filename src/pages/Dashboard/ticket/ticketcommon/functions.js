@@ -187,6 +187,15 @@ export class QueryFunctions{
         });
     }
 
+    getAllTicketsWithoutTips(businessid){
+        const sql = "select  t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value,t.sync_id, t.discount_totalamt, t.sync_id,c.name as customer_name from ticket as t left join customers as c on t.customer_id=c.sync_id where t.businessId= '"+businessid+"' and t.isDelete!=1 and t.paid_status='paid' and (t.tips_totalamt is null or t.tips_totalamt < 1 or t.tips_totalamt = '')"; 
+        return new Promise(async (resolve) => {
+            await window.api.getData(sql).then(results=>{
+                resolve(results); 
+            });
+        });
+    }
+
     getTicketByTicketCode(code){
         const sql = "select * from ticket where ticket_code='"+code+"' and Date(created_at)=Date('"+moment().format('YYYY-MM-DD HH:mm:ss')+"')";
         return new Promise(async (resolve) => {

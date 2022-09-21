@@ -1801,6 +1801,13 @@ render()  {
                            }
 
                             {(this.state.value ==1) && <div style={{position:'relative', height:'100%'}}>
+
+                                    <div style={{display:'flex', alignItems:'right', justifyContent:'flex-end', marginRight:50, position:'absolute', right:0, padding:'8px 12px', zIndex:999}}>  
+                                        <Button  variant='contained' color={'primary'} onClick={()=>{
+                                            this.props.onBatchSettle();
+                                        }}>Batch Settle</Button>
+                                    </div> 
+
                                     <div style={{display:'flex', alignItems:'right', justifyContent:'flex-end', marginRight: 10, position:'absolute', right:0, zIndex:999}}> 
                                         <IconButton onClick={()=>{
                                             this.setState({showDatePopup: true})
