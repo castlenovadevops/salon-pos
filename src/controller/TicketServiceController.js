@@ -383,8 +383,8 @@ export default class TicketServiceController {
                                     sync_id: csyncid + "ownercommission",
                                     isActive:1,
                                     totalamount:service.qty * service.perunit_cost,
-                                    owner_percent:commissiondetail.owner_percent,
-                                    emp_percent:commissiondetail.emp_percent
+                                    owner_percent:commissiondetail.owner_percentage,
+                                    emp_percent:commissiondetail.emp_percentage
                                 }   
                                 thisobj.saveData({ table_name: 'employee_commission_detail', data: emp_input }).then(res => { 
                                     this.saveServiceEmpCommission(idx, input, resolve);
@@ -467,8 +467,8 @@ export default class TicketServiceController {
                             sync_id: csyncid + "service",
                             isActive:1,
                             totalamount:service.qty * service.perunit_cost,
-                            owner_percent:commissiondetail.owner_percent,
-                            emp_percent:commissiondetail.emp_percent
+                            owner_percent:commissiondetail.owner_percentage,
+                            emp_percent:commissiondetail.emp_percentage
                         }   
                         thisobj.saveData({ table_name: 'employee_commission_detail', data: emp_input }).then(res => { 
                             this.saveServiceTipsCommission(idx, input, resolve)

@@ -210,4 +210,13 @@ export default class QueryManager extends DataManager{
             resolve(response);
         }
     }
+
+    getEmployeeName(id){
+        return new Promise(async (resolve) => {
+            var sql = `select * from users where id=`+id;   
+            this.getData(sql).then(r=>{
+                this.getPaymentMethods(0, r, [],resolve)
+            })
+        });
+    }
 }
