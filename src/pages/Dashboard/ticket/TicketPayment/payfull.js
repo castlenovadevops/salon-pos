@@ -101,11 +101,18 @@ export default class TicketFullPayment extends React.Component  {
                     </Grid>}
                     
                 
-                    {this.paymentController.getPaymentValues(Math.ceil(Number(this.props.data.topayamount))).map(t=>{
+                    {Math.ceil(Number(this.props.data.topayamount)).toFixed(2) ===  Number(this.props.data.topayamount).toFixed(2) &&  this.paymentController.getPaymentValues(Math.ceil(Number(this.props.data.topayamount)), 3).map(t=>{
                         return <Grid item xs={3} style={{display:'flex'}}>
                                     <Typography  id="modal-modal-title" variant="subtitle"  style={{display:'flex', alignItems:'center', justifyContent:'center',"color":'#000', fontWeight:'700', width:'200px', height:'70px', border:'1px solid #134163', margin:10,borderRadius:10, cursor:'pointer'}} align="left">{Number(t).toFixed(2)}</Typography>
                                 </Grid>
                     })} 
+                    
+                    {Math.ceil(Number(this.props.data.topayamount)).toFixed(2) !==  Number(this.props.data.topayamount).toFixed(2) &&  this.paymentController.getPaymentValues(Math.ceil(Number(this.props.data.topayamount)), 2).map(t=>{
+                        return <Grid item xs={3} style={{display:'flex'}}>
+                                    <Typography  id="modal-modal-title" variant="subtitle"  style={{display:'flex', alignItems:'center', justifyContent:'center',"color":'#000', fontWeight:'700', width:'200px', height:'70px', border:'1px solid #134163', margin:10,borderRadius:10, cursor:'pointer'}} align="left">{Number(t).toFixed(2)}</Typography>
+                                </Grid>
+                    })} 
+                    
                 </Grid>
             </div> 
             <div style={{display:'flex', flexDirection:'row',borderBottom:'1px solid #f0f0f0', paddingBottom:'2rem'}}>

@@ -3,8 +3,8 @@ import axios from 'axios';
 // import { Link as RouterLink } from 'react-router-dom';
 // material
 import { Stack,TextField} from '@mui/material';
-import DesktopDatePicker from '@mui/lab/DesktopDatePicker';
-import LocalizationProvider from '@mui/lab/LocalizationProvider';
+//import DesktopDatePicker from '@mui/lab/DesktopDatePicker';
+import {LocalizationProvider, DesktopDatePicker} from '@mui/x-date-pickers';
 import AdapterDateFns from '@mui/lab/AdapterDateFns';
 import Moment from 'moment';
 // components

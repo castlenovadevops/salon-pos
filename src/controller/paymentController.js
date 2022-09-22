@@ -22,12 +22,16 @@ export default class PaymentController extends DataManager{
         });
     }
 
-    getPaymentValues(x){
+    getPaymentValues(x,n){
         var values = [];
         var x1 = Math.round(x / 10) * 10;
         values.push(x1);
         var x2 = Math.round((x1+10) / 10) * 10;
         values.push(x2);
+        if(n === 3){ 
+            var x3 = Math.round((x2+10) / 10) * 10;
+            values.push(x3);
+        }
         return values;
     }
 

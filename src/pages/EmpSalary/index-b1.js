@@ -9,9 +9,9 @@ import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar'; 
 import IconButton from '@material-ui/core/IconButton';
 import CloseIcon from '@mui/icons-material/Close'; 
-import DesktopDatePicker from '@mui/lab/DesktopDatePicker';
-import LocalizationProvider from '@mui/lab/LocalizationProvider';
-import AdapterDateFns from '@mui/lab/AdapterDateFns'; 
+//import DesktopDatePicker from '@mui/lab/DesktopDatePicker';
+import {LocalizationProvider, DesktopDatePicker} from '@mui/x-date-pickers';
+import {AdapterDateFns} from '@mui/x-date-pickers/AdapterDateFns';
 import config from '../../config/config';
 // components
 import ButtonContent from '../../components/formComponents/Button';

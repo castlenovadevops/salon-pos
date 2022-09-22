@@ -15,9 +15,9 @@ import AlertModal from '../../../components/Modal/alertModal';
 import axios from 'axios';
 import {CalendarMonthOutlined} from '@mui/icons-material';
 import CloseIcon from '@mui/icons-material/Close';
-import DesktopDatePicker from '@mui/lab/DesktopDatePicker';
-import LocalizationProvider from '@mui/lab/LocalizationProvider';
-import AdapterDateFns from '@mui/lab/AdapterDateFns'; 
+//import DesktopDatePicker from '@mui/lab/DesktopDatePicker';
+import {LocalizationProvider, DesktopDatePicker} from '@mui/x-date-pickers';
+import {AdapterDateFns} from '@mui/x-date-pickers/AdapterDateFns';
 import ModalHeader from '../../../components/Modal/Titlebar';
 
 

@@ -111,7 +111,7 @@ export default class TicketPayment extends React.Component  {
     }
 
     render(){
-        return  <Box sx={paymentStyle} style={{borderRadius: 10, height:'100%'}}>
+        return  <Box sx={paymentStyle} style={{borderRadius: 10, height:'100%', zIndex:9999}}>
             {this.state.isLoading && <LoadingModal />}
 
             <Grid container spacing={2} style={{borderBottom:'1px solid #f0f0f0'}}>

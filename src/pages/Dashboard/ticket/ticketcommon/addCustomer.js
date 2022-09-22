@@ -10,8 +10,8 @@ import PhoneNumberContent from '../../../../components/formComponents/PhoneNumbe
 import AutoCompleteContent from '../../../../components/formComponents/AutoComplete';
 import Moment from 'moment';
 
-import DesktopDatePicker from '@mui/lab/DesktopDatePicker';
-import LocalizationProvider from '@mui/lab/LocalizationProvider';
+//import DesktopDatePicker from '@mui/lab/DesktopDatePicker';
+import {LocalizationProvider, DesktopDatePicker} from '@mui/x-date-pickers';
 import AdapterDateFns from '@mui/lab/AdapterDateFns';
 
 import config from '../../../../config/config';

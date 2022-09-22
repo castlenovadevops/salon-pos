@@ -8,9 +8,9 @@ import CloseIcon from '@mui/icons-material/Close';
 import { Card, CardContent,  Stack, Container, Typography,TextField , Grid,IconButton, Button, 
     Dialog, DialogActions, DialogContent, DialogTitle, DialogContentText, FormControl,FormLabel, FormControlLabel, RadioGroup, Radio, InputLabel, Select, Chip, Input,  MenuItem, Checkbox } from '@mui/material';
 
-import DesktopDatePicker from '@mui/lab/DesktopDatePicker';
-import LocalizationProvider from '@mui/lab/LocalizationProvider';
-import AdapterDateFns from '@mui/lab/AdapterDateFns'; 
+//import DesktopDatePicker from '@mui/lab/DesktopDatePicker';
+import {LocalizationProvider, DesktopDatePicker} from '@mui/x-date-pickers';
+import {AdapterDateFns} from '@mui/x-date-pickers/AdapterDateFns';
  
 import {Print, CalendarMonthOutlined} from '@mui/icons-material';    
 import SyncIcon from '@mui/icons-material/Sync';
