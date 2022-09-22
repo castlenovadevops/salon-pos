@@ -20,9 +20,15 @@ import MuiAlert from '@mui/material/Alert';
 import AppBarContent from '../TopBar';
 import DrawerContent from '../Drawer';
 import TicketController from '../../controller/TicketController';
+import QueryManager from '../../controller/queryManager';
+import AlertModal from '../../components/Modal/alertModal';
+import EmpController from '../../controller/empController';
 export default class Employee extends React.Component {
   ticketController = new TicketController();
   dataManager = new DataManager();
+  queryManager = new QueryManager();
+  empController = new EmpController();
+
   constructor(props) {
     super(props);
     this.state = {
@@ -119,7 +125,9 @@ export default class Employee extends React.Component {
             
         ],
         isLoading: false,
-        businessdetail:{}
+        businessdetail:{},
+        settingalert:false,
+        alertmsg:''
     };
     this.handleClose = this.handleClose.bind(this)
  
@@ -256,24 +264,41 @@ export default class Employee extends React.Component {
   }
 
   getEmployeeList() {
+    var thisobj = this;
     this.setState({isLoading: true}); 
         axios.get(config.root+`/employee/`+this.state.businessdetail.id).then(res=>{
             this.setState({employeelist:res.data.data}, function(){
-              this.setState({isLoading: false});
                 // console.log(this.state.employeelist)
-                this.syncMasterData(0);
+                // this.syncMasterData(0);
+                this.empController.syncEmployee().then(r=>{
+                  this.setState({isLoading: false});
+                })
             })
         }); 
   }
 
   openEdit(row){
-    this.setState({selectedEmployee: row}, function(){
-      this.setState({editForm: true})
+    this.queryManager.checkDefaultSettings().then(res=>{
+      if(res.status === 200){
+        this.setState({selectedEmployee: row}, function(){
+          this.setState({editForm: true})
+        })
+      }
+      else{ 
+        this.setState({settingalert: true, alertmsg:res.msg})
+      }
     })
   }
 
   openAdd(){
-    this.setState({addForm: true})
+    this.queryManager.checkDefaultSettings().then(res=>{
+      if(res.status === 200){
+        this.setState({addForm: true})
+      }
+      else{ 
+        this.setState({settingalert: true, alertmsg:res.msg})
+      }
+    })
   }
 
   render() {
@@ -362,7 +387,10 @@ export default class Employee extends React.Component {
       </Snackbar>
 
 
-      </div></div>
+      </div>
+      {this.state.settingalert &&  <AlertModal title="Alert" msg={this.state.alertmsg} handleCloseAlert={()=>this.setState({settingalert:false, alertmsg:''})}/>}
+
+    </div>
     );
   }
 }

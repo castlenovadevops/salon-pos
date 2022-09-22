@@ -19,6 +19,10 @@ export default class TicketSplitPayment extends React.Component  {
         } 
     }
 
+    splitAmount(n){
+        this.props.data.onselectedWays(Number(this.props.data.ticketDetail.ticketPendingAmount)/n);
+
+    }
 
     render(){
         return <div style={{width:'100%', display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column'}}>
@@ -34,34 +38,46 @@ export default class TicketSplitPayment extends React.Component  {
                 
                 <Grid item xs={12} style={{display:'flex',marginTop:10, width:'80%'}}>
                     <Grid item xs={4}>
-                        <Typography  id="modal-modal-title" variant="subtitle"  style={{display:'flex', alignItems:'center', justifyContent:'center',"color":'#fff', fontWeight:'700', width:'200px', height:'70px', background:'#134163', margin:10,borderRadius:10, cursor:'pointer'}} align="left">
+                        <Typography  onClick={()=>{
+                            this.splitAmount(1);
+                        }}  id="modal-modal-title" variant="subtitle"  style={{display:'flex', alignItems:'center', justifyContent:'center',"color":'#fff', fontWeight:'700', width:'200px', height:'70px', background:'#134163', margin:10,borderRadius:10, cursor:'pointer'}} align="left">
                             Full Amount
                         </Typography>
                     </Grid>
                     <Grid item xs={4}>  
-                        <Typography  id="modal-modal-title" variant="subtitle"  style={{display:'flex', alignItems:'center', justifyContent:'center',"color":'#000', fontWeight:'700', width:'200px', height:'70px', border:'1px solid #134163', margin:10,borderRadius:10, cursor:'pointer'}} align="left">
+                        <Typography onClick={()=>{
+                            this.splitAmount(2);
+                        }} id="modal-modal-title" variant="subtitle"  style={{display:'flex', alignItems:'center', justifyContent:'center',"color":'#000', fontWeight:'700', width:'200px', height:'70px', border:'1px solid #134163', margin:10,borderRadius:10, cursor:'pointer'}} align="left">
                             2 Ways
                         </Typography>
                     </Grid>
                     <Grid item xs={4}>
-                        <Typography  id="modal-modal-title" variant="subtitle"  style={{display:'flex', alignItems:'center', justifyContent:'center',"color":'#000', fontWeight:'700', width:'200px', height:'70px', border:'1px solid #134163', margin:10,borderRadius:10, cursor:'pointer'}} align="left">
+                        <Typography onClick={()=>{
+                            this.splitAmount(3);
+                        }}  id="modal-modal-title" variant="subtitle"  style={{display:'flex', alignItems:'center', justifyContent:'center',"color":'#000', fontWeight:'700', width:'200px', height:'70px', border:'1px solid #134163', margin:10,borderRadius:10, cursor:'pointer'}} align="left">
                            3 Ways
                         </Typography>
                     </Grid>
                 </Grid>
                 <Grid item xs={12} style={{display:'flex',marginTop:10, width:'80%'}}>
                     <Grid item xs={4}>
-                        <Typography  id="modal-modal-title" variant="subtitle"  style={{display:'flex', alignItems:'center', justifyContent:'center',"color":'#000', fontWeight:'700', width:'200px', height:'70px', border:'1px solid #134163', margin:10,borderRadius:10, cursor:'pointer'}} align="left">
+                        <Typography  onClick={()=>{
+                            this.splitAmount(4);
+                        }} id="modal-modal-title" variant="subtitle"  style={{display:'flex', alignItems:'center', justifyContent:'center',"color":'#000', fontWeight:'700', width:'200px', height:'70px', border:'1px solid #134163', margin:10,borderRadius:10, cursor:'pointer'}} align="left">
                             4 Ways
                         </Typography>
                     </Grid>
                     <Grid item xs={4}>  
-                        <Typography  id="modal-modal-title" variant="subtitle"  style={{display:'flex', alignItems:'center', justifyContent:'center',"color":'#000', fontWeight:'700', width:'200px', height:'70px', border:'1px solid #134163', margin:10,borderRadius:10, cursor:'pointer'}} align="left">
+                        <Typography  onClick={()=>{
+                            this.splitAmount(5);
+                        }}  id="modal-modal-title" variant="subtitle"  style={{display:'flex', alignItems:'center', justifyContent:'center',"color":'#000', fontWeight:'700', width:'200px', height:'70px', border:'1px solid #134163', margin:10,borderRadius:10, cursor:'pointer'}} align="left">
                             5 Ways
                         </Typography>
                     </Grid>
                     <Grid item xs={4}>
-                        <Typography  id="modal-modal-title" variant="subtitle"  style={{display:'flex', alignItems:'center', justifyContent:'center',"color":'#000', fontWeight:'700', width:'200px', height:'70px', border:'1px solid #134163', margin:10,borderRadius:10, cursor:'pointer'}} align="left">
+                        <Typography  onClick={()=>{
+                            this.splitAmount(6);
+                        }}  id="modal-modal-title" variant="subtitle"  style={{display:'flex', alignItems:'center', justifyContent:'center',"color":'#000', fontWeight:'700', width:'200px', height:'70px', border:'1px solid #134163', margin:10,borderRadius:10, cursor:'pointer'}} align="left">
                            6 Ways
                         </Typography>
                     </Grid>

@@ -1,6 +1,6 @@
 import DataManager from "./datacontroller"; 
 import Moment from 'moment';  
-import moment from "moment";
+import moment from "moment"; 
 
 export default class QueryManager extends DataManager{
 
@@ -216,6 +216,35 @@ export default class QueryManager extends DataManager{
             var sql = `select * from users where id=`+id;   
             this.getData(sql).then(r=>{
                 this.getPaymentMethods(0, r, [],resolve)
+            })
+        });
+    }
+
+    checkDefaultSettings(){
+        return  new Promise(async (resolve) => {
+            this.getData(`select * from default_commission where businessId=`+this.getBusinessId()).then(res=>{
+                if(res.length > 0){
+                    this.getData(`select * from users`).then(eres=>{
+                        if(eres.length > 0){ 
+                            this.getData(`select * from users where id not in (select employeeId from employee_salary where businessId=`+this.getBusinessId()+`)`).then(esres=>{
+                                console.log(`select * from users where id not in (select employeeId from employee_salary where businessId=`+this.getBusinessId()+`)`)
+                                console.log(esres)
+                                if(esres.length > 0){
+                                    resolve({status:400,msg:"1Please set the employee commission settings and continue."})
+                                }
+                                else{
+                                    resolve({status:200});
+                                }
+                            })
+                        }
+                        else{
+                            resolve({status:400,msg:"2Please set the employee commission settings and continue."})
+                        }
+                    })
+                }
+                else{
+                    resolve({status:400,msg:"Please set the default commission settings and continue."});
+                }
             })
         });
     }

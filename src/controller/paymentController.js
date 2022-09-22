@@ -23,8 +23,8 @@ export default class PaymentController extends DataManager{
     }
 
     getPaymentValues(x,n){
-        var values = [];
-        var x1 = Math.round(x / 10) * 10;
+        var values = []; 
+        var x1 = Math.round((x+1) / 10) * 10; 
         values.push(x1);
         var x2 = Math.round((x1+10) / 10) * 10;
         values.push(x2);
@@ -35,7 +35,7 @@ export default class PaymentController extends DataManager{
         return values;
     }
 
-    async savePayment(amt, ticket, mode, card_type, notes){
+    async savePayment(amt, ticket, mode, card_type, notes, method='full'){
         return new Promise(async (resolve) => {
             await window.api.getSyncUniqueId().then(sync=>{ 
                 var paymentinput =  {
@@ -55,10 +55,13 @@ export default class PaymentController extends DataManager{
                     ticketref_id: ticket.sync_id,
                     isActive:1,
                 }
+                var pendingamt = ticket.ticketPendingAmount > 0 ? ticket.ticketPendingAmount-amt : ticket.grand_total - amt;
                 var ticketinput = {
                     sync_status:0,
-                    ticketPendingAmount: ticket.grand_total - amt,
-                    paid_status: ticket.grand_total - amt > 0 ? 'Partially Paid' : 'paid'
+                    ticketPendingAmount: ticket.ticketPendingAmount > 0 ? ticket.ticketPendingAmount-amt : ticket.grand_total - amt,
+                    paid_status:  pendingamt > 0 ? 'Partially Paid' : 'paid',
+                    ticketPaymentMethod: method,
+                    paid_at: this.queryManager.getDate()
                 }
                 this.queryManager.saveTableData({table_name:'ticket_payment', data:paymentinput}).then(res=>{
                     this.queryManager.updateTableData({table_name:'ticket', data: ticketinput, query_field:'sync_id', query_value: ticket.sync_id}).then(res=>{

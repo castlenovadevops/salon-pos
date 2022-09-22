@@ -236,8 +236,8 @@ export default class EmployeeReport extends React.Component {
         (select total_tax from ticket where sync_id=tp.ticketref_id) as total_tax,
         (select grand_total from ticket where sync_id=tp.ticketref_id) as grand_total,
         u.id as employee_id, u.firstName, u.lastName, u.staff_role as role,  tp.pay_mode , tp.card_type
-        FROM    ticket_payment as tp
-        left join employee_commission_detail as ec   on tp.ticket_id=ec.ticketref_id join users as u on u.id = ec.employeeId 
+        FROM   employee_commission_detail as ec  
+        left join  ticket_payment as tp on tp.ticket_id=ec.ticketref_id join users as u on u.id = ec.employeeId 
         WHERE ec.businessId=`+input.businessId+` and ( ec.cash_type_for='service' or ec.cash_type_for='product'  or ec.cash_type_for='tips' 
         or ec.cash_type_for like '%discount%') and  ec.isActive=1 and 
         ec.ticketref_id in (select sync_id from ticket where  sync_id in (select ticketref_id from ticket_payment where  DATE(paid_at) between '`+input.from_date+`' and '`+input.to_date+`') and isDelete=0 
@@ -266,8 +266,8 @@ export default class EmployeeReport extends React.Component {
             (select total_tax from ticket where sync_id=tp.ticketref_id) as total_tax,
             (select grand_total from ticket where sync_id=tp.ticketref_id) as grand_total,
             u.id as employee_id, u.firstName, u.lastName, u.staff_role as role,  tp.pay_mode , tp.card_type
-            FROM    ticket_payment as tp
-            left join employee_commission_detail as ec   on tp.ticket_id=ec.ticketref_id join users as u on u.id = ec.employeeId 
+            FROM  employee_commission_detail as ec  
+            left join ticket_payment as tp on tp.ticket_id=ec.ticketref_id join users as u on u.id = ec.employeeId 
         WHERE ec.businessId=`+input.businessId+` and (  ec.cash_type_for='service' or ec.cash_type_for='product'  or ec.cash_type_for='tips' 
         or ec.cash_type_for like '%discount%') and  ec.isActive=1 and 
         ec.ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where   DATE(paid_at) = '`+input.from_date+`')  and isDelete=0 
@@ -297,8 +297,8 @@ export default class EmployeeReport extends React.Component {
                (select total_tax from ticket where sync_id=tp.ticketref_id) as total_tax,
                (select grand_total from ticket where sync_id=tp.ticketref_id) as grand_total,
                u.id as employee_id, u.firstName, u.lastName, u.staff_role as role,  tp.pay_mode , tp.card_type
-               FROM    ticket_payment as tp
-               left join employee_commission_detail as ec   on tp.ticket_id=ec.ticketref_id join users as u on u.id = ec.employeeId 
+               FROM   employee_commission_detail as ec  
+               left join  ticket_payment as tp on tp.ticket_id=ec.ticketref_id join users as u on u.id = ec.employeeId 
             WHERE ec.businessId=`+input.businessId+` and ec.isActive=1 and ec.cash_type_for != 'ownercommission' and 
             ec.ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where   DATE(paid_at) between '`+input.from_date+`' and '`+input.to_date+`') and
             isDelete=0 and businessId=`+input.businessId+` and paid_status='paid') 
@@ -327,8 +327,8 @@ export default class EmployeeReport extends React.Component {
                         (select total_tax from ticket where sync_id=tp.ticketref_id) as total_tax,
                         (select grand_total from ticket where sync_id=tp.ticketref_id) as grand_total,
                         u.id as employee_id, u.firstName, u.lastName, u.staff_role as role,  tp.pay_mode , tp.card_type
-                        FROM    ticket_payment as tp
-                        left join employee_commission_detail as ec   on tp.ticket_id=ec.ticketref_id join users as u on u.id = ec.employeeId 
+                        FROM   employee_commission_detail as ec 
+                        left join   ticket_payment as tp on tp.ticket_id=ec.ticketref_id join users as u on u.id = ec.employeeId 
                      WHERE ec.businessId=`+input.businessId+` and ec.cash_type_for != 'ownercommission' and  ec.isActive=1 and 
                      ec.ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where  DATE(paid_at) = '`+input.from_date+`')  and
                      isDelete=0 and businessId=`+input.businessId+` and paid_status='paid') 

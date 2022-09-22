@@ -21,9 +21,11 @@ import MuiAlert from '@mui/material/Alert';
 import DataManager from '../../../controller/datacontroller'
 
 import TicketController from '../../../controller/TicketController'
+import EmpController from '../../../controller/empController';
 export default class Commission extends React.Component {
   dataManager= new DataManager();
   ticketController = new TicketController();
+  empController = new EmpController();
   constructor(props) {
     super(props);
     this.state = {
@@ -228,9 +230,10 @@ syncIndividualEntry(mindex, idx, data, tbldata) {
                   if(this.state.commissionlist.length> 0){
                     this.setState({selectedcommission:this.state.commissionlist[0]},()=>{
                       console.log(this.state.selectedcommission);
-
-                this.syncMasterData(0);
-
+                      this.empController.syncEmployee().then(r=>{
+                        this.setState({isLoading: false});
+                      })
+                // this.syncMasterData(0); 
                     });
                   }
                 });

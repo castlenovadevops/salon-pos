@@ -38,7 +38,7 @@ import CreateTicketModal from './modal';
 import EditTicketModal from './editTicket';
 import PaymentModal from './TicketPayment'; 
 import TicketController  from '../../../controller/TicketController';
-
+import QueryManager from '../../../controller/queryManager';
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
 
@@ -81,6 +81,7 @@ export default class TicketDashboard extends React.Component {
   });
 interval;
 ticketController = new TicketController();
+queryManager = new QueryManager();
 constructor(props){
     super(props);
     this.state={
@@ -118,7 +119,7 @@ constructor(props){
         paid_ticket_list:[],
         hide: false,
         ticketManager: new TicketManager(this.props),
-        
+        tobeclocked:{},
         columns: [
 
             {
@@ -492,6 +493,8 @@ constructor(props){
         showDatePopup: false, 
         closedticketprint:false,
         printtype:'',
+        settingalert:false,
+        alertmsg:''
     }
     this.handlePageEvent = this.handlePageEvent.bind(this);
     this.handleOpen = this.handleOpen.bind(this)
@@ -579,7 +582,9 @@ getClosedTicketsByDate(){
        if (response instanceof Array) {
       
            this.setState({unsyncedCount: response.length}, function() { 
-            var sql = "select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value, t.discount_totalamt, t.sync_id,c.name as customer_name, tp.pay_mode,tp.paid_at,tp.card_type, tp.notes as  payment_notes from ticket as t left join customers as c on t.customer_id=c.sync_id left join ticket_payment as tp on tp.ticketref_id=t.sync_id where t.businessId='"+businessdetail["id"]+"' and t.isDelete!=1 and DATE(tp.paid_at) between '"+from_date+"' and '"+to_date+"' order by tp.paid_at desc" 
+            // var sql = "select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value, t.discount_totalamt, t.sync_id,c.name as customer_name, tp.pay_mode,tp.paid_at,tp.card_type, tp.notes as  payment_notes from ticket as t left join customers as c on t.customer_id=c.sync_id left join ticket_payment as tp on tp.ticketref_id=t.sync_id where t.businessId='"+businessdetail["id"]+"' and t.isDelete!=1 and DATE(tp.paid_at) between '"+from_date+"' and '"+to_date+"' order by tp.paid_at desc" 
+            
+            var sql = "select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value, t.discount_totalamt, t.sync_id,c.name as customer_name, t.paid_at from ticket as t left join customers as c on t.customer_id=c.sync_id  where t.businessId='"+businessdetail["id"]+"' and t.isDelete!=1 and DATE(paid_at) between '"+from_date+"' and '"+to_date+"' and t.paid_status='paid' order by t.paid_at desc" 
             this.state.dataManager.getData(sql).then(response =>{
                 
                 if (response instanceof Array) { 
@@ -1493,33 +1498,40 @@ handleChange(uvalue) {
 };
 
 handleOpenTicket(){
-    window.api.getTicketCode().then(res=>{ 
-        console.log(res)
-        if(res.ticketid !== ''){
-            var ticket_code = String(res.ticketid).padStart(4, '0');
-            window.api.getSyncUniqueId().then(sync=>{
-                var syncid = sync.syncid;
-                
-                var ticketDetail = {
-                    ticket_code : ticket_code,
-                    sync_id: syncid,
-                    sync_status:0,
-                    isDraft: 0,
-                    notes:''
-                }
-                this.setState({selectedTicket:ticketDetail, dateerror: false, isTicketEdit: false}, ()=>{
-                    window.api.invoke('log', "Create Ticket clicked - Ticket code : "+ticket_code ).then(r=>{
-                        this.setState({showPage:'createTicket'})
-                    })
-                });
+    this.queryManager.checkDefaultSettings().then(res=>{
+        if(res.status===200){ 
+            window.api.getTicketCode().then(res=>{ 
+                    console.log(res)
+                    if(res.ticketid !== ''){
+                        var ticket_code = String(res.ticketid).padStart(4, '0');
+                        window.api.getSyncUniqueId().then(sync=>{
+                            var syncid = sync.syncid;
+                            
+                            var ticketDetail = {
+                                ticket_code : ticket_code,
+                                sync_id: syncid,
+                                sync_status:0,
+                                isDraft: 0,
+                                notes:''
+                            }
+                            this.setState({selectedTicket:ticketDetail, dateerror: false, isTicketEdit: false}, ()=>{
+                                window.api.invoke('log', "Create Ticket clicked - Ticket code : "+ticket_code ).then(r=>{
+                                    this.setState({showPage:'createTicket'})
+                                })
+                            });
+                        })
+                    }
+                    else{
+                        this.setState({dateerror: true, isTicketEdit: false}, ()=>{
+                            this.setState({showPage:'createTicket'})
+                        })
+                    }
             })
         }
         else{
-            this.setState({dateerror: true, isTicketEdit: false}, ()=>{
-                 this.setState({showPage:'createTicket'})
-            })
-        }
-})
+            this.setState({settingalert: true, alertmsg:res.msg});
+        } 
+    })
 }
 
 openCreateTicket() { 
@@ -1542,25 +1554,28 @@ getTicketList(loading){
     let from_date = Moment(this.state.from_date).format('YYYY-MM-DD');
     let to_date = Moment(this.state.to_date).format('YYYY-MM-DD');
 
-    var sql = `select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value,t.sync_id, t.discount_totalamt, t.sync_id, c.name as customer_name from ticket as t left join customers as c on t.customer_id=c.sync_id where t.businessId='`+businessdetail["id"]
-    +`' and t.isDelete!=1 and t.sync_status=0 order by t.created_at desc`
+    var sql = `select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value,t.sync_id, t.discount_totalamt, t.sync_id, c.name as customer_name from ticket as t left join customers as c on t.customer_id=c.sync_id where t.businessId='`+businessdetail["id"]+`' and t.isDelete!=1 and t.sync_status=0 order by t.created_at desc`
  
   
    this.state.dataManager.getData(sql).then(response =>{
        if (response instanceof Array) {
       
            this.setState({unsyncedCount: response.length}, function() {
-            var sql = "select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value, t.discount_totalamt, t.sync_id,c.name as customer_name, tp.pay_mode,tp.paid_at, tp.card_type, tp.notes as payment_notes from ticket as t left join customers as c on t.customer_id=c.sync_id left join ticket_payment as tp on tp.ticketref_id=t.sync_id where t.businessId='"+businessdetail["id"]+"' and t.isDelete!=1 and DATE(tp.paid_at) between '"+from_date+"' and '"+to_date+"' order by tp.paid_at desc" 
+            var sql = "select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value, t.discount_totalamt, t.sync_id,c.name as customer_name, t.paid_at from ticket as t left join customers as c on t.customer_id=c.sync_id  where t.businessId='"+businessdetail["id"]+"' and t.isDelete!=1 and DATE(paid_at) between '"+from_date+"' and '"+to_date+"' and t.paid_status='paid' order by t.paid_at desc" 
            
             if(this.state.value === 0){
-                sql = "select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value, t.discount_totalamt, t.sync_id,c.name as customer_name, tp.pay_mode, tp.paid_at,tp.card_type, tp.notes as payment_notes from ticket as t left join customers as c on t.customer_id=c.sync_id left join ticket_payment as tp on tp.ticketref_id=t.sync_id where t.businessId='"+businessdetail["id"]+"' and t.isDelete!=1 order by  t.created_at desc"
+                sql = "select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value, t.discount_totalamt, t.sync_id,c.name as customer_name  from ticket as t left join customers as c on t.customer_id=c.sync_id where t.businessId='"+businessdetail["id"]+"' and t.isDelete!=1 order by  t.created_at desc"
             }
            console.log(sql);
             this.state.dataManager.getData(sql).then(response =>{
-                console.log("response", response)
                 if (response instanceof Array) { 
                     let selected_ticket = response.filter(item => item.paid_status !== "paid")
                     let selected_paid_ticket = response.filter(item => item.paid_status === "paid" && item.paid_at !== null && item.paid_at !== undefined  )
+                    response.forEach(item=>{
+                        console.log(item.paid_status === "paid" && item.paid_at !== null && item.paid_at !== undefined , item.paid_status)
+                    })
+                    
+                console.log("response", selected_paid_ticket)
                     this.setState({ticket_list: response,isLoading: false, unpaid_ticket_list:selected_ticket,paid_ticket_list: selected_paid_ticket, isLoading: false}, function() { 
                         this.state.unpaid_ticket_list.map((data)=>{
                             this.getTicketService(data.id)
@@ -1603,7 +1618,7 @@ handleCloseTicket(msg){
 }
 
 handleOpen(){ 
-    this.setState({open: true})
+    this.setState({tobeclocked:{}}, ()=>{this.setState({open: true})});
 }
 handleClose(){
     this.setState({open: false, ticketowner: {}})
@@ -1728,7 +1743,7 @@ render()  {
                                                         <Grid className='techbtn'  item xs={4} style={{background:"",paddingRight: 2,paddingLeft: 2, paddingTop:2,paddingBottom:2,minWidth:(this.state.hide)?'90%':'33.33%', cursor:'pointer'}}> 
                                                         <div style={{background: '#F2F2F2',height:65,borderBottom: '0px solid #bee1f7', display: 'table',borderRadius: 10,display:'flex',alignItems:'center', justifyContent:'center', }} 
                                                         onDoubleClick={()=>{
-                                                                 this.setState({ticketowner:staff})
+                                                                 this.setState({tobeclocked:staff})
                                                                  this.handleOpenClockin()
                                                         }}>
                                                         <div style={{display:'flex',alignItems:'center', justifyContent:'center', height:'100%',overflow: "hidden", textOverflow: "ellipsis", width: '11rem'}}>
@@ -1885,7 +1900,7 @@ render()  {
                     {/* Clockin out modal starts */}
                          <ClockInOutModal errormsg={"Invalid passcode. Please try again."} open={this.state.open} onClose={()=>this.handleClose()} 
                          afterFinished={()=>this.afterFinishedClockinout()} 
-                         selectedTechi={this.state.ticketowner}/>
+                         selectedTechi={this.state.tobeclocked}/>
                     {/* Clockin out modal ends */}
 
                     
@@ -2089,8 +2104,11 @@ render()  {
             </div>
 
         </div>
-    </div>
-    }
+    
+                </div>
+                }
+
+            {this.state.settingalert &&  <AlertModal title="Alert" msg={this.state.alertmsg} handleCloseAlert={()=>this.setState({settingalert:false, alertmsg:''})}/>}
 
         </div> 
   }

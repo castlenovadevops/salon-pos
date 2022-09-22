@@ -36,7 +36,9 @@ export default class TicketPayment extends React.Component  {
             ticketDetail:{}, 
             ticketpayments:[],
             remainAmount: 0,
-            activeTab:'full'
+            activeTab:'full',
+            paymentSplitted: false,
+            splittedAmount: 0
         }
 
         this.getTicketPayments = this.getTicketPayments.bind(this);
@@ -44,6 +46,11 @@ export default class TicketPayment extends React.Component  {
 
     
     componentDidMount(){ 
+        this.loadData()
+    } 
+
+    loadData(){
+        this.setState({isLoading: true})
         var  detail = window.localStorage.getItem('businessdetail');
         if(detail !== undefined && detail !== 'undefined'){
             var businessdetail = JSON.parse(detail); 
@@ -51,15 +58,26 @@ export default class TicketPayment extends React.Component  {
                 if(this.props.ticketDetail !== undefined){
                     console.log(this.props.ticketDetail.sync_id)
                     this.paymentController.getTicketDetail(this.props.ticketDetail.sync_id).then(res=>{
-                        this.setState({ticketDetail : res}, function(){ 
-                            console.log(this.state.ticketDetail)
-                            if(this.state.ticketDetail.ticketPendingAmount === null || this.state.ticketDetail.ticketPendingAmount === ''){
-                                var obj = Object.assign({}, this.state.ticketDetail);
-                                obj.ticketPendingAmount = this.state.ticketDetail.grand_total
-                                this.setState({remainAmount: this.state.ticketDetail.grand_total, topayamount: this.state.ticketDetail.grand_total,  ticketDetail:obj})
-                            }
-                            this.getTicketPayments();
-                        })
+                        if(res.paid_status==='paid'){
+                            this.props.afterSubmit();
+                        }
+                        else{
+                            this.setState({ticketDetail : res}, function(){ 
+                                console.log(this.state.ticketDetail)
+                                if(this.state.ticketDetail.ticketPendingAmount === null || this.state.ticketDetail.ticketPendingAmount === ''){
+                                    var obj = Object.assign({}, this.state.ticketDetail);
+                                    obj.ticketPendingAmount = this.state.ticketDetail.grand_total
+                                    this.setState({remainAmount: this.state.ticketDetail.grand_total, topayamount: this.state.ticketDetail.grand_total,  ticketDetail:obj},()=>{ 
+                                        this.getTicketPayments();
+                                    })
+                                }
+                                else{
+                                    this.setState({remainAmount: this.state.ticketDetail.ticketPendingAmount, topayamount: this.state.ticketDetail.ticketPendingAmount},()=>{ 
+                                        this.getTicketPayments();
+                                    })
+                                }
+                            })
+                        }
                     })
                 }
                 var employeedetail = window.localStorage.getItem('employeedetail');
@@ -68,44 +86,71 @@ export default class TicketPayment extends React.Component  {
                 }
             });
         }
-    } 
-
+    }
 
     getTicketPayments(){
         this.paymentController.getTicketPayments(this.state.ticketDetail.sync_id).then(res=>{ 
+            console.log("ASdasdasdasds")
+            console.log(res);
             this.setState({ticketpayments: res, isLoading:false});
         })
     }
 
     renderPaymentTabs(){
-        return <div style={{display:'flex', width:'100%', background:'transparent', flexDirection:'column'}}>
-                <div>
-                    <div className='paymentTabContainer'>
-                        <div className={this.state.activeTab === 'full' ? 'paymenttab active' : 'paymenttab'} onClick={()=>{
-                            this.setState({activeTab: 'full'})
-                        }}>Pay Full Amount</div>
-                        <div className={this.state.activeTab === 'split' ? 'paymenttab active' : 'paymenttab'} onClick={()=>{
-                            this.setState({activeTab: 'split'})
-                        }}>Split Custom Amount</div>
+        return <div style={{display:'flex', width:'100%', background:'transparent', flexDirection:'column', position:'relative'}}>
+                {!this.state.paymentSplitted && <>
+                    <div>
+                        <div className='paymentTabContainer'>
+                            <div className={this.state.activeTab === 'full' ? 'paymenttab active' : 'paymenttab'} onClick={()=>{
+                                this.setState({activeTab: 'full'})
+                            }}>Pay Full Amount</div>
+                            <div className={this.state.activeTab === 'split' ? 'paymenttab active' : 'paymenttab'} onClick={()=>{
+                                this.setState({activeTab: 'split'})
+                            }}>Split Custom Amount</div>
+                        </div>
                     </div>
-                </div>
 
-                {this.state.activeTab==='full' && <TicketFullPayment data={{
-                    ticketDetail:this.state.ticketDetail,
-                    topayamount: this.state.topayamount,
-                    completePayment:()=>{
-                        this.props.afterSubmit();
-                    }
-                }} />}
+                    {this.state.activeTab==='full' && <TicketFullPayment data={{
+                        ticketDetail:this.state.ticketDetail,
+                        topayamount: this.state.topayamount,
+                        completePayment:()=>{
+                            this.props.afterSubmit();
+                        }
+                    }} />}
 
-                
-                {this.state.activeTab==='split' && <TicketSplitPayment data={{
-                    ticketDetail:this.state.ticketDetail,
-                    topayamount: this.state.topayamount,
-                    completePayment:()=>{
-                        this.props.afterSubmit();
-                    }
-                }} />}
+                    
+                    {this.state.activeTab==='split' && <TicketSplitPayment data={{
+                        ticketDetail:this.state.ticketDetail,
+                        topayamount: this.state.topayamount,
+                        onselectedWays: (splitamt)=>{
+                            this.setState({splittedAmount: splitamt, paymentSplitted: true})
+                        }
+                    }} />}
+                </>}
+
+                {this.state.paymentSplitted && <><TicketFullPayment data={{
+                        ticketDetail:this.state.ticketDetail,
+                        topayamount: this.state.splittedAmount,
+                        completePayment:()=>{
+                            this.setState({splittedAmount: 0, paymentSplitted: false})
+                            // this.props.afterSubmit();
+                            this.loadData();
+                        }
+                    }} />
+                        
+                        <Grid item xs={12} style={{display:'flex',marginTop:10, position:'absolute', bottom:20, left:0, right:0}}>
+                            <Grid item xs={4}></Grid>
+                            <Grid item xs={4} style={{display: 'flex', justifyContent:'center', alignItems:'center'}}> 
+                                <Button style={{marginRight: 10}} onClick={()=>{
+                                    this.setState({splittedAmount: 0, paymentSplitted: false}, ()=>{
+                                        this.loadData();
+                                    })
+                                }} color="secondary" variant="contained">Cancel</Button> 
+                            </Grid>
+                            <Grid item xs={4}></Grid>
+                        </Grid>
+
+                    </>}
 
         </div>
     }
@@ -159,6 +204,12 @@ export default class TicketPayment extends React.Component  {
                         <Typography id="modal-modal-title" variant="subtitle2"  style={{"color":'#000', fontWeight:'500'}} align="left"> ${Number(this.state.ticketDetail.grand_total).toFixed(2)}</Typography>
                    </div> 
                              
+                    {this.state.ticketpayments.map((p, idx)=>{
+                        return <div style={{display:'flex',marginTop:'5px', alignItems:'center', justifyContent:'space-between', flexDirection:'row'}}>
+                                    <Typography  id="modal-modal-title" variant="subtitle"  style={{"color":'#000', fontWeight:'500', fontSize:'16px'}} align="left">Payment {idx+1}</Typography>
+                                    <Typography id="modal-modal-title" variant="subtitle"  style={{"color":'#000', fontWeight:'500', fontSize:'16px'}} align="left"> ${Number(p.ticket_amt).toFixed(2)}</Typography>
+                            </div>  
+                    })}
                    
                    <div style={{display:'flex',marginTop:'5px', alignItems:'center', justifyContent:'space-between', flexDirection:'row'}}>
                         <Typography  id="modal-modal-title" variant="subtitle"  style={{"color":'#000', fontWeight:'700'}} align="left">Amount Remaining</Typography>

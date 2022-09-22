@@ -141,11 +141,11 @@ export default class TicketServiceController {
                         thisobj.updateData({ table_name: 'ticket_services', data: { isActive:2, sync_status: 0 }, query_field: 'ticketref_id', query_value: ticketid }).then(r => {
                             thisobj.updateData({ table_name: 'ticketservice_taxes', data: {  isActive:2,sync_status: 0 }, query_field: 'ticketref_id', query_value:ticketid}).then(r => {
                                 thisobj.updateData({ table_name: 'ticketservice_requestnotes', data: {  isActive:2,sync_status: 0 }, query_field: 'ticketref_id', query_value: ticketid}).then(r => {
-                                    thisobj.updateData({ table_name: 'ticket_payment', data: {  isActive:2,sync_status: 0 }, query_field: 'ticketref_id', query_value: ticketid }).then(r => {
+                                    // thisobj.updateData({ table_name: 'ticket_payment', data: {  isActive:2,sync_status: 0 }, query_field: 'ticketref_id', query_value: ticketid }).then(r => {
                                         thisobj.updateData({ table_name: 'employee_commission_detail', data: {  isActive:2,sync_status: 0 }, query_field: 'ticketref_id', query_value:ticketid }).then(r => {
                                             thisobj.saveTicketDetail(data, resolve, savedData)
                                         });
-                                    });
+                                    // });
                                 });
                             });
                         })
@@ -199,7 +199,7 @@ export default class TicketServiceController {
             technician_id: input.ticketowner.id, 
             subtotal: input.price.subTotal || 0,
             discounts: input.price.discountAmount || 0,
-            paid_status : '', 
+            paid_status : input.ticketDetail.paid_status || '', 
             updated_at: this.getDate(), 
             updated_by: this.getUserId(),
             businessId: this.getBusinessId(),
@@ -853,7 +853,7 @@ export default class TicketServiceController {
                         thisobj.updateData({ table_name: 'ticket_services', data: { isActive:2, sync_status: 0 }, query_field: 'ticketref_id', query_value: ticketid }).then(r => {
                             thisobj.updateData({ table_name: 'ticketservice_taxes', data: {  isActive:2,sync_status: 0 }, query_field: 'ticketref_id', query_value:ticketid}).then(r => {
                                 thisobj.updateData({ table_name: 'ticketservice_requestnotes', data: {  isActive:2,sync_status: 0 }, query_field: 'ticketref_id', query_value: ticketid}).then(r => {
-                                    thisobj.updateData({ table_name: 'ticket_payment', data: {  isActive:2,sync_status: 0 }, query_field: 'ticketref_id', query_value: ticketid }).then(r => {
+                                    // thisobj.updateData({ table_name: 'ticket_payment', data: {  isActive:2,sync_status: 0 }, query_field: 'ticketref_id', query_value: ticketid }).then(r => {
                                         thisobj.updateData({ table_name: 'employee_commission_detail', data: {  isActive:2,sync_status: 0 }, query_field: 'ticketref_id', query_value:ticketid }).then(r => {
                                             thisobj.updateData({table_name:'ticket', data: ticket_input, query_field:'sync_id', query_value:savedData.sync_id}).then(r=>{
                                                 var obj = Object.assign({}, data);
@@ -861,7 +861,7 @@ export default class TicketServiceController {
                                                 resolve({status:200, msg:"Ticket saved successfully."})
                                             });
                                         });
-                                    });
+                                    // });
                                 });
                             });
                         })
@@ -1009,11 +1009,11 @@ export default class TicketServiceController {
             thisobj.updateData({ table_name: 'ticket_services', data: { isActive:2, sync_status: 0 }, query_field: 'ticketref_id', query_value: ticketid }).then(r => {
                 thisobj.updateData({ table_name: 'ticketservice_taxes', data: {  isActive:2,sync_status: 0 }, query_field: 'ticketref_id', query_value:ticketid}).then(r => {
                     thisobj.updateData({ table_name: 'ticketservice_requestnotes', data: {  isActive:2,sync_status: 0 }, query_field: 'ticketref_id', query_value: ticketid}).then(r => {
-                        thisobj.updateData({ table_name: 'ticket_payment', data: {  isActive:2,sync_status: 0 }, query_field: 'ticketref_id', query_value: ticketid }).then(r => {
+                        // thisobj.updateData({ table_name: 'ticket_payment', data: {  isActive:2,sync_status: 0 }, query_field: 'ticketref_id', query_value: ticketid }).then(r => {
                             thisobj.updateData({ table_name: 'employee_commission_detail', data: {  isActive:2,sync_status: 0 }, query_field: 'ticketref_id', query_value:ticketid }).then(r => { 
                                     resolve({status:200, msg:"Ticket saved successfully."}) 
                             });
-                        });
+                        // });
                     });
                 });
             })

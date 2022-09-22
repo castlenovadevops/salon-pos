@@ -16,9 +16,12 @@ export default class TicketFullPayment extends React.Component  {
         this.state={
             notesPopup: false,
             description: '', 
-            card_type:''
+            card_type:'',
+            completionPopup: false,
+            tenderedamt:''
         }
         this.handlechangeDesc = this.handlechangeDesc.bind(this)
+        this.cashPayment = this.cashPayment.bind(this);
     }
 
 
@@ -63,6 +66,47 @@ export default class TicketFullPayment extends React.Component  {
         </div>
     }
 
+    cashPayment(amt){
+        this.setState({tenderedamt: amt}, ()=>{
+            this.paymentController.savePayment(this.props.data.topayamount, this.props.data.ticketDetail, 'cash', '', '').then(r=>{
+                this.setState({notesPopup: false}, ()=>{
+                    this.setState({completionPopup: true})
+                })
+            })
+        })
+    } 
+    
+    renderCompletion(){
+        return  <div className="modalbox">
+            <div className='modal_backdrop'>
+            </div>
+            <div className='modal_container' style={{height:'400px', width:'600px'}}> 
+                <ModalTitleBar onClose={()=>  {
+                    this.setState({completionPopup: false});
+                     this.props.data.completePayment();
+                }} title="Payment Completion"/>  
+                <Grid item xs={12} style={{display:'flex',margin :10}}>  
+                    <Grid item xs={2}></Grid>
+                    <Grid item xs={8} style={{display: 'flex',flexDirection:'column', justifyContent:'center', alignItems:'center'}}> 
+                        <Typography  id="modal-modal-title" variant="subtitle"  style={{"color":'#000', fontWeight:'700',marginBottom:'1rem', fontSize:'20px'}} align="left">Cash Tendered: ${Number(this.state.tenderedamt).toFixed(2)}</Typography>
+                        <Typography  id="modal-modal-title" variant="subtitle"  style={{"color":'#000', fontWeight:'700', fontSize:'20px'}} align="left">Cash Balance: ${(Number(this.state.tenderedamt) - Number(this.props.data.topayamount)).toFixed(2)}</Typography>
+                    </Grid>
+                    <Grid item xs={2}></Grid>
+                </Grid>
+                <Grid item xs={12} style={{display:'flex',marginTop:10, position:'absolute', bottom:20, left:0, right:0}}>
+                    <Grid item xs={4}></Grid>
+                    <Grid item xs={4} style={{display: 'flex', justifyContent:'center', alignItems:'center'}}> 
+                        <Button style={{marginRight: 10}} onClick={()=>{
+                            this.setState({completionPopup: false})
+                             this.props.data.completePayment();
+                        }} color="secondary" variant="contained">OK</Button> 
+                    </Grid>
+                    <Grid item xs={4}></Grid>
+                </Grid>
+            </div>
+        </div>
+    }
+
     renderCardMethods(){
         return <div style={{display:'flex', width:'100%', flexDirection:'column'}}>
             <div style={{display:'flex', width:'100%', flexDirection:'row'}}>
@@ -93,23 +137,35 @@ export default class TicketFullPayment extends React.Component  {
             <div style={{display:'flex', width:'100%', flexDirection:'row'}}>
                 <Grid container spacing={2} >
                     <Grid item xs={3} style={{display:'flex'}}> 
-                        <Typography  id="modal-modal-title" variant="subtitle"  style={{display:'flex', alignItems:'center', justifyContent:'center',"color":'#000', fontWeight:'700', width:'200px', height:'70px', border:'1px solid #134163', margin:10,borderRadius:10, cursor:'pointer'}} align="left">{Number(this.props.data.topayamount).toFixed(2)}</Typography>
+                        <Typography  id="modal-modal-title" variant="subtitle"  style={{display:'flex', alignItems:'center', justifyContent:'center',"color":'#000', fontWeight:'700', width:'200px', height:'70px', border:'1px solid #134163', margin:10,borderRadius:10, cursor:'pointer'}} align="left" onClick={()=>{
+                            this.cashPayment(this.props.data.topayamount)
+                        }}>{Number(this.props.data.topayamount).toFixed(2)}</Typography>
                     </Grid> 
 
-                    {Math.ceil(Number(this.props.data.topayamount)).toFixed(2) !==  Number(this.props.data.topayamount).toFixed(2) && <Grid item xs={3} style={{display:'flex'}}> 
-                         <Typography  id="modal-modal-title" variant="subtitle"  style={{display:'flex', alignItems:'center', justifyContent:'center',"color":'#000', fontWeight:'700', width:'200px', height:'70px', border:'1px solid #134163', margin:10,borderRadius:10, cursor:'pointer'}} align="left">{Math.ceil(Number(this.props.data.topayamount)).toFixed(2)}</Typography> 
+                    {Math.ceil(Number(this.props.data.topayamount)).toFixed(2) !==  Number(this.props.data.topayamount).toFixed(2)  && <Grid item xs={3} style={{display:'flex'}}> 
+                         <Typography  id="modal-modal-title" variant="subtitle"  style={{display:'flex', alignItems:'center', justifyContent:'center',"color":'#000', fontWeight:'700', width:'200px', height:'70px', border:'1px solid #134163', margin:10,borderRadius:10, cursor:'pointer'}} align="left"
+                          onClick={()=>{
+                            this.cashPayment(Math.ceil(Number(this.props.data.topayamount)))
+                        }}
+                        >{Math.ceil(Number(this.props.data.topayamount)).toFixed(2)}</Typography> 
                     </Grid>}
                     
                 
                     {Math.ceil(Number(this.props.data.topayamount)).toFixed(2) ===  Number(this.props.data.topayamount).toFixed(2) &&  this.paymentController.getPaymentValues(Math.ceil(Number(this.props.data.topayamount)), 3).map(t=>{
                         return <Grid item xs={3} style={{display:'flex'}}>
-                                    <Typography  id="modal-modal-title" variant="subtitle"  style={{display:'flex', alignItems:'center', justifyContent:'center',"color":'#000', fontWeight:'700', width:'200px', height:'70px', border:'1px solid #134163', margin:10,borderRadius:10, cursor:'pointer'}} align="left">{Number(t).toFixed(2)}</Typography>
+                                    <Typography  id="modal-modal-title" variant="subtitle"  style={{display:'flex', alignItems:'center', justifyContent:'center',"color":'#000', fontWeight:'700', width:'200px', height:'70px', border:'1px solid #134163', margin:10,borderRadius:10, cursor:'pointer'}} align="left"
+                                     onClick={()=>{
+                                        this.cashPayment(t)
+                                    }}>{Number(t).toFixed(2)}</Typography>
                                 </Grid>
                     })} 
                     
                     {Math.ceil(Number(this.props.data.topayamount)).toFixed(2) !==  Number(this.props.data.topayamount).toFixed(2) &&  this.paymentController.getPaymentValues(Math.ceil(Number(this.props.data.topayamount)), 2).map(t=>{
                         return <Grid item xs={3} style={{display:'flex'}}>
-                                    <Typography  id="modal-modal-title" variant="subtitle"  style={{display:'flex', alignItems:'center', justifyContent:'center',"color":'#000', fontWeight:'700', width:'200px', height:'70px', border:'1px solid #134163', margin:10,borderRadius:10, cursor:'pointer'}} align="left">{Number(t).toFixed(2)}</Typography>
+                                    <Typography  id="modal-modal-title" variant="subtitle"  style={{display:'flex', alignItems:'center', justifyContent:'center',"color":'#000', fontWeight:'700', width:'200px', height:'70px', border:'1px solid #134163', margin:10,borderRadius:10, cursor:'pointer'}} align="left"
+                                     onClick={()=>{
+                                        this.cashPayment(t)
+                                    }}>{Number(t).toFixed(2)}</Typography>
                                 </Grid>
                     })} 
                     
@@ -133,6 +189,7 @@ export default class TicketFullPayment extends React.Component  {
             {this.renderCardMethods()}
 
             {this.state.notesPopup && this.renderNotes()}
+            {this.state.completionPopup && this.renderCompletion()}
         </div>
     }
 }

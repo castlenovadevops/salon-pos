@@ -311,7 +311,9 @@ export default class ProductForm extends React.Component {
                 if(this.state.default_taxDetail.length > 0){
                     this.setState({isDefaultTax_available: true});
                 }else{
-                    this.setState({isDefaultTax_available: false});
+                    this.setState({isDefaultTax_available: false}, ()=>{
+                        console.log("315 ", this.state.isDefaultTax_available);
+                    });
                 }
             });
         })
@@ -757,20 +759,20 @@ export default class ProductForm extends React.Component {
                             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                                 <FormControl component="fieldset">
                                     <FormLabel component="legend">Select Tax</FormLabel>
-                                    <RadioGroup row aria-label="tax" name="row-radio-buttons-group" style={{ marginLeft: 10, display: this.state.isTax_available ? 'block' : 'none' }}>
+                                    <RadioGroup row aria-label="tax" name="row-radio-buttons-group" style={{ marginLeft: 10}}>
                                         <FormControlLabel value={this.state.tax_type} control={<Radio checked={this.state.tax_type === 'default'} value="default" onChange={(e) => { this.handleradio(e); }} />} label="Default" />
                                         <FormControlLabel value={this.state.tax_type} control={<Radio checked={this.state.tax_type === 'custom'} value="custom" onChange={(e) => { this.handleradio(e); }} />} label="Custom" />
                                         <FormControlLabel value={this.state.tax_type} control={<Radio checked={this.state.tax_type === 'notax'} value="notax" onChange={(e) => { this.handleradio(e); }} />} label="No Tax" />
 
                                     </RadioGroup>
 
-                                    <FormLabel component="legend" style={{ marginTop: '10px', display: !this.state.isTax_available ? 'block' : 'none' }}>No Tax Found!</FormLabel>
+                                    {/* <FormLabel component="legend" style={{ marginTop: '10px', display: !this.state.isTax_available ? 'block' : 'none' }}>No Tax Found!</FormLabel> */}
                                 </FormControl>
                             </Stack>
                             {this.state.isDefault && this.state.isTax_available && <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} >
                                 <Box sx={{ display: 'flex', alignItems: 'flex-end', }}>
                                     {/* <FormControl sx={{ m: 3 }} component="fieldset" variant="standard" > */}
-                                    <div style={{display: this.state.isDefaultTax_available ? 'block': 'none'}}>    
+                                    {this.state.isDefaultTax_available && <div >    
                                         {this.state.default_taxDetail.map((v, i) => {
                                             return <><Checkbox 
                                             value={v.id}
@@ -793,11 +795,11 @@ export default class ProductForm extends React.Component {
 
                                         })}
                                     {/* </FormControl> */}
-                                    </div>
-                                    <FormLabel component="legend" style={{marginTop:'10px',display: !this.state.isDefaultTax_available  ? 'block': 'none'}}>No Default Tax Found!</FormLabel>
+                                    </div>}
+                                    
                                 </Box>
                             </Stack>}
-                            
+                            {this.state.isDefault && !this.state.isDefaultTax_available && <Typography component="legend" style={{marginTop:'10px'}}>No Default Tax Found!</Typography>}
                             { (this.state.isCustom && this.state.isTax_available)  && <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} >
                                 <Box sx={{ display: 'flex', alignItems: 'flex-start' , flexDirection:'column'}}>
                                  

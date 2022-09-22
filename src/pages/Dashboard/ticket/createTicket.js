@@ -397,7 +397,7 @@ export default class CreateTicket extends React.Component {
         });
     } 
 
-    calculateTotal(){ 
+    calculateTotal(opt=''){ 
         var price = {
             retailPrice: 0,
             servicePrice: 0,
@@ -406,10 +406,11 @@ export default class CreateTicket extends React.Component {
             grandTotal: 0,
             tipsAmount: 0, 
         };
-        this.calculateTotalindividual(0, price)
+        console.log("409 OPT::::", opt)
+        this.calculateTotalindividual(0, price, opt)
     }
 
-    calculateTotalindividual(i, price){
+    calculateTotalindividual(i, price, opt){
         var retailPrice = Number(price.retailPrice);
         var servicePrice = Number(price.servicePrice);
         var subTotal = Number(price.subTotal);
@@ -439,7 +440,7 @@ export default class CreateTicket extends React.Component {
                 tipsAmount: tipsAmount,
                 grandTotal: grandTotal
             }; 
-            this.calculateTotalindividual(i+1, priceupdate);
+            this.calculateTotalindividual(i+1, priceupdate, opt);
         }
         else{
             var ticketdetails = Object.assign({}, this.state.ticketDetail);
@@ -460,6 +461,50 @@ export default class CreateTicket extends React.Component {
                 tipsAmount: tipsAmount,
                 grandTotal: grandTotal,
                 ticketDetail: ticketdetails
+            }, ()=>{
+                console.log("464 OPT::::", opt)
+                if(opt === 'save'){
+                    var thisobj = this;
+                    console.log("TIPS CALCULATE SAVE")
+                    setTimeout(()=>{  
+                        var  price = { 
+                            subTotal:  Number(this.state.subTotal),
+                            taxAmount:  Number(this.state.taxAmount),
+                            discountAmount:  Number(this.state.discountAmount),
+                            tipsAmount:  Number(this.state.tipsAmount),
+                            grandTotal: Number(this.state.grandTotal),
+                            ticketDiscount: {
+                                discount_id: this.state.ticketDiscount.discount_id,
+                                discount_type: this.state.ticketDiscount.discount_type,
+                                discount_value: this.state.ticketDiscount.discount_value,
+                                discount_amt : this.state.ticketDiscount.discount_totalamt
+                            },
+                            tipsType:this.state.tipsType,
+                            tipsPercent: this.state.tipsPercent,
+                         }
+                         var ticket =  Object.assign({}, this.state.ticketDetail);
+                         ticket.paid_status = 'paid';
+             
+                         var input = {
+                            ticketDetail:ticket, 
+                            ticketowner: this.state.ticketowner,
+                            customer_detail: this.state.customer_detail,
+                            price: price,
+                            services_taken : this.state.services_taken, 
+                        }  
+                        
+                        this.ticketServiceController.saveTicket(input).then(response=>{
+                            if(response.status === 200){ 
+                                thisobj.ticketServiceController.updateClosedTicket(input).then(r=>{
+                                    thisobj.saveTicket('')
+                                })
+                            }
+                            else{
+                                thisobj.setState({alertPopup:true, alertMsg:"Error in saving Ticket. Please try again later.", alertTitle:"Error"})
+                            }
+                        });
+                    },200)
+                }
             });
         }
         
@@ -1215,39 +1260,9 @@ handleCloseTips(msg, tipsInput){
                     if(tipsInput["tips_type"] !== undefined){ 
                         this.setState({services_taken:tipsInput["service_selected"],
                         tips_type:tipsInput["tips_type"], tips_totalamt:tipsInput["tips_amount"], tips_percent: tipsInput["tips_percent"] }, function(){
-                            console.log("TIPS SAEV paid:::::")
+                            console.log("TIPS SAVE paid:::::")
                             console.log(this.state.services_taken); 
-                            this.calculateTotal();
-                            setTimeout(()=>{  
-                                var  price = { 
-                                    subTotal:  Number(this.state.subTotal),
-                                    taxAmount:  Number(this.state.taxAmount),
-                                    discountAmount:  Number(this.state.discountAmount),
-                                    tipsAmount:  Number(this.state.tipsAmount),
-                                    grandTotal: Number(this.state.grandTotal),
-                                    ticketDiscount: {
-                                        discount_id: this.state.ticketDiscount.discount_id,
-                                        discount_type: this.state.ticketDiscount.discount_type,
-                                        discount_value: this.state.ticketDiscount.discount_value,
-                                        discount_amt : this.state.ticketDiscount.discount_totalamt
-                                    },
-                                    tipsType:this.state.tipsType,
-                                    tipsPercent: this.state.tipsPercent,
-                                 }
-                     
-                                 var input = {
-                                    ticketDetail: Object.assign({}, this.state.ticketDetail), 
-                                    ticketowner: this.state.ticketowner,
-                                    customer_detail: this.state.customer_detail,
-                                    price: price,
-                                    services_taken : this.state.services_taken, 
-                                } 
-
-                                thisobj.ticketServiceController.updateClosedTicket(input).then(r=>{
-                                    thisobj.saveTicket('')
-                                })
-                            },200)
-
+                            this.calculateTotal('save'); 
                         }); 
                     }
                 }

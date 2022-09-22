@@ -189,7 +189,7 @@ export default class App extends React.Component {
         //     console.log(res.data.data);
         //     this.setState({transactions: res.data.data, isLoading: false})
         // }); 
-        var sql = `select t.id as id,t.*, tp.card_type, tp.pay_mode, tp.paid_at, tp.ticket_amt as paid_amount, tp.notes from ticket as t left join ticket_payment as tp on tp.ticketref_id=t.sync_id where  t.sync_id in (select ticketref_id from ticket_payment where  (DATE(paid_at) between '`+input.from_date+`' and '`+input.to_date+`' )) and tp.isActive=1  and t.businessId=`+input.businessId+``
+        var sql = `select t.id as id,t.*, tp.card_type, tp.pay_mode, tp.paid_at,tp.sync_id as transactionid, tp.ticket_amt as paid_amount, tp.notes from ticket as t left join ticket_payment as tp on tp.ticketref_id=t.sync_id where  t.sync_id in (select ticketref_id from ticket_payment where  (DATE(paid_at) between '`+input.from_date+`' and '`+input.to_date+`' )) and tp.isActive=1  and t.businessId=`+input.businessId+``
         // console.log(sql);
         if(input.transactiontype === 'paid'){
             sql += ` and t.paid_status='paid'`;
@@ -343,7 +343,7 @@ export default class App extends React.Component {
                     Total
                 </Grid>
                 <Grid item xs={1} style={{height:'100%',width:'100%', margin:0, padding:10, fontSize:'14px', fontWeight:'bold'}}> 
-                    Payment Mode
+                    Mode
                 </Grid> 
                 <Grid item xs={2} style={{height:'100%',width:'100%', margin:0, padding:'10px 20px', fontSize:'14px', fontWeight:'bold'}}> 
                     Paid On
@@ -386,7 +386,7 @@ export default class App extends React.Component {
                         this.setState({showDetail: true})
                     })
                 }}> 
-                    <b>Payment</b>
+                    <b>{t.transactionid.substring(t.sync_id.length-10)}</b>
                 </Grid>
                 <Grid item xs={1} style={{height:'100%',width:'100%', margin:0, padding:10, fontSize:'14px'}} onClick={()=>{ 
                     this.setState({transactiondetail: t}, ()=>{
