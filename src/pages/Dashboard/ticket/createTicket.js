@@ -836,7 +836,7 @@ export default class CreateTicket extends React.Component {
                 newsplitted.forEach((o, i)=>{
                     services.push(o);
                     if(i === newsplitted.length-1){ 
-                        this.setState({selectedMenuIndex:0, selectedRowServiceindex: -1, selectedRowService:{},  services_taken:services}, function(){
+                        this.setState({selectedMenuIndex:0, selectedRowServiceindex: -1, selectedRowService:{},  services_taken:services, isLoading: false}, function(){
                             // this.calculateTotal();
                             this.UpdateServices(0);
                         });
@@ -844,7 +844,7 @@ export default class CreateTicket extends React.Component {
                 })
             }
             else{
-                this.setState({selectedMenuIndex:0, selectedRowServiceindex: -1, selectedRowService:{}});
+                this.setState({selectedMenuIndex:0, selectedRowServiceindex: -1, selectedRowService:{}, isLoading: false});
             }
         })
     }

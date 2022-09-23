@@ -41,16 +41,13 @@ export default class BatchSettleComponent extends React.Component {
         })
     }
 
-    checkTips(){
-        
+    checkTips(){ 
         this.queryFunctions.getAllTicketsWithoutTips(this.queryManager.getBusinessId()).then(r=>{
             if(r.length>0){
                 this.setState({tipsDialog: true});
             }
             else{
-                this.batchController.createTicketBatch('manual').then(r=>{
-                    this.setState({msgToast: true})
-                });
+                this.onSubmitTipsDialog();
             }
         });
     }

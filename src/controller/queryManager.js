@@ -189,7 +189,7 @@ export default class QueryManager extends DataManager{
 
     getBatchTickets(batchid){
         return new Promise(async (resolve) => {
-            var sql = `select t.*, tp.paid_at, tp.pay_mode, tp.card_type from ticket as t join ticket_payment as tp on tp.ticketref_id=t.sync_id and tp.pay_mode='card' where t.batchId='`+batchid+`'`;   
+            var sql = `select t.*,tp.ticket_amt, tp.paid_at, tp.pay_mode, tp.card_type from ticket as t join ticket_payment as tp on tp.ticketref_id=t.sync_id and tp.pay_mode='card' where t.batchId='`+batchid+`'`;   
             this.getData(sql).then(r=>{
                 this.getPaymentMethods(0, r, [],resolve)
             })
@@ -230,7 +230,7 @@ export default class QueryManager extends DataManager{
                                 console.log(`select * from users where id not in (select employeeId from employee_salary where businessId=`+this.getBusinessId()+`)`)
                                 console.log(esres)
                                 if(esres.length > 0){
-                                    resolve({status:400,msg:"1Please set the employee commission settings and continue."})
+                                    resolve({status:400,msg:"Please set the employee commission settings and continue."})
                                 }
                                 else{
                                     resolve({status:200});
@@ -238,7 +238,7 @@ export default class QueryManager extends DataManager{
                             })
                         }
                         else{
-                            resolve({status:400,msg:"2Please set the employee commission settings and continue."})
+                            resolve({status:400,msg:"Please set the employee commission settings and continue."})
                         }
                     })
                 }

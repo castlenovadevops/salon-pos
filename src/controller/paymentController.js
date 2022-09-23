@@ -25,8 +25,14 @@ export default class PaymentController extends DataManager{
     getPaymentValues(x,n){
         var values = []; 
         var x1 = Math.round((x+1) / 10) * 10; 
+        if(x%10 === 0){
+            x1 = Math.round((x+5) / 5) * 5; 
+        }
         values.push(x1);
         var x2 = Math.round((x1+10) / 10) * 10;
+        if(x%10 === 0){
+            x2 = Math.round((x+5) / 10) * 10;
+        }
         values.push(x2);
         if(n === 3){ 
             var x3 = Math.round((x2+10) / 10) * 10;
