@@ -120,15 +120,19 @@ class Discounts extends React.Component {
         this.props.afterSubmitDiscount('');
     }
     resetDiscount(){
-        this.setState({ticket_grandTotal: this.props.ticket_service_total,discount_value: 0,ticket_with_dis : 0}); 
+        this.setState({ticket_grandTotal: this.props.ticket_service_total,discount_value: 0,ticket_with_dis : 0, selected_discount:'',
+        selected_disDetails:{}}); 
     }
 
     saveDiscount(){
         var dis_input = {
-            dis_selected : this.state.selected_disDetails,
+            dis_selected : Object.assign({}, this.state.selected_disDetails),
             discount_value: this.state.discount_value,
             ticket_with_discount : this.state.ticket_with_dis
-        } 
+        }  
+        if(this.props.ticket_service_total < this.state.discount_value){
+            this.resetDiscount()
+        }
         this.props.afterSubmitDiscount('Applied Sucessfully',dis_input, 'apply');
     }
     render() {

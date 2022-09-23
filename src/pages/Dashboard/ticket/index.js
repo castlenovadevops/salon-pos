@@ -4,8 +4,7 @@ import Button from '@material-ui/core/Button';
 import Grid from '@material-ui/core/Grid';
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
-import Tabs from '@material-ui/core/Tabs'; 
-import Tab from '@material-ui/core/Tab';
+import moment from 'moment';
 import PropTypes from 'prop-types';
 import Box from '@material-ui/core/Box'; 
 import { Snackbar, Stack, IconButton,TextField, Dialog, DialogActions, DialogContent, DialogTitle, DialogContentText } from '@mui/material';
@@ -39,6 +38,7 @@ import EditTicketModal from './editTicket';
 import PaymentModal from './TicketPayment'; 
 import TicketController  from '../../../controller/TicketController';
 import QueryManager from '../../../controller/queryManager';
+import ModalTitleBar from '../../../components/Modal/Titlebar'
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
 
@@ -361,7 +361,7 @@ constructor(props){
                 editable: false,
                 renderCell: (params) => (
                 
-                  <div style={{"float":"right", display:'flex', alignItems:'center', justifyContent:'center'}}>
+                  <div style={{"float":"right", display:'flex', alignItems:'center', justifyContent:'space-between', width:'75%'}}>
                       {(params.row.paid_status !== 'paid' && this.state.value===0)&&
                      <Button
                         variant="contained"
@@ -377,7 +377,13 @@ constructor(props){
                     >
                         Pay
                     </Button>}
-                    {(params.row.paid_status === 'paid') && <b style={{textTransform:'capitalize'}}>{params.row.pay_mode}</b>}
+                    {(params.row.paid_status === 'paid') && <b onClick={()=>{
+                        this.queryManager.getPayments(params.row.id).then(res=>{
+                            this.setState({ticketPayments: res, ticketToView: params.row}, ()=>{
+                                this.setState({showPayment:true})
+                            })
+                        })
+                    }} style={{textTransform:'capitalize', minWidth:'150'}}>{params.row.pay_count === 1 ? params.row.pay_mode : 'Multiple' }</b>}
                     <Print style={{marginLeft:'1rem'}} onClick={()=>this.handleTicketPrint(params.row)}/>
                   </div>
                 )
@@ -457,7 +463,7 @@ constructor(props){
                 editable: false,
                 renderCell: (params) => (
                 
-                  <div style={{"float":"right", display:'flex', alignItems:'center', justifyContent:'center'}}>
+                  <div style={{"float":"right", display:'flex', alignItems:'center', justifyContent:'space-between', width:'90%'}}>
                       {(params.row.paid_status !== 'paid' && this.state.value===0)&&
                      <Button
                         variant="contained"
@@ -473,7 +479,13 @@ constructor(props){
                     >
                         Pay
                     </Button>}
-                    {(params.row.paid_status === 'paid') && <b style={{textTransform:'capitalize'}}>{params.row.pay_mode}</b>}
+                    {(params.row.paid_status === 'paid') && <b  onClick={()=>{
+                        this.queryManager.getPayments(params.row.id).then(res=>{
+                            this.setState({ticketPayments: res,ticketToView:params.row}, ()=>{
+                                this.setState({showPayment:true})
+                            })
+                        })
+                    }} style={{textTransform:'capitalize'}}>{params.row.pay_count === 1 ? params.row.pay_mode : 'Multiple' }</b>}
                    <Print  style={{marginLeft:'1rem'}} onClick={()=>this.handleTicketPrint(params.row)}/>
                   </div>
                 )
@@ -494,7 +506,10 @@ constructor(props){
         closedticketprint:false,
         printtype:'',
         settingalert:false,
-        alertmsg:''
+        alertmsg:'',
+        showPayment: false,
+        ticketPayments:[],
+        ticketToView:{}
     }
     this.handlePageEvent = this.handlePageEvent.bind(this);
     this.handleOpen = this.handleOpen.bind(this)
@@ -549,8 +564,19 @@ constructor(props){
     this.handlechangeToDate = this.handlechangeToDate.bind(this);
     this.getClosedTicketsByDate = this.getClosedTicketsByDate.bind(this);
     this.reloadTicket = this.reloadTicket.bind(this)
+    this.getPaymode = this.getPaymode.bind(this);
 }
 
+
+getPaymode(tid){
+    // this.queryManager.getPaymode(tid).then(r=>{
+    //     console.log(r)
+    //     return r;
+    // })
+    var mode= this.queryManager.getPaymode(tid)
+    console.log(mode)
+    return mode;
+}
 
 
 reloadTicket(ticket){
@@ -569,22 +595,10 @@ getClosedTicketsByDate(){
     let from_date = Moment(this.state.from_date).format('YYYY-MM-DD');
     let to_date = Moment(this.state.to_date).format('YYYY-MM-DD');
     var detail = window.localStorage.getItem('businessdetail');
-    var businessdetail = JSON.parse(detail);
-    
-
-
-    var sql = `select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value,t.sync_id, t.discount_totalamt, t.sync_id, c.name as customer_name from ticket as t left join customers as c on t.customer_id=c.sync_id where t.businessId='`+businessdetail["id"]
-    +`' and t.isDelete!=1 and t.sync_status=0`
-    // console.log("1",sql)
- 
-  
-   this.state.dataManager.getData(sql).then(response =>{
-       if (response instanceof Array) {
-      
-           this.setState({unsyncedCount: response.length}, function() { 
+    var businessdetail = JSON.parse(detail);  
             // var sql = "select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value, t.discount_totalamt, t.sync_id,c.name as customer_name, tp.pay_mode,tp.paid_at,tp.card_type, tp.notes as  payment_notes from ticket as t left join customers as c on t.customer_id=c.sync_id left join ticket_payment as tp on tp.ticketref_id=t.sync_id where t.businessId='"+businessdetail["id"]+"' and t.isDelete!=1 and DATE(tp.paid_at) between '"+from_date+"' and '"+to_date+"' order by tp.paid_at desc" 
             
-            var sql = "select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value, t.discount_totalamt, t.sync_id,c.name as customer_name, t.paid_at from ticket as t left join customers as c on t.customer_id=c.sync_id  where t.businessId='"+businessdetail["id"]+"' and t.isDelete!=1 and DATE(paid_at) between '"+from_date+"' and '"+to_date+"' and t.paid_status='paid' order by t.paid_at desc" 
+            var sql = "select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value, t.discount_totalamt,t.batchId, t.sync_id,c.name as customer_name, t.paid_at, (select count(sync_id) from ticket_payment where ticketref_id=t.sync_id) as pay_count,   (select group_concat(pay_mode) from ticket_payment where ticketref_id=t.sync_id) as pay_mode from ticket as t left join customers as c on t.customer_id=c.sync_id  where t.businessId='"+businessdetail["id"]+"' and t.isDelete!=1 and DATE(paid_at) between '"+from_date+"' and '"+to_date+"' and t.paid_status='paid' order by t.paid_at desc" 
             this.state.dataManager.getData(sql).then(response =>{
                 
                 if (response instanceof Array) { 
@@ -598,12 +612,9 @@ getClosedTicketsByDate(){
                     })
                 }
                 
-            })
+            }) 
 
-           })
-       }
-      
-   })
+            
 }
 
 handleTicketPrint(row){ 
@@ -1218,6 +1229,7 @@ editTicket(row){
     var ticketowner = this.state.staff_list.filter(t=>{ return t.id.toString() === row.technician_id});
     var ticketdetail = Object.assign({}, row);
     ticketdetail["isDraft"] = 1;
+    console.log(ticketdetail)
     this.setState({selectedTicket: ticketdetail, isTicketEdit: true, ticketowner: ticketowner.length > 0 ? ticketowner[0] : this.state.ticketowner, dateerror: false}, function(){  
         console.log(this.state.dateerror)
         window.api.invoke('log', "Edit Ticket clicked - Ticket code : "+row.ticket_code ).then(r=>{
@@ -1552,16 +1564,10 @@ getTicketList(loading){
     var detail = window.localStorage.getItem('businessdetail');
     var businessdetail = JSON.parse(detail);   
     let from_date = Moment(this.state.from_date).format('YYYY-MM-DD');
-    let to_date = Moment(this.state.to_date).format('YYYY-MM-DD');
-
-    var sql = `select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value,t.sync_id, t.discount_totalamt, t.sync_id, c.name as customer_name from ticket as t left join customers as c on t.customer_id=c.sync_id where t.businessId='`+businessdetail["id"]+`' and t.isDelete!=1 and t.sync_status=0 order by t.created_at desc`
+    let to_date = Moment(this.state.to_date).format('YYYY-MM-DD'); 
  
-  
-   this.state.dataManager.getData(sql).then(response =>{
-       if (response instanceof Array) {
-      
-           this.setState({unsyncedCount: response.length}, function() {
-            var sql = "select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value, t.discount_totalamt, t.sync_id,c.name as customer_name, t.paid_at from ticket as t left join customers as c on t.customer_id=c.sync_id  where t.businessId='"+businessdetail["id"]+"' and t.isDelete!=1 and DATE(paid_at) between '"+from_date+"' and '"+to_date+"' and t.paid_status='paid' order by t.paid_at desc" 
+   
+            var sql = "select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value, t.discount_totalamt, t.sync_id,c.name as customer_name, t.batchId, t.paid_at, (select count(sync_id) from ticket_payment where ticketref_id=t.sync_id) as pay_count,   (select group_concat(pay_mode) from ticket_payment where ticketref_id=t.sync_id) as pay_mode from ticket as t left join customers as c on t.customer_id=c.sync_id  where t.businessId='"+businessdetail["id"]+"' and t.isDelete!=1 and DATE(paid_at) between '"+from_date+"' and '"+to_date+"' and t.paid_status='paid' order by t.paid_at desc" 
            
             if(this.state.value === 0){
                 sql = "select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value, t.discount_totalamt, t.sync_id,c.name as customer_name  from ticket as t left join customers as c on t.customer_id=c.sync_id where t.businessId='"+businessdetail["id"]+"' and t.isDelete!=1 order by  t.created_at desc"
@@ -1570,11 +1576,7 @@ getTicketList(loading){
             this.state.dataManager.getData(sql).then(response =>{
                 if (response instanceof Array) { 
                     let selected_ticket = response.filter(item => item.paid_status !== "paid")
-                    let selected_paid_ticket = response.filter(item => item.paid_status === "paid" && item.paid_at !== null && item.paid_at !== undefined  )
-                    response.forEach(item=>{
-                        console.log(item.paid_status === "paid" && item.paid_at !== null && item.paid_at !== undefined , item.paid_status)
-                    })
-                    
+                    let selected_paid_ticket = response.filter(item => item.paid_status === "paid" && item.paid_at !== null && item.paid_at !== undefined  ) 
                 console.log("response", selected_paid_ticket)
                     this.setState({ticket_list: response,isLoading: false, unpaid_ticket_list:selected_ticket,paid_ticket_list: selected_paid_ticket, isLoading: false}, function() { 
                         this.state.unpaid_ticket_list.map((data)=>{
@@ -1584,11 +1586,7 @@ getTicketList(loading){
                 }
                 
             })
-
-           })
-       }
-      
-   })
+            
 
 }
 
@@ -1645,7 +1643,7 @@ toggleDrawer = (anchor, open) => (event) => {
 onRowClick(rowData) {
     var detail = window.localStorage.getItem('businessdetail');
     var businessdetail = JSON.parse(detail); 
-    var sql = "select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value, t.discount_totalamt,t.sync_id,  c.name as customer_name from ticket as t left join customers as c on t.customer_id=c.sync_id where t.businessId='"+businessdetail["id"]+"' and t.isDelete!=1 and t.sync_id='"+rowData.row.id+"'"
+    var sql = "select t.sync_id as id,t.ticket_code, t.customer_id, t.technician_id, t.services, t.type, t.subtotal, t.discounts, t.paid_status, t.created_at, t.created_by, t.updated_at, t.updated_by, t.businessId,t.total_tax, t.grand_total, t.notes, t.isDelete, t.tips_totalamt, t.tips_type, t.tips_percent, t.discount_id, t.discount_type, t.discount_value, t.discount_totalamt,t.sync_id,t.batchId,  c.name as customer_name from ticket as t left join customers as c on t.customer_id=c.sync_id where t.businessId='"+businessdetail["id"]+"' and t.isDelete!=1 and t.sync_id='"+rowData.row.id+"'"
     this.state.dataManager.getData(sql).then(response =>{ 
         console.log(response);
         if (response instanceof Array) {
@@ -2110,6 +2108,36 @@ render()  {
 
             {this.state.settingalert &&  <AlertModal title="Alert" msg={this.state.alertmsg} handleCloseAlert={()=>this.setState({settingalert:false, alertmsg:''})}/>}
 
+            {this.state.showPayment && <div className="modalbox">
+                            <div className='modal_backdrop'>
+                            </div>
+                            <div className='modal_container' style={{height:'500px', width:'500px', overflow:'auto'}}> 
+                                <ModalTitleBar onClose={()=> this.setState({showPayment: false, ticketPayments:[], ticketToView:{}}) } title={this.state.ticketToView.ticket_code}/>  
+                                <Grid item xs={12} style={{display:'flex',marginTop:10}}>
+                                        
+                                <Grid container style={{display:'flex', flexDirection:'row'}}>
+                                <Grid item xs={12}>
+                                   {this.state.ticketToView.id !== undefined && <>   
+                                                    <Grid item xs={12} style={{padding:'8px',display:'flex', flexDirection:'row', background:'#ccc'}}> 
+                                                            <Grid item xs={5} md={5}><b>Payment Date</b></Grid> 
+                                                            <Grid item xs={3} md={3}><b>Amount</b></Grid>
+                                                            <Grid item xs={4} md={4}><b>Payment mode</b></Grid>
+                                                    </Grid>
+                                            {this.state.ticketPayments.map(t=>{
+                                                return <>
+                                                    <Grid item xs={12} style={{ display:'flex', flexDirection:'row', borderBottom:'1px solid #f0f0f0'}}> 
+                                                        <Grid item xs={5} md={5} style={{padding:'6px', fontSize:'14px', fontWeight:'500'}}>{moment(t.paid_at).format('MM/DD/YYYY HH:mm:ss a')} </Grid> 
+                                                        <Grid item xs={3} md={3}  style={{padding:'6px', fontSize:'14px', fontWeight:'500'}}>{t.ticket_amt}</Grid>
+                                                        <Grid item xs={4} md={4} style={{padding:'6px', fontSize:'14px', fontWeight:'500',textTransform:'capitalize'}}>{t.pay_mode === 'cash' ? t.pay_mode : t.card_type+" Card"}</Grid>
+                                                    </Grid>
+                                                </>
+                                            })}</> }
+                                    </Grid> 
+                                </Grid>
+                                </Grid> 
+                            </div>
+                        </div>}
+            
         </div> 
   }
 

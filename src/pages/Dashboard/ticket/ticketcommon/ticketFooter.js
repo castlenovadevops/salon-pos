@@ -294,9 +294,9 @@ export default class TicketFooterComponent extends React.Component{
                                 </Grid>
                             </Grid>
                             <Grid item xs={7} style={{border:'2px solid #f0f0f0'}}>
-                                <Grid item xs={12} style={{display:'flex',height:'100%'}}>
+                                <Grid item xs={12} style={{display:'flex',height:'100%'}}> 
                                     <Grid xs={4}>
-                                        <Button style={{height:'100%', borderRadius:0}} disabled={this.props.data.isDisabled? false: (this.state.tipsdiscountEnabled) ? true: false || this.props.data.services_taken.length === 0} onClick={()=>this.addTips()} fullWidth variant="outlined">Tips</Button> 
+                                         <Button style={{height:'100%', borderRadius:0}} disabled={!this.props.data.tipsAdjust || this.props.data.services_taken.length === 0} onClick={()=>this.addTips()} fullWidth variant="outlined">Tips</Button> 
                                     </Grid>
                                 
                                     <Grid xs={4}>

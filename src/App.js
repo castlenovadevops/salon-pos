@@ -167,7 +167,7 @@ export default class App extends React.Component {
         
             
 
-      <Snackbar autoHideDuration={1000} open ={this.state.msgToast} style={{width:'50%', marginTop: 50}} anchorOrigin={{ vertical: "top", horizontal:  "center" }}  onClose={() => this.setState({isSuccess: false})}>
+      <Snackbar autoHideDuration={1000} open ={this.state.msgToast} style={{width:'50%', marginTop: 50}} anchorOrigin={{ vertical: "top", horizontal:  "center" }}  onClose={() => this.setState({msgToast: false})}>
         <MuiAlert elevation={6}  variant="filled" severity="success" sx={{ width: '50%' }} style={{background: '#134163', color: 'white'}}>
         Batch settled successfully.
         </MuiAlert>

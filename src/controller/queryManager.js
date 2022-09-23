@@ -248,4 +248,13 @@ export default class QueryManager extends DataManager{
             })
         });
     }
+
+
+    getPayments(tid){
+        return  new Promise(async (resolve) => {
+            this.getData(`select * from ticket_payment where ticketref_id='`+tid+`'`).then(res=>{
+                resolve(res);
+            });
+        });
+    }
 }

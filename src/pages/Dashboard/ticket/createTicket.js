@@ -1,6 +1,8 @@
 import React from 'react';
 import { Grid, Typography, Button, Card, CardContent } from '@material-ui/core/'; 
 
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
 // import CallSplit from '@mui/icons-material/CallSplit';
 // import FormControlLabel from '@mui/material/FormControlLabel';
 // import { Checkbox } from '@material-ui/core';
@@ -29,9 +31,9 @@ import TicketTotalComponent from './ticketcommon/ticketTotal';
 import TicketFooterComponent  from './ticketcommon/ticketFooter';
 import { QueryFunctions } from './ticketcommon/functions';
 import './ticketcommon/css/common.css';   
-
+import QueryManager from '../../../controller/queryManager';
 export default class CreateTicket extends React.Component {
-
+    baseQueries = new QueryManager();
     ticketController = new TicketController();
     dataManager = new DataManager();
     queryManager = new QueryFunctions();
@@ -100,7 +102,9 @@ export default class CreateTicket extends React.Component {
             
             alertMsg:'',
             alertPopup: false,
-            alertTitle:''
+            alertTitle:'',
+            discountError: false,
+            tipsAdjust: false
         }
         this.reloadView = this.reloadView.bind(this);
         this.handleCloseTicket = this.handleCloseTicket.bind(this); 
@@ -149,19 +153,25 @@ export default class CreateTicket extends React.Component {
                 discount_value: discount.dis_selected.discount_value||0,
                 discount_totalamt: discount.discount_value||0
             }
-            this.setState({ 
-                total_discount:  discount.discount_value,
-                grandTotal: discount.ticket_with_discount,
-                discount_id: discount.dis_selected.id,
-                discount_type: discount.dis_selected.discount_type,
-                discount_value: discount.dis_selected.discount_value,
-                discount_totalamt: discount.discount_value,
-                ticketDiscount:obj
-                }, ()=>{
-                console.log("discountUpdated",msg,discount, this.state.ticketDiscount)
-                    ////console.log(this.state.ticket_discount_selected)
-                    this.calculateTotal();
-                }); 
+            
+            if(obj.discount_totalamt <= this.state.grandTotal){ 
+                this.setState({ 
+                    total_discount:  discount.discount_value,
+                    grandTotal: discount.ticket_with_discount,
+                    discount_id: discount.dis_selected.id,
+                    discount_type: discount.dis_selected.discount_type,
+                    discount_value: discount.dis_selected.discount_value,
+                    discount_totalamt: discount.discount_value,
+                    ticketDiscount:obj
+                    }, ()=>{
+                    console.log("discountUpdated",msg,discount, this.state.ticketDiscount)
+                        ////console.log(this.state.ticket_discount_selected)
+                        this.calculateTotal();
+                    }); 
+            }
+            else{ 
+                this.setState({discountError: true})
+            }
         }
         console.log("CREAET TICKET ", discount, opt)
     }
@@ -196,7 +206,24 @@ export default class CreateTicket extends React.Component {
                             var ticketdetails = Object.assign({}, this.props.ticketDetail);
                             ticketdetails.ticketref_id = ticketdetails.sync_id !== undefined  ? ticketdetails.sync_id : ticketdetails.sync_id;
                             if(ticketdetails.paid_status === 'paid'){
+                                console.log("ASDASDASDASDASD")
+                                if(ticketdetails.batchId !== null && ticketdetails.batchId !== undefined && ticketdetails.batchId !== ''){
+                                    console.log("ASDASDASDASDASD")
+                                    this.setState({tipsAdjust: false})
+                                }
+                                else{
+                                    this.baseQueries.getPayments(ticketdetails.ticketref_id).then(res=>{
+                                        res.forEach(p=>{
+                                            if(p.pay_mode === 'card'){
+                                                this.setState({tipsAdjust: true})
+                                            }
+                                        })
+                                    })
+                                }
                                 this.setState({isPaidOnOpen: true})
+                            }
+                            else{
+                                this.setState({tipsAdjust: true})
                             }
                             this.setState({ticketDetail: ticketdetails},()=>{
                                 if(this.props.isTicketEdit){
@@ -729,12 +756,18 @@ export default class CreateTicket extends React.Component {
                 discount_divisiontype: discount.division_type,
                 discount_ownerdivision: discount.owner_division,
                 discount_empdivision: discount.emp_division,
-                discount_calculated: discount.discount_type === 'amount' ? (Number(service.subtotal) - Number(discount.discount_value)) : (Number(service.subtotal) * (Number(discount.discount_value)/100))
+                discount_calculated: discount.discount_type === 'amount' ? Number(discount.discount_value) : (Number(service.subtotal) * (Number(discount.discount_value)/100))
             }
-
-            service.discount = discountDetail;
-            service.discountamount = discountDetail.discount_calculated;
-            service.subTotal = service.subtotal - discountDetail.discount_calculated;
+            if(discountDetail.discount_calculated <= service.subtotal){
+                service.discount = discountDetail;
+                service.discountamount = discountDetail.discount_calculated;
+                service.subTotal = service.subtotal - discountDetail.discount_calculated;
+            }
+            else{
+                service.discount = {}
+                service.discountamount = 0;
+                this.setState({discountError: true})
+            }
 
             services[this.state.selectedRowServiceindex] = service;
             this.setState({services_taken: services, selectedRowService: service}, ()=>{
@@ -1350,6 +1383,7 @@ handleCloseTips(msg, tipsInput){
                                                                     </Grid>
                                                                     <Grid>
                                                                         <TicketFooterComponent data={{
+                                                                            tipsAdjust: this.state.tipsAdjust,
                                                                             isDisabled: this.state.isPaidOnOpen,
                                                                             isTicketEdit: this.props.isTicketEdit,
                                                                             services_taken: this.state.services_taken,
@@ -1570,6 +1604,12 @@ handleCloseTips(msg, tipsInput){
                 </div>
                 }
                 
+
+      <Snackbar autoHideDuration={1000} open ={this.state.discountError} style={{width:'50%', marginTop: 50}} anchorOrigin={{ vertical: "top", horizontal:  "center" }}  onClose={() => this.setState({discountError: false})}>
+        <MuiAlert elevation={6}  variant="filled" severity="error" sx={{ width: '50%' }} style={{background:'red',  color: 'white'}}>
+                Discount cannot be applied.
+        </MuiAlert>
+      </Snackbar>
 
         </div>
     }
