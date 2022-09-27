@@ -547,12 +547,13 @@ export default class CreateTicket extends React.Component {
                             services_taken : this.state.services_taken, 
                         }  
                         
-                        this.paymentController.getTicketPaymentsByType(ticket.sync_id, 'card').then(r=>{
-                            if(r.length === 1){
+                        this.paymentController.getTicketPaymentsByType(ticket.sync_id, 'card').then(txns=>{
+                            if(txns.length === 1){
+                                console.log(txns)
                                 this.ticketServiceController.saveTicket(input).then(response=>{
                                     if(response.status === 200){ 
                                         thisobj.ticketServiceController.updateClosedTicket(input).then(r=>{
-                                            thisobj.paymentController.updatePayment(r[0].sync_id, (Number(r[0].ticket_amt)+Number(this.state.tipsAmount))).then(tres=>{
+                                            thisobj.paymentController.updatePayment(txns[0].sync_id, (Number(txns[0].ticket_amt)+Number(this.state.tipsAmount))).then(tres=>{
                                                 thisobj.saveTicket('')
                                             })
                                         })
@@ -563,7 +564,7 @@ export default class CreateTicket extends React.Component {
                                 });
                             }
                             else{ 
-                                this.setState({showTransactions: true, transactions_list:r, tickettosave: input})
+                                this.setState({showTransactions: true, transactions_list:txns, tickettosave: input})
                             }
                         })
                     },200)
