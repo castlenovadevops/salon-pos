@@ -166,17 +166,19 @@ export default class TaxForm extends React.Component {
             input["updated_at"] = new Date().toISOString();
              
             input["sync_status"] = 0;
-            this.datamanager.getData("select * from taxes").then(res=>{
-                if(res.length === 0){
-                    input["isDefault"] = 1
-                    this.setState({isDefault:1},()=>{
-                        this.updateDefault(input, syncid);
-                    })
-                }
-                else{
-                    this.updateDefault(input, syncid);
-                }
-            })
+            // this.datamanager.getData("select * from taxes").then(res=>{
+            //     if(res.length === 0){
+            //         input["isDefault"] = 1
+            //         this.setState({isDefault:1},()=>{
+            //             this.updateDefault(input, syncid);
+            //         })
+            //     }
+            //     else{
+            //         this.updateDefault(input, syncid);
+            //     }
+            // })
+
+            this.updateDefault(input, syncid);
 
             // axios.post(config.root + `/tax/saveorupdate`, input).then(res => {
             //     var status = res.data["status"];

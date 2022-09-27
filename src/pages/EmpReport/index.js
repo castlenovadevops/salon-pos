@@ -85,7 +85,7 @@ export default class EmployeeReport extends React.Component {
         ownerdetail : {},
         supplydetail:{},
         profitdetail:{profit:0},
-        selectedEmp:0
+        selectedEmp:0,
     }
     this.handleCloseDialog = this.handleCloseDialog.bind(this);
     this.handleChangeCode = this.handleChangeCode.bind(this);
@@ -112,7 +112,12 @@ export default class EmployeeReport extends React.Component {
 
   handlechangeSelect(event){
     var emps = [];
-    emps.push(event.target.value);
+    if(event.target.value === ''){
+        emps = this.state.employeelist.map(t=>t.id);
+    }
+    else{
+        emps.push(event.target.value);
+    }
     this.setState({selectedemps:emps, selectedEmp: event.target.value}, ()=>{
         this.getReport()
     });
@@ -594,7 +599,8 @@ export default class EmployeeReport extends React.Component {
         if(empids.indexOf(obj.employee_id) > -1){
             var idx = empids.indexOf(obj.employee_id);
             var eobj = results[idx];
-            eobj.tickets.push(obj);
+            if(obj.Amount > 0)
+                eobj.tickets.push(obj);
             results[idx]  = eobj;
             this.groupEmpData(i+1, data, results, empids)
         }
@@ -612,7 +618,8 @@ export default class EmployeeReport extends React.Component {
                 tickets:[],
                 discountdata: discountdata
             }
-            cobj.tickets.push(obj);
+            if(obj.Amount > 0)
+                cobj.tickets.push(obj);
             empids.push(obj.employee_id);
             results.push(cobj);
             this.groupEmpData(i+1, data, results, empids)
@@ -664,7 +671,8 @@ export default class EmployeeReport extends React.Component {
         else{ 
           var creportresults = results;
           var finalreport = [];
-          this.state.selectedemps.forEach((emp, j)=>{
+          this.state.selectedemps.forEach((emp, j)=>{console.log("ASDASDASDASDASDAS")
+                console.log(creportresults)
                 var empreport = creportresults.filter(e=>e.employee_id === emp);
                 var discountdata= this.state.discountdata[0]; 
                 var discountdatatemp = this.state.empdiscount.filter(d=>d.employeeId === emp); 
@@ -685,51 +693,62 @@ export default class EmployeeReport extends React.Component {
         var nettsql= `select sum(cash_amt) as nett from employee_commission_detail as ec where ec.cash_type_for='service' and ec.isActive=1 and ec.employeeId=`+emp+` and  ec.ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where   DATE(paid_at) between '`+input.from_date+`' and '`+input.to_date+`') and isDelete=0 and businessId=`+input.businessId+` and paid_status='paid')`;
         
         var taxsql = `select SUM(tax_calculated) as tax_amount from  ticketservice_taxes where serviceref_id in (select sync_id from  ticket_services where ticketref_id in (select sync_id from ticket where sync_id in (select ticketref_id from ticket_payment where   DATE(paid_at) between '`+input.from_date+`' and '`+input.to_date+`') and
-        isDelete=0 and businessId=`+input.businessId+` and paid_status='paid') and employee_id=`+emp+`)` 
-        console.log("############")
-        console.log(taxsql);
+        isDelete=0 and businessId=`+input.businessId+` and paid_status='paid') and employee_id=`+emp+` and isActive=1)`  
+
         var discountquery = ` SELECT   SUM(CASE WHEN  cash_type_for = 'owner-discount' THEN cash_amt ELSE 0 END) as OwnerDiscount,
         SUM(CASE WHEN  cash_type_for = 'emp-discount' THEN cash_amt ELSE 0 END) as EmpDiscount,
         SUM(CASE WHEN  cash_type_for = 'owneremp-discount' THEN cash_amt ELSE 0 END) as OwnerEmpDiscount FROM   employee_commission_detail as ec join users as u on u.id = ec.employeeId
                    WHERE ec.businessId=`+input.businessId+` and ec.cash_type_for != 'ownercommission' and  ec.isActive=1 and  ec.employeeId=`+emp+` and
                    ec.ticketref_id in (select sync_id from ticket where  sync_id in (select ticketref_id from ticket_payment where  DATE(paid_at) between '`+input.from_date+`' and '`+input.to_date+`') and
                    isDelete=0 and businessId=`+input.businessId+`  and paid_status='paid')`
+                   
+        var odiscountquery = ` SELECT   SUM(CASE WHEN  cash_type_for = 'owner-discount' THEN cash_amt ELSE 0 END) as OwnerDiscount,
+        SUM(CASE WHEN  cash_type_for = 'emp-discount' THEN cash_amt ELSE 0 END) as EmpDiscount,
+        SUM(CASE WHEN  cash_type_for = 'owneremp-discount' THEN cash_amt ELSE 0 END) as OwnerEmpDiscount FROM   employee_commission_detail as ec 
+                   WHERE ec.businessId=`+input.businessId+` and ec.cash_type_for != 'ownercommission' and  ec.isActive=1  and
+                   ec.ticketref_id in (select sync_id from ticket where  sync_id in (select ticketref_id from ticket_payment where  DATE(paid_at) between '`+input.from_date+`' and '`+input.to_date+`') and
+                   isDelete=0 and businessId=`+input.businessId+`  and paid_status='paid')`
              
                 this.dataManager.getData(discountquery).then(disdata=>{
                     discountdata = disdata.length> 0? disdata[0] : {OwnerDiscount:0, EmpDiscount:0, OwnerEmpDiscount:0}  
+                    console.log("EMP REPORT DISCOUNT ::::: ", discountdata);
                     this.dataManager.getData(nettsql).then(nett=>{
                         this.dataManager.getData(supplysql).then(da=>{
                             this.dataManager.getData(taxsql).then(taxdata=>{
-                                console.log(taxdata, taxsql);
-                                var supplyamt = da.length > 0 ? da[0].PaidAmount : 0;
-                                var nettamt = nett.length > 0 ? nett[0].nett : 0;
-                                var taxamt = taxdata.length > 0 ? taxdata[0].tax_amount : 0;
-
-                                if(empreport.length === 0){
-                                    var empdetail = this.state.employeelist.filter(r=>r.id === emp);
-                                    finalreport.push({
-                                        employee_id: emp,
-                                        firstName: empdetail[0].firstName,
-                                        lastName: empdetail[0].lastName,
-                                        tickets:[],
-                                        discountdata: discountdata,
-                                        supplies_amt : supplyamt,
-                                        nett:nettamt,
-                                        taxamount:taxamt
-                                    })
-                                } 
-                                else{
-                                    empreport[0].discountdata = discountdata;
-                                    empreport[0].supplies_amt = supplyamt;
-                                    empreport[0].nett = nettamt;
-                                    empreport[0].taxamount = taxamt;
-                                    finalreport.push(empreport[0]);
-                                }
-                                if(j === this.state.selectedemps.length-1 ){ 
-                                    console.log("$$$$$$$$$")
-                                    console.log(finalreport)
-                                    this.setState({isLoading: false,  empReport:finalreport, showDatePopup: false})
-                                }
+                                this.dataManager.getData(odiscountquery).then(owndiscount=>{
+                                    console.log(taxdata, taxsql);
+                                    var supplyamt = da.length > 0 ? da[0].PaidAmount : 0;
+                                    var nettamt = nett.length > 0 ? nett[0].nett : 0;
+                                    var taxamt = taxdata.length > 0 ? taxdata[0].tax_amount : 0;
+                                    if(owndiscount.length > 0){
+                                        discountdata["OwnerDiscount"] = owndiscount[0].OwnerDiscount;
+                                    }
+                                    if(empreport.length === 0){
+                                        var empdetail = this.state.employeelist.filter(r=>r.id === emp);
+                                        finalreport.push({
+                                            employee_id: emp,
+                                            firstName: empdetail[0].firstName,
+                                            lastName: empdetail[0].lastName,
+                                            tickets:[],
+                                            discountdata: discountdata,
+                                            supplies_amt : supplyamt,
+                                            nett:nettamt,
+                                            taxamount:taxamt
+                                        })
+                                    } 
+                                    else{
+                                        empreport[0].discountdata = discountdata;
+                                        empreport[0].supplies_amt = supplyamt;
+                                        empreport[0].nett = nettamt;
+                                        empreport[0].taxamount = taxamt;
+                                        finalreport.push(empreport[0]);
+                                    }
+                                    if(j === this.state.selectedemps.length-1 ){ 
+                                        console.log("$$$$$$$$$")
+                                        console.log(finalreport)
+                                        this.setState({isLoading: false,  empReport:finalreport, showDatePopup: false})
+                                    }
+                                })
                             });
                         })
                     });   
@@ -1050,10 +1069,10 @@ export default class EmployeeReport extends React.Component {
                             this.showDetails(t)
                         }}>{t.ticketcount} </Grid>
                         <Grid item xs={2}>{t.ticketservicecount}</Grid>
-                        <Grid item xs={2}>{Number(t.Amount) > 0 ? "$"+Number(t.Amount).toFixed(2) : '-' }</Grid>
-                        <Grid item xs={1}>{Number(t.Tips) > 0 ? "$"+Number(t.Tips).toFixed(2) : '-' }</Grid>
-                        <Grid item xs={1}>{Number(t.Discount) > 0 ? "$"+Number(t.Discount).toFixed(2) : '-' }</Grid>
-                        <Grid item xs={2}>{(Number(t.Amount)+Number(t.Tips)-Number(t.Discount)) > 0 ? "$"+(Number(t.Amount)+Number(t.Tips)-Number(t.Discount)).toFixed(2) : '-' }</Grid>
+                        <Grid item xs={2}>{Number(t.Amount) > 0 ? "$"+Number(t.Amount).toFixed(2) : '$0.00' }</Grid>
+                        <Grid item xs={1}>{Number(t.Tips) > 0 ? "$"+Number(t.Tips).toFixed(2) : '$0.00' }</Grid>
+                        <Grid item xs={1}>{Number(t.Discount) > 0 ? "($"+Number(t.Discount).toFixed(2)+")" : "($0.00)"}</Grid>
+                        <Grid item xs={2}>{(Number(t.Amount)+Number(t.Tips)-Number(t.Discount)) > 0 ? "$"+(Number(t.Amount)+Number(t.Tips)-Number(t.Discount)).toFixed(2) : '$0.00' }</Grid>
                     </Grid>
                 </div>)
             })
@@ -1329,7 +1348,13 @@ export default class EmployeeReport extends React.Component {
 
                     
 
-                    discounttotal += emp.discountdata.OwnerDiscount+emp.discountdata.EmpDiscount+emp.discountdata.OwnerEmpDiscount;
+                    discounttotal += emp.discountdata.EmpDiscount+emp.discountdata.OwnerEmpDiscount;
+                    
+                    var nett = emp.nett !== null ? Number(Number(emp.nett) - Number(discounttotal)) : 0;
+                    var netttotal = emp.nett !== null ? Number(Number(emp.nett) - Number(discounttotal) + Number(totalTips))  : 0; 
+                    discounttotal +=  emp.discountdata.OwnerDiscount 
+                    var amountcollected = totalAmount+Number(emp.taxamount)-discounttotal
+                    console.log("AMT COLLECTIED: ::::: ", discounttotal)
                     
                     reportdetail.push(
                         <div style={{display:'flex',width:'100%',fontSize:'12px', alignItems:'flex-start', justifyContent:'flex-start', flexDirection:'row', borderBottom:'1px solid #000',fontWeight:'700', padding:'2px 0'}}> 
@@ -1396,18 +1421,18 @@ export default class EmployeeReport extends React.Component {
 
                         <Grid container style={{textTransform:'capitalize', fontWeight:'700', display:'flex', alignItems:'center', justifyContent:'space-between',  width:'100%',}}>
                             <Grid item xs={8}>Amount Collected</Grid>
-                            <Grid item xs={4}>${Number(totalAmount-discounttotal).toFixed(2)}</Grid>
+                            <Grid item xs={4}>${Number(amountcollected).toFixed(2)}</Grid>
                         </Grid> 
 
 
 
                         <Grid container style={{textTransform:'capitalize', fontWeight:'700', display:'flex', alignItems:'center', justifyContent:'space-between',  width:'100%',}}>
                             <Grid item xs={8}>Net</Grid>
-                            <Grid item xs={4}>${emp.nett !== null ? Number(Number(emp.nett) - Number(discounttotal)).toFixed(2) : '0.00'}</Grid>
+                            <Grid item xs={4}>${nett > 0 ? Number(nett).toFixed(2) : '0.00'}</Grid>
                         </Grid> 
                         <Grid container style={{textTransform:'capitalize', fontWeight:'700', display:'flex', alignItems:'center', justifyContent:'space-between',  width:'100%',}}>
                             <Grid item xs={8}>Net Total</Grid>
-                            <Grid item xs={4}>${emp.nett !== null ? Number(Number(emp.nett) - Number(discounttotal) + Number(totalTips)).toFixed(2) : '0.00'}</Grid>
+                            <Grid item xs={4}>${nett ? Number(netttotal).toFixed(2) : '0.00'}</Grid>
                         </Grid> 
                         </div>)
                 }
@@ -2149,26 +2174,21 @@ export default class EmployeeReport extends React.Component {
                                         empdiscount:[],
                                         ownertotal:0})
                                 }}>Switch Account</span><br/><br/>
-                               {this.state.restrictionmode !== 'Employee' &&  <FormControl fullWidth>
+                               {this.state.restrictionmode === 'Owner' &&  <FormControl fullWidth>
                                     <InputLabel>Employees</InputLabel>
                                     <Select
                                     labelId=""
                                     id="selectedemps"
                                     multiple={false}
-                                    // value={this.state.selectedemps}
+                                    value={this.state.selectedEmp}
                                     onChange={(e)=>{
                                         this.handlechangeSelect(e);
                                     }}
-                                    input={<Input id="select-multiple-chip" />}
-                                    // renderValue={(selected) => (
-                                    //     <div>
-                                    //     {selected.map((value) => (
-                                    //         <Chip key={value} label={this.getEmpName(value)} />
-                                    //     ))}
-                                    //     </div>
-                                    // )}
+                                    displayEmpty
+                                    input={<Input id="select-multiple-chip" />} 
                                     MenuProps={MenuProps}
                                     >
+                                    <MenuItem value=""> Select Staff</MenuItem>
                                     {this.state.employeelist.map(emp => (
                                         <MenuItem value={emp.id}>
                                             {/* <Checkbox checked={this.checkEmp(emp.id)} />   */}

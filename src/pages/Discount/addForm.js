@@ -79,6 +79,7 @@ export default class DiscountForm extends React.Component {
                     }else{
                         this.setState({isDivisionBothShow: false});
                     }
+                    this.handleValidation();
                 })
     
             }
@@ -254,6 +255,8 @@ export default class DiscountForm extends React.Component {
     handleValidation(){
         let formIsValid = true;
         let fields = this.state;
+
+        console.log("DISCOU DIVISIO" , fields.division_type )
         //Name
         if (!fields.name) {
             formIsValid = false;
@@ -279,6 +282,10 @@ export default class DiscountForm extends React.Component {
             this.setState({ isDisable: true })
         }
         else if(fields.emp_division !== 0 && fields.emp_division <100 && fields.owner_division === 0 && fields.division_type === 'both'){
+            formIsValid = false;
+            this.setState({ isDisable: true })
+        }
+        else if(fields.division_type ===''){
             formIsValid = false;
             this.setState({ isDisable: true })
         }

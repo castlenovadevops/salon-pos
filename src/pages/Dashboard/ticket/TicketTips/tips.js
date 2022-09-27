@@ -464,7 +464,8 @@ class Tips extends React.Component {
                                     </Grid>
                                     <Grid item xs={3} style={{padding:'10px',paddingLeft: 20}}>
                                     <Typography variant="subtitle1" align="left"> 
-                                        {v.perunit_cost}  
+                                        {/* {v.perunit_cost+" X "+v.qty}   */}
+                                        {v.subtotal}
                                     </Typography>
                                     </Grid>
                                     <Grid item xs={3} style={{padding:'10px',paddingLeft: 20}}> 

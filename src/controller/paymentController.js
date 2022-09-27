@@ -13,6 +13,15 @@ export default class PaymentController extends DataManager{
         });
     } 
 
+    getTicketPaymentsByType(tid, paymode){
+        return new Promise(async (resolve) => {
+            var sql = `select * from ticket_payment where ticketref_id='`+tid+`' and pay_mode='`+paymode+`'`;
+            this.getData(sql).then(r=>{
+                resolve(r);
+            })
+        });
+    } 
+
     getTicketDetail(tid){  
         return new Promise(async (resolve) => {
             var sql = `select * from ticket where sync_id='`+tid+`'`;
@@ -52,6 +61,7 @@ export default class PaymentController extends DataManager{
                     notes :  notes,
                     card_type : card_type,
                     ticket_amt: amt,
+                    paidamount: amt,
                     created_at: this.queryManager.getDate(),
                     created_by: this.queryManager.getUserId(),
                     updated_at: this.queryManager.getDate(),
@@ -74,6 +84,13 @@ export default class PaymentController extends DataManager{
                         resolve(res);
                     })
                 })
+            })
+        });
+    } 
+    updatePayment(pid, amt){
+        return new Promise(async (resolve) => {
+            this.queryManager.updateTableData({table_name:'ticket_payment', data:{ticket_amt: amt, updated_at: this.queryManager.getDate()}, query_field:'sync_id', query_value:pid}).then(res=>{
+                resolve("success")
             })
         });
     }

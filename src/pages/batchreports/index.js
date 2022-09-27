@@ -200,11 +200,7 @@ export default class BatchReports extends React.Component {
                 </div>
             </Card> 
         </div>
-    }
-    
-    getTickets(){
-
-    }
+    } 
 
     render() {
         return(

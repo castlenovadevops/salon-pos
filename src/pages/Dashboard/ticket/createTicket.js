@@ -14,7 +14,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import Moment from 'moment';
 // import TableContent from '../../../components/formComponents/DataGrid';
 // import TextFieldContent from '../../../components/formComponents/TextField' 
-
+import ButtonContent from '../../../components/formComponents/Button';
 import DataManager from '../../../controller/datacontroller';
 import TicketController from '../../../controller/TicketController';
 import TicketServiceController from '../../../controller/TicketServiceController';
@@ -32,12 +32,15 @@ import TicketFooterComponent  from './ticketcommon/ticketFooter';
 import { QueryFunctions } from './ticketcommon/functions';
 import './ticketcommon/css/common.css';   
 import QueryManager from '../../../controller/queryManager';
+import PaymentController from '../../../controller/paymentController';
+
 export default class CreateTicket extends React.Component {
     baseQueries = new QueryManager();
     ticketController = new TicketController();
     dataManager = new DataManager();
     queryManager = new QueryFunctions();
     ticketServiceController = new TicketServiceController();
+    paymentController = new PaymentController();
     constructor(props){
         super(props);
         this.state = {
@@ -104,7 +107,10 @@ export default class CreateTicket extends React.Component {
             alertPopup: false,
             alertTitle:'',
             discountError: false,
-            tipsAdjust: false
+            tipsAdjust: false,
+            tickettosave:{},
+            transactions_list: [],
+            showTransactions: false
         }
         this.reloadView = this.reloadView.bind(this);
         this.handleCloseTicket = this.handleCloseTicket.bind(this); 
@@ -128,12 +134,33 @@ export default class CreateTicket extends React.Component {
         this.handleClosePrint = this.handleClosePrint.bind(this)
         this.handleChangePrinter = this.handleChangePrinter.bind(this)
         this.discountUpdated = this.discountUpdated.bind(this)
+        this.onSelectTransaction= this.onSelectTransaction.bind(this)
     }
 
     
     componentDidMount(){ 
         this.reloadView();
     } 
+
+    onSelectTransaction(txn){
+        var thisobj = this;
+        var input = Object.assign({}, this.state.tickettosave);
+        this.setState({showTransactions: false},()=>{
+            this.ticketServiceController.saveTicket(this.state.tickettosave).then(response=>{
+                if(response.status === 200){ 
+                    thisobj.ticketServiceController.updateClosedTicket(input).then(r=>{
+                        thisobj.paymentController.updatePayment(txn.sync_id, (Number(txn.ticket_amt)+Number(this.state.tipsAmount))).then(tres=>{
+                            this.setState({showTransactions: false, transactions_list:[], tickettosave:{}})
+                            thisobj.saveTicket('')
+                        })
+                    })
+                }
+                else{
+                    thisobj.setState({alertPopup:true, alertMsg:"Error in saving Ticket. Please try again later.", alertTitle:"Error"})
+                }
+            });
+        })
+    }
 
     saveNotes(notes) {
       var details = this.state.ticketDetail;
@@ -520,16 +547,25 @@ export default class CreateTicket extends React.Component {
                             services_taken : this.state.services_taken, 
                         }  
                         
-                        this.ticketServiceController.saveTicket(input).then(response=>{
-                            if(response.status === 200){ 
-                                thisobj.ticketServiceController.updateClosedTicket(input).then(r=>{
-                                    thisobj.saveTicket('')
-                                })
+                        this.paymentController.getTicketPaymentsByType(ticket.sync_id, 'card').then(r=>{
+                            if(r.length === 1){
+                                this.ticketServiceController.saveTicket(input).then(response=>{
+                                    if(response.status === 200){ 
+                                        thisobj.ticketServiceController.updateClosedTicket(input).then(r=>{
+                                            thisobj.paymentController.updatePayment(r[0].sync_id, (Number(r[0].ticket_amt)+Number(this.state.tipsAmount))).then(tres=>{
+                                                thisobj.saveTicket('')
+                                            })
+                                        })
+                                    }
+                                    else{
+                                        thisobj.setState({alertPopup:true, alertMsg:"Error in saving Ticket. Please try again later.", alertTitle:"Error"})
+                                    }
+                                });
                             }
-                            else{
-                                thisobj.setState({alertPopup:true, alertMsg:"Error in saving Ticket. Please try again later.", alertTitle:"Error"})
+                            else{ 
+                                this.setState({showTransactions: true, transactions_list:r, tickettosave: input})
                             }
-                        });
+                        })
                     },200)
                 }
             });
@@ -1283,8 +1319,7 @@ handleChangePrinter(e) {
     this.setState({selected_printer: val})
 }
 
-handleCloseTips(msg, tipsInput){ 
-    var thisobj = this;
+handleCloseTips(msg, tipsInput){  
         //////console.log(tipsInput);
         if(this.props.isTicketEdit) {
             //////console.log("iffffff")
@@ -1294,7 +1329,7 @@ handleCloseTips(msg, tipsInput){
                         this.setState({services_taken:tipsInput["service_selected"],
                         tips_type:tipsInput["tips_type"], tips_totalamt:tipsInput["tips_amount"], tips_percent: tipsInput["tips_percent"] }, function(){
                             console.log("TIPS SAVE paid:::::")
-                            console.log(this.state.services_taken); 
+                                                        console.log(this.state.services_taken); 
                             this.calculateTotal('save'); 
                         }); 
                     }
@@ -1603,6 +1638,47 @@ handleCloseTips(msg, tipsInput){
                     </div>
                 </div>
                 }
+
+
+                {this.state.showTransactions && <div>
+                    <div style={{border:'1px solid',right:0, bottom:0,top:'0',left:'0',position:'absolute'}}>
+                        <div style={{background:'rgba(0,0,0,0.8)',right:0, bottom:0,top:'0',left:'0',position:'absolute' }}>
+                        </div>
+                        <div style={{background:'#fff', height:'500px', width:'600px', margin:'calc(25% - 175px) auto 0', position:'relative', borderRadius: 10}}>
+                        <Grid container>
+                             <Grid item xs={10}></Grid>
+                            <Grid item xs={2}>
+                                <Typography variant="subtitle2"  style={{cursor:'pointer',textAlign:'end', paddingRight: '10px', paddingTop: '5px'}} onClick={()=>this.setState({showTransactions:false, transactions_list: []})}> <CloseIcon fontSize="small" style={{"color":'#134163'}}/></Typography>
+                            </Grid> 
+                        </Grid>
+                        <Grid container>
+                            
+                            <Grid item xs={12} style={{padding:'8px',display:'flex', flexDirection:'row', background:'#ccc'}}> 
+                                    <Grid item xs={3} md={3}><b>Payment Date</b></Grid> 
+                                    <Grid item xs={3} md={3}><b>Amount</b></Grid>
+                                    <Grid item xs={3} md={3}><b>Payment mode</b></Grid>
+                                    <Grid item xs={3} md={3}></Grid>
+                            </Grid>
+                            
+                            {this.state.transactions_list.map(t=>{
+                                return <>
+                                    <Grid item xs={12} style={{ display:'flex', flexDirection:'row', fontSize:'12px', padding:'10px'}}> 
+                                        <Grid item xs={3} md={3}>{Moment(t.paid_at).format('MM/DD/YYYY HH:mm:ss a')} </Grid> 
+                                        <Grid item xs={3} style={{paddingLeft:'1rem'}} md={3}>${Number(t.ticket_amt).toFixed(2)}</Grid>
+                                        <Grid item xs={3} md={3} style={{textTransform:'capitalize'}}>{t.card_type+" Card"}</Grid>
+                                        <Grid item xs={3} md={3}>
+                                            <ButtonContent color="success" variant="contained" size="small"  onClick={()=>this.onSelectTransaction(t)} label="Select"/>
+                                        </Grid>
+                                    </Grid>
+                                </>
+                            })} 
+
+                        </Grid>
+
+                        </div>
+
+                    </div>
+                </div> }
                 
 
       <Snackbar autoHideDuration={1000} open ={this.state.discountError} style={{width:'50%', marginTop: 50}} anchorOrigin={{ vertical: "top", horizontal:  "center" }}  onClose={() => this.setState({discountError: false})}>
